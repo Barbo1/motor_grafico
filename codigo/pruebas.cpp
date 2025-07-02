@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_events.h>
 #include <iostream>
@@ -6,7 +7,7 @@
 
 #include "headers/concepts/primitives.hpp"
 #include "headers/concepts/texture.hpp"
-#include "headers/pr_objects/circle.hpp"
+#include "headers/pr_objects/square.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
@@ -48,12 +49,17 @@ int main () {
   bool step = true;
   bool cont = true;
   AngularDirection gravity = AngularDirection (0, 2, 0);
-  Circle circle (render, 15, {300, 100, 0}, SDL_Color {255, 255, 255, 0}, 0.8);
-  circle.set_velocity({0, -1, 2});
-  circle.set_force(gravity);
+
+  std::vector<AngularDirection*> fig_vec = std::vector<AngularDirection*>();
+  Square fig (render, 15, 50, {300, 100, 0}, SDL_Color {255, 255, 255, 0});
+  fig.set_velocity({0, -1, 2});
+  fig.set_force(gravity);
   SDL_Event event;
 
-  Texture tex = Texture::triangle(render, {-396, 534}, {278, 412}, {-548, 252}, {255,255,0,255});
+  std::vector<Direction> a = {{147, -116}, {-234, -147}, {-376, -226}, {-254, -362}, {-152, -234}, {12, -414}, {221, -291}};
+  Texture tex = Texture::polygon(render, a, {255,255,0,255});
+  std::vector<Direction> b = {{82, 169}, {18, 23}, {183, 40}, {278, 182}, {144, 112}};
+  Texture tex1 = Texture::polygon(render, b, {255,0,255,255});
 
   int mid = 300;
   float angle = 0;
@@ -80,18 +86,26 @@ int main () {
     SDL_RenderClear(render);
 
     tex.draw(render, {0,0,0});
+    tex1.draw(render, {0,0,0});
 
-    if (circle.get_position().y >= (float)mid && step) {
-      circle.set_force(-gravity);
+    if (fig.get_position().y >= (float)mid && step) {
+      fig.set_force(-gravity);
       step = false;
     }
-    if (circle.get_position().y <= (float)mid && !step) {
-      circle.set_force(gravity);
+    if (fig.get_position().y <= (float)mid && !step) {
+      fig.set_force(gravity);
       step = true;
     }
-    circle.calculate_movement(std::vector<AngularDirection*>());
-    circle.draw(render);
 
+    fig.calculate_movement(fig_vec);
+    fig.draw(render);
+
+    /*
+    float r = 3;
+    Texture cir = Texture::circle(render, r, {255, 255, 255, 255});
+    for (auto& v: a) {
+      cir.draw(render, {v.x + 376-r/2, v.y + 414-r/2, 0});
+    }*/
 
     SDL_RenderPresent (render);
     SDL_Delay(16);

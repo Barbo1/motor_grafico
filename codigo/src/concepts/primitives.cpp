@@ -51,7 +51,7 @@ Direction Direction::operator- () {
   return {-this->x, -this->y};
 }
 
-template<DirFin R> Direction Direction::operator+ (R d) {
+template<DirFin R> Direction Direction::operator+ (const R & d) {
   return Direction (
     this->x + d.x,
     this->y + d.y
@@ -59,7 +59,7 @@ template<DirFin R> Direction Direction::operator+ (R d) {
 }
 
 
-template<DirFin R> Direction Direction::operator- (R d) {
+template<DirFin R> Direction Direction::operator- (const R & d) {
   return Direction (
     this->x - d.x,
     this->y - d.y
@@ -73,16 +73,16 @@ Direction Direction::operator* (float f) {
   );
 }
 
-template<DirFin R> float Direction::operator* (R d) {
+template<DirFin R> float Direction::operator* (const R & d) {
   return this->x * d.x + this->y * d.y;
 }
 
-template<DirFin R> void Direction::operator+= (R d) {
+template<DirFin R> void Direction::operator+= (const R & d) {
   this->x += d.x;
   this->y += d.y;
 }
 
-template<DirFin R> void Direction::operator-= (R d) {
+template<DirFin R> void Direction::operator-= (const R & d) {
   this->x -= d.x;
   this->y -= d.y;
 }
@@ -194,24 +194,24 @@ template<DirFin R> void AngularDirection::operator-= (R d) {
  *  Instantiation  *
  *******************/
 
-template Direction Direction::operator+<AngularDirection>(AngularDirection);
-template Direction Direction::operator+<Direction>(Direction);
-template Direction Direction::operator-<AngularDirection>(AngularDirection);
-template Direction Direction::operator-<Direction>(Direction);
-template float Direction::operator*<AngularDirection>(AngularDirection);
-template float Direction::operator*<Direction>(Direction);
-template void Direction::operator+=<AngularDirection>(AngularDirection);
-template void Direction::operator+=<Direction>(Direction);
-template void Direction::operator-=<AngularDirection>(AngularDirection);
-template void Direction::operator-=<Direction>(Direction);
+template Direction Direction::operator+<AngularDirection>(const AngularDirection&);
+template Direction Direction::operator-<AngularDirection>(const AngularDirection&);
+template float Direction::operator*<AngularDirection>(const AngularDirection&);
+template void Direction::operator+=<AngularDirection>(const AngularDirection&);
+template void Direction::operator-=<AngularDirection>(const AngularDirection&);
+template Direction Direction::operator+<Direction>(const Direction&);
+template Direction Direction::operator-<Direction>(const Direction&);
+template float Direction::operator*<Direction>(const Direction&);
+template void Direction::operator+=<Direction>(const Direction&);
+template void Direction::operator-=<Direction>(const Direction&);
 
 template AngularDirection AngularDirection::operator+<AngularDirection>(AngularDirection);
-template AngularDirection AngularDirection::operator+<Direction>(Direction);
 template AngularDirection AngularDirection::operator-<AngularDirection>(AngularDirection);
-template AngularDirection AngularDirection::operator-<Direction>(Direction);
 template float AngularDirection::operator*<AngularDirection>(AngularDirection);
-template float AngularDirection::operator*<Direction>(Direction);
 template void AngularDirection::operator+=<AngularDirection>(AngularDirection);
-template void AngularDirection::operator+=<Direction>(Direction);
 template void AngularDirection::operator-=<AngularDirection>(AngularDirection);
+template AngularDirection AngularDirection::operator+<Direction>(Direction);
+template AngularDirection AngularDirection::operator-<Direction>(Direction);
+template float AngularDirection::operator*<Direction>(Direction);
+template void AngularDirection::operator+=<Direction>(Direction);
 template void AngularDirection::operator-=<Direction>(Direction);

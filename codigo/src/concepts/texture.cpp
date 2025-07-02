@@ -1,12 +1,15 @@
 #include "../../headers/concepts/primitives.hpp"
 #include "../../headers/concepts/texture.hpp"
 
-#include <SDL2/SDL_blendmode.h>
-#include <SDL2/SDL_rect.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_stdinc.h>
+#include <cstddef>
+#include <cstdint>
+#include <ios>
 #include <utility>
+#include <array>
+#include <bit>
 #include <cstring>
+#include <algorithm>
+#include <iostream>
 
 Texture::Texture(SDL_Renderer* render, int height, int width, SDL_Point & center, Uint32* pixels) {
   SDL_Surface* sur = SDL_CreateRGBSurfaceFrom(
@@ -203,6 +206,87 @@ Texture Texture::triangle (SDL_Renderer* render, Direction point1, Direction poi
   Texture ret = bounder(render, bounds, height, width, color, center);
   delete [] bounds;
   return ret;
+}
+    
+Texture Texture::polygon (SDL_Renderer* render, std::vector<Direction> points, SDL_Color color) {
+  /* Searching maximum and minimum coordenates. */
+  Direction max(points[0]), min(points[0]);
+  for (auto& point: points) {
+    if (max.x < point.x) max.x = point.x;
+    if (min.x > point.x) min.x = point.x;
+    if (max.y < point.y) max.y = point.y;
+    if (min.y > point.y) min.y = point.y;
+  }
+
+  /* Translate points. */
+  for (std::size_t i = 0; i < points.size(); i++)
+    points[i] -= min;
+  max -= min;
+
+  /* Calculating texture parameter. */
+  int height = max.y;
+  int width = max.x;
+  Direction center;
+  for (auto& point: points)
+    center += point;
+  center *= (1.f/points.size());
+
+  /* Calculating coefitients. */
+  auto calc_coef = [] (Direction point0, Direction point1, Direction point2) {
+    double mi = (point1.x - point2.x) / (point1.y - point2.y);
+    double ci = point2.x - point2.y * mi;
+    double q, p;
+    if (point2.x != point1.x) {
+      q = 1 / (point2.x - point1.x);
+      p = (ci - point1.x) * q;
+      q = mi * q;
+    } else {
+      q = 1/ (point2.y - point1.y);
+      p = -point1.y * q;
+    }
+    return std::pair<std::array<double, 4>, bool> {{mi, ci, q, p}, (point1.y - point0.y) * (point1.y - point2.y) > 0};
+  };
+
+  std::vector<std::pair<std::array<double, 4>, bool>> coef = std::vector<std::pair<std::array<double, 4>, bool>>();
+  coef.reserve (points.size());
+  std::size_t i = 1;
+  coef.push_back (calc_coef (points[points.size() - 1], points[0], points[1]));
+  for (; i < points.size() - 1; i++)
+    coef.push_back (calc_coef (points[i-1], points[i], points[i+1]));
+  coef.push_back (calc_coef (points[i-1], points[i], points[0]));
+
+  /* Calculate the bound to make the texture. */
+  int * bounds = new int[height * points.size()];
+  int * biter = bounds;
+  std::vector<int32_t> intersections;
+  intersections.reserve (points.size());
+
+  for (int yi = 0; yi < height; yi++) {
+    intersections.clear();
+    for (auto & mc: coef) {
+      float q = mc.first[2] * yi + mc.first[3];
+      if (-0.00001 < q && q < 1.00001) {
+        int32_t inter = static_cast<int32_t>(std::round(mc.first[0] * yi + mc.first[1]));
+        std::size_t ind = 0;
+        for (; ind < intersections.size(); ind++)
+          if (intersections[ind] == inter)
+            break;
+        if (ind == intersections.size() || mc.second)
+          intersections.push_back(inter);
+      }
+    }
+    for (std::size_t i = 0; i < intersections.size(); i++)
+      for (std::size_t j = i + 1; j < intersections.size(); j++)
+        if (intersections[j] < intersections[i])
+          std::swap (intersections[j], intersections[i]);
+    for (auto& inter: intersections)
+      *(biter++) = inter + yi * width;
+  }
+  *biter = height * width;
+  
+  Texture ret = bounder(render, bounds, height, width, color, {static_cast<int>(center.x), static_cast<int>(center.y)});
+  delete [] bounds;
+  return ret; 
 }
 
 Texture Texture::circle (SDL_Renderer* render, int radio, SDL_Color color) {

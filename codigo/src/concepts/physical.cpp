@@ -66,7 +66,7 @@ AngularDirection Physical::get_position () const {
   return this->position;
 }
 
-void Physical::calculate_movement(std::vector<AngularDirection*> extrenal_forces) {
+void Physical::calculate_movement(std::vector<AngularDirection*> & extrenal_forces) {
   if (this->_movible) {
     for (auto* force: extrenal_forces)
       this->_force += (*force) * DRAW_RATE;

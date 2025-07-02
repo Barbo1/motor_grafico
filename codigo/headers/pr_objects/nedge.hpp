@@ -3,18 +3,17 @@
 #include "../concepts/physical.hpp"
 #include "../concepts/texture.hpp"
 
-class NEdge: public Texture, public Physical {
+class NEdge: public Physical, public Texture {
   private:
     std::vector<Direction> _points;
 
-    NEdge ();
-
   public: 
-    NEdge (float);
+    NEdge ();
+    NEdge (std::vector<Direction> & _points);
     NEdge (const NEdge &);
     NEdge (NEdge &&);
     NEdge & operator= (const NEdge &);
     NEdge & operator= (NEdge &&);
 
-    virtual void draw (SDL_Renderer *);
+    void draw (SDL_Renderer *);
 };

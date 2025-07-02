@@ -1,7 +1,6 @@
 #pragma once 
 
 #include <vector>
-#include <cstdint>
 
 #include "./primitives.hpp"
 
@@ -60,5 +59,5 @@ class Physical {
     AngularDirection get_velocity () const;
 
     /* calcule the movement of the object and move it. */
-    void calculate_movement(std::vector<AngularDirection*> external_forces);
+    void calculate_movement(std::vector<AngularDirection*> & external_forces);
 };

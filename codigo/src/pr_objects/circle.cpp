@@ -2,17 +2,18 @@
 
 #include "../../headers/pr_objects/circle.hpp"
 
-#include <SDL2/SDL_render.h>
 #include <cmath>
 #include <utility>
 
+Circle::Circle (): Physical(), Texture(), radio(0) {}
+
 Circle::Circle (
-    SDL_Renderer* render, uint32_t radio, AngularDirection center, SDL_Color color, float density, float elasticity, 
-    float friction, bool movible, bool colidable) 
-      : Physical (center, density, 2 * M_PI * radio, elasticity, friction, movible, colidable), 
-      Texture(circle(render, radio, color)) {
-  this->radio = radio;
-}
+  SDL_Renderer* render, uint32_t radio, AngularDirection center, SDL_Color color, float density, float elasticity, 
+  float friction, bool movible, bool colidable
+) : Physical (center, density, 2 * M_PI * radio, elasticity, friction, movible, colidable), 
+  Texture(circle(render, radio, color)),
+  radio (radio)
+{}
 
 Circle::Circle (const Circle & circle) : Physical (circle), Texture (circle) {
   this->radio = circle.radio;
@@ -47,5 +48,7 @@ uint32_t Circle::get_radio () {
 }
 
 void Circle::draw (SDL_Renderer * render) {
-  this->Texture::draw(render, this->position);
+  if (this->radio != 0) {
+    this->Texture::draw(render, this->position);
+  }
 }

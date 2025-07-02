@@ -1,6 +1,5 @@
 #pragma once
 #include "../../headers/concepts/zstack.hpp"
-#include "../../headers/concepts/texture.hpp"
 
 void draw (SDL_Renderer *) {}
 

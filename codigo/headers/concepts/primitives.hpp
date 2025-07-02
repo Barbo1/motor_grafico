@@ -1,6 +1,6 @@
 #pragma once 
 
-#include <concepts>
+#include <type_traits>
 
 enum Function {
   FT_CONSTANT,
@@ -43,12 +43,12 @@ class Direction {
 
     Direction operator- ();
 
-    template<DirFin R> Direction operator+ (R);
-    template<DirFin R> Direction operator- (R);
+    template<DirFin R> Direction operator+ (const R &);
+    template<DirFin R> Direction operator- (const R &);
     Direction operator* (float);
-    template<DirFin R> float operator* (R);
-    template<DirFin R> void operator+= (R);
-    template<DirFin R> void operator-= (R);
+    template<DirFin R> float operator* (const R &);
+    template<DirFin R> void operator+= (const R &);
+    template<DirFin R> void operator-= (const R &);
     virtual void operator*= (float);
     virtual Direction normalize ();
     virtual float modulo ();

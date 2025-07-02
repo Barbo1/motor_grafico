@@ -7,9 +7,11 @@ all: $(concepts_folder) $(primitives_files)
 	mv texture.o ./compiled/
 	$(CXX) -c ./src/pr_objects/circle.cpp $(CXXFLAGS)
 	mv circle.o ./compiled/
+	$(CXX) -c ./src/pr_objects/square.cpp $(CXXFLAGS)
+	mv square.o ./compiled/
 	$(CXX) -c ./src/concepts/physical.cpp $(CXXFLAGS)
 	mv physical.o ./compiled/
-	$(CXX) ./compiled/* ./headers/pr_objects/circle.hpp ./headers/concepts/physical.hpp ./headers/concepts/texture.hpp ./headers/concepts/primitives.hpp ./pruebas.cpp -o ./fin $(CXXFLAGS)
+	$(CXX) ./compiled/* ./headers/pr_objects/square.hpp ./headers/pr_objects/circle.hpp ./headers/concepts/physical.hpp ./headers/concepts/texture.hpp ./headers/concepts/primitives.hpp ./pruebas.cpp -o ./fin $(CXXFLAGS)
 
 clean: 
 	rm -rf ./compiled/*
