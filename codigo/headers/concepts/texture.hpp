@@ -49,8 +49,10 @@ class Texture {
 
     /* special constructors */
     static Texture square (SDL_Renderer* render, int height, int base, SDL_Color color);
+    static Texture rounded_square (SDL_Renderer* render, int height, int base, int radio, SDL_Color color);
     static Texture triangle (SDL_Renderer* render, Direction point1, Direction point2, Direction point3, SDL_Color color);
     static Texture circle (SDL_Renderer* render, int radio, SDL_Color color);
+    static Texture circunference (SDL_Renderer* render, int radio, int width, SDL_Color color);
     static Texture oval (SDL_Renderer* render, int height, int base, SDL_Color color);
     static Texture polygon (SDL_Renderer* render, std::vector<Direction> points, SDL_Color color);
 

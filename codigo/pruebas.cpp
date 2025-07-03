@@ -1,9 +1,13 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_events.h>
+#include <cstddef>
 #include <iostream>
 #include <stdlib.h>
+#include <cmath>
+#include <array>
 
 #include "headers/concepts/primitives.hpp"
 #include "headers/concepts/texture.hpp"
@@ -56,15 +60,10 @@ int main () {
   fig.set_force(gravity);
   SDL_Event event;
 
-  std::vector<Direction> a = {{147, -116}, {-234, -147}, {-376, -226}, {-254, -362}, {-152, -234}, {12, -414}, {221, -291}};
-  Texture tex = Texture::polygon(render, a, {255,255,0,255});
-  std::vector<Direction> b = {{82, 169}, {18, 23}, {183, 40}, {278, 182}, {144, 112}};
-  Texture tex1 = Texture::polygon(render, b, {255,0,255,255});
-
+  std::size_t tope = 70;
+  std::size_t min = 5;
+  std::array<std::size_t, 3> arr = {tope, tope/2 + min, min};
   int mid = 300;
-  float angle = 0;
-  SDL_Point center = SDL_Point {0, 0};
-  SDL_Rect dstRect = SDL_Rect {40, 40, 100, 100};
 
   while (cont) {
     if (SDL_PollEvent(&event)) {
@@ -85,8 +84,23 @@ int main () {
 
     SDL_RenderClear(render);
 
-    tex.draw(render, {0,0,0});
-    tex1.draw(render, {0,0,0});
+    for (auto& a: arr) {
+      a++;
+      if (a >= tope)
+        a = min;
+      std::size_t b = a;
+      float cosi = 1 - static_cast<float>(a) / tope;
+      Texture::circunference (render, b, std::roundl(0.3 * std::log2(b)), {
+        .r = 255,
+        .g = 255,
+        .b = 255,
+        .a = static_cast<Uint8>(cosi * 255)
+      }).draw(render, AngularDirection {
+        100 - (float)b, 
+        100 - (float)b, 
+        0
+      });
+    }
 
     if (fig.get_position().y >= (float)mid && step) {
       fig.set_force(-gravity);
@@ -99,13 +113,6 @@ int main () {
 
     fig.calculate_movement(fig_vec);
     fig.draw(render);
-
-    /*
-    float r = 3;
-    Texture cir = Texture::circle(render, r, {255, 255, 255, 255});
-    for (auto& v: a) {
-      cir.draw(render, {v.x + 376-r/2, v.y + 414-r/2, 0});
-    }*/
 
     SDL_RenderPresent (render);
     SDL_Delay(16);

@@ -6,11 +6,33 @@
 #include <cstring>
 #include <utility>
 #include <array>
+#include <iostream>
+
+void circle_bound_maker (int radio, int* bounds, int offset) {
+  int* biter = bounds;
+  const float radio_2 = radio * radio;
+
+  float y = radio-1;
+  int x = std::sqrt(radio + y);
+  for (; y > 0; y-=1, x = std::sqrt(radio_2 - y*y)) {
+    *(biter++) = radio-x;
+    *(biter++) = radio+x;
+  }
+  for (int* rbiter = biter-1; rbiter >= bounds; rbiter-=2) {
+    *(biter++) = *(rbiter-1);
+    *(biter++) = *rbiter;
+  }
+  biter = bounds;
+  for (int i = 0, sum = offset + 2 * (radio + offset) * offset; i < 2 * radio - 2; i++, sum += 2 * (radio + offset)) {
+    *(biter++) += sum;
+    *(biter++) += sum;
+  }
+}
 
 Texture::Texture(SDL_Renderer* render, int height, int width, SDL_Point & center, Uint32* pixels) {
   SDL_Surface* sur = SDL_CreateRGBSurfaceFrom (
     pixels, width, height, 32, width * 4, 
-    0x000000FF,0x0000FF00,0x00FF0000,0xFF000000
+    0xFF000000,0x00FF0000,0x0000FF00,0x000000FF
   );
   this->texture = SDL_CreateTextureFromSurface(render, sur);
   SDL_FreeSurface(sur);
@@ -127,6 +149,10 @@ Texture Texture::square (SDL_Renderer* render, int height, int base, SDL_Color c
   Texture ret = Texture(render, height, base, center, pixels);
   delete [] pixels;
   return ret;
+}
+
+Texture rounded_square (SDL_Renderer* render, int height, int base, int radio, SDL_Color color) {
+  return Texture();
 }
 
 Texture Texture::triangle (SDL_Renderer* render, Direction point1, Direction point2, Direction point3, SDL_Color color) {
@@ -285,30 +311,44 @@ Texture Texture::polygon (SDL_Renderer* render, std::vector<Direction> points, S
 
 Texture Texture::circle (SDL_Renderer* render, int radio, SDL_Color color) {
   int* bounds = new int[4*radio - 4];
-  int* biter = bounds;
-  const float radio_2 = radio * radio;
-
-  float y = radio-1;
-  int x = std::sqrt(radio + y);
-  int level = 0;
-  for (; y > 0; y-=1, x = std::sqrt(radio_2 - y*y)) {
-    *(biter++) = radio-x;
-    *(biter++) = radio+x;
-    level++;
-  }
-  for (int* rbiter = biter-1; rbiter >= bounds; rbiter-=2) {
-    *(biter++) = *(rbiter-1);
-    *(biter++) = *rbiter;
-    level++;
-  }
-  biter = bounds;
-  for (int i = 0, sum = 0; i < level; i++, sum += 2*radio) {
-    *(biter++) += sum;
-    *(biter++) += sum;
-  }
+  circle_bound_maker (radio, bounds, 0);
 
   Texture ret = bounder(render, bounds, 2*radio, 2*radio, color, {radio, radio});
   delete [] bounds;
+  return ret;
+}
+   
+Texture Texture::circunference (SDL_Renderer* render, int radio, int width, SDL_Color color) {
+  std::size_t r1 = radio - width;
+  std::size_t b1 = 4*radio - 4;
+  std::size_t b2 = 4*r1 - 4;
+  int* bounds1 = new int[b1];
+  int* bounds2 = new int[b2];
+  int* bounds3 = new int[b1 + b2];
+  circle_bound_maker (radio, bounds1, 0);
+  circle_bound_maker (r1, bounds2, width);
+
+  std::size_t i = 0, j = 0, k = 0;
+  while (i < b1 && j < b2) {
+    if (bounds1[i] < bounds2[j]) {
+      bounds3[k] = bounds1[i++];
+    } else if (bounds2[j] < bounds1[i]) {
+      bounds3[k] = bounds2[j++];
+    } else {
+      bounds3[k++] = bounds1[i++];
+      bounds3[k] = bounds2[j++];
+    }
+    k++;
+  }
+  while (i < b1)
+    bounds3[k++] = bounds1[i++];
+  delete [] bounds1;
+  delete [] bounds2;
+
+  bounds3[k] = 4*radio*radio;
+
+  Texture ret = bounder(render, bounds3, 2*radio, 2*radio, color, {radio, radio});
+  delete [] bounds3;
   return ret;
 }
 
