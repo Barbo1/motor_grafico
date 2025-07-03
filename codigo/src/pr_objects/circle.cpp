@@ -9,8 +9,8 @@ Circle::Circle (): Physical(), Texture(), radio(0) {}
 
 Circle::Circle (
   SDL_Renderer* render, uint32_t radio, AngularDirection center, SDL_Color color, float density, float elasticity, 
-  float friction, bool movible, bool colidable
-) : Physical (center, density, 2 * M_PI * radio, elasticity, friction, movible, colidable), 
+  float f_s, float f_k, bool movible, bool colidable
+) : Physical (center, density, 2 * M_PI * radio, elasticity, f_s, f_k, movible, colidable), 
   Texture(circle(render, radio, color)),
   radio (radio)
 {}

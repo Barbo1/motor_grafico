@@ -7,25 +7,27 @@ Physical::Physical () {
   this->_density = 0;
   this->_area = 0;
   this->_elasticity = 0;
-  this->_friction = 0;
+  this->_f_s = 0;
+  this->_f_k = 0;
   this->_movible = true;
   this->_colidalble = false;
   this->_index = 0;
-  this->_gcenter = Direction ({0, 0});
+  this->_gcenter = {0, 0};
   this->_force = {0, 0, 0};
   this->_velocity = {0, 0, 0};
 }
 
 Physical::Physical (
     AngularDirection position, float density, float area, 
-    float elasticity, float friction, bool movible, 
+    float elasticity, float f_s, float f_k, bool movible, 
     bool colidable
 ) {
   this->position = position;
   this->_density = density;
   this->_area = area;
   this->_elasticity = elasticity;
-  this->_friction = friction;
+  this->_f_s = f_s;
+  this->_f_k = f_k;
   this->_movible = movible;
   this->_colidalble = true;
   this->_index = 0;
@@ -69,7 +71,7 @@ AngularDirection Physical::get_position () const {
 void Physical::calculate_movement(std::vector<AngularDirection*> & extrenal_forces) {
   if (this->_movible) {
     for (auto* force: extrenal_forces)
-      this->_force += (*force) * DRAW_RATE;
+      this->_force += (*force) * (this->_density * this->_area * DRAW_RATE);
     if (this->_movible) {
       this->_velocity += this->_force;
       this->position += this->_velocity * DRAW_RATE;

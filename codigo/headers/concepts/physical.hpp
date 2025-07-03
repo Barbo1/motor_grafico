@@ -35,15 +35,16 @@ class Physical {
     float _area; /* px^2 */
     float _density; /* kg/px^2 */
     float _elasticity; /* Near 0 means rigid, near 0 marks complete elastic. */
-    float _friction;
+    float _f_s; /* static fritction. */
+    float _f_k; /* kinetic fritction. */
 
     AngularDirection position;
 
   public:
     Physical (
-      AngularDirection position, float density, float area, 
-      float elasticity, float friction, bool movible, 
-      bool colidable
+        AngularDirection position, float density, float area, 
+        float elasticity, float f_s, float f_k, bool movible, 
+        bool colidable
     );
     Physical ();
 

@@ -11,8 +11,8 @@ Square::Square () : Physical (), Texture() {
 
 Square::Square(
   SDL_Renderer* render, uint32_t height, uint32_t width, AngularDirection center, SDL_Color color, 
-  float density, float elasticity, float friction, bool movible, bool colidable
-): Physical (center, density, height * width, elasticity, friction, movible, colidable), 
+  float density, float elasticity, float f_s, float f_k, bool movible, bool colidable
+): Physical (center, density, height * width, elasticity, f_s, f_k, movible, colidable), 
 Texture(square(render, height, width, color)) {
   this->position = center;
   this->height = height;

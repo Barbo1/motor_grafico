@@ -3,16 +3,12 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <ios>
+#include <cstring>
 #include <utility>
 #include <array>
-#include <bit>
-#include <cstring>
-#include <algorithm>
-#include <iostream>
 
 Texture::Texture(SDL_Renderer* render, int height, int width, SDL_Point & center, Uint32* pixels) {
-  SDL_Surface* sur = SDL_CreateRGBSurfaceFrom(
+  SDL_Surface* sur = SDL_CreateRGBSurfaceFrom (
     pixels, width, height, 32, width * 4, 
     0x000000FF,0x0000FF00,0x00FF0000,0xFF000000
   );
@@ -120,10 +116,8 @@ Texture Texture::square (SDL_Renderer* render, int height, int base, SDL_Color c
   Uint32 col = SDL_MapRGBA(format, color.r, color.g, color.b, color.a);
   SDL_FreeFormat(format);
 
-  for (int y = 0; y < height; y++) {
-    for (int pos = y*base; pos < (y+1)*base; pos++) {
-      pixels[pos] = col;
-    }
+  for (int pos = 0; pos < height * base; pos++) {
+    pixels[pos] = col;
   }
   
   SDL_Point center;
@@ -155,10 +149,10 @@ Texture Texture::triangle (SDL_Renderer* render, Direction point1, Direction poi
 
   max.y = point3.y;
 
-  max = max - min;
-  point1 = point1 - min;
-  point2 = point2 - min;
-  point3 = point3 - min;
+  max -= min;
+  point1 -= min;
+  point2 -= min;
+  point3 -= min;
 
   SDL_Point center;
   Direction pre_center = (point1 + point2 + point3) * (1.f/3.f);
@@ -244,7 +238,9 @@ Texture Texture::polygon (SDL_Renderer* render, std::vector<Direction> points, S
       q = 1/ (point2.y - point1.y);
       p = -point1.y * q;
     }
-    return std::pair<std::array<double, 4>, bool> {{mi, ci, q, p}, (point1.y - point0.y) * (point1.y - point2.y) > 0};
+    return std::pair<std::array<double, 4>, bool> {
+      {mi, ci - mi, q, p - q}, (point1.y - point0.y) * (point1.y - point2.y) < 0
+    };
   };
 
   std::vector<std::pair<std::array<double, 4>, bool>> coef = std::vector<std::pair<std::array<double, 4>, bool>>();
@@ -258,29 +254,27 @@ Texture Texture::polygon (SDL_Renderer* render, std::vector<Direction> points, S
   /* Calculate the bound to make the texture. */
   int * bounds = new int[height * points.size()];
   int * biter = bounds;
-  std::vector<int32_t> intersections;
-  intersections.reserve (points.size());
+  int * piter = bounds;
+  int * liter;
 
-  for (int yi = 0; yi < height; yi++) {
-    intersections.clear();
+  for (uint32_t level = 0; level < width * height; level += width) {
     for (auto & mc: coef) {
-      float q = mc.first[2] * yi + mc.first[3];
+      double& q = mc.first[3]; q += mc.first[2];
+      double& elem = mc.first[1]; elem += mc.first[0];
       if (-0.00001 < q && q < 1.00001) {
-        int32_t inter = static_cast<int32_t>(std::round(mc.first[0] * yi + mc.first[1]));
-        std::size_t ind = 0;
-        for (; ind < intersections.size(); ind++)
-          if (intersections[ind] == inter)
-            break;
-        if (ind == intersections.size() || mc.second)
-          intersections.push_back(inter);
+        int32_t inter = std::lround(elem) + level;
+        if (mc.second) {
+          liter = piter;
+          while (liter < biter && *liter != inter) { liter++; }
+          if (liter < biter) continue; 
+        }
+        *(biter++) = inter;
       }
     }
-    for (std::size_t i = 0; i < intersections.size(); i++)
-      for (std::size_t j = i + 1; j < intersections.size(); j++)
-        if (intersections[j] < intersections[i])
-          std::swap (intersections[j], intersections[i]);
-    for (auto& inter: intersections)
-      *(biter++) = inter + yi * width;
+    for (; piter < biter; piter++)
+      for (liter = piter + 1; liter < biter; liter++)
+        if (*liter < *piter)
+          std::swap (*piter, *liter); 
   }
   *biter = height * width;
   
