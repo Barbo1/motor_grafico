@@ -75,4 +75,3 @@ class AngularDirection: public Direction {
     template<DirFin R> void operator+= (R);
     template<DirFin R> void operator-= (R);
 };
-
