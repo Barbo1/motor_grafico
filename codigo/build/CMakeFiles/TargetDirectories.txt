@@ -1,0 +1,16 @@
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/CMakeFiles/edit_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/CMakeFiles/rebuild_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/CMakeFiles/objsrc.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/CMakeFiles/edit_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/CMakeFiles/rebuild_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/concepts/CMakeFiles/objsrc_concepts.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/concepts/CMakeFiles/edit_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/concepts/CMakeFiles/rebuild_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/pr_objects/CMakeFiles/objsrc_probjects.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/pr_objects/CMakeFiles/edit_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/pr_objects/CMakeFiles/rebuild_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/sp_objects/CMakeFiles/edit_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/src/sp_objects/CMakeFiles/rebuild_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/prueba/CMakeFiles/fin.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/prueba/CMakeFiles/edit_cache.dir
+/home/barbo/Desktop/proyectos/motor_grafico/codigo/build/prueba/CMakeFiles/rebuild_cache.dir
