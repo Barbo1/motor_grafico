@@ -1,13 +1,13 @@
 #include "../../../../headers/concepts/texture.hpp"
 #include <cstdint>
 
-Texture Texture::triangle (SDL_Renderer* render, Direction point1, Direction point2, Direction point3, SDL_Color color) {
+Texture Texture::triangle (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
   if (point2.y < point1.y) std::swap (point2, point1);
   if (point3.y < point2.y) std::swap (point3, point2);
   if (point2.y < point1.y) std::swap (point2, point1);
 
-  Direction max = point1;
-  Direction min = point1;
+  Dir2 max = point1;
+  Dir2 min = point1;
   if (max.x < point2.x) max.x = point2.x;
   else min.x = point2.x;
   if (max.x < point3.x) max.x = point3.x;
@@ -21,7 +21,7 @@ Texture Texture::triangle (SDL_Renderer* render, Direction point1, Direction poi
   point3 -= min;
 
   SDL_Point center;
-  Direction pre_center = (point1 + point2 + point3) * (1.f/3.f);
+  Dir2 pre_center = (point1 + point2 + point3) * (1.f/3.f);
   center.x = pre_center.x;
   center.y = pre_center.y;
 

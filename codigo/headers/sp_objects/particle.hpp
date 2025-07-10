@@ -21,9 +21,9 @@ class ParticleSource : private ZStackable {
   private:
     Position position;
     std::vector<SDL_Color> colors;
-    std::pair<Direction, Direction> anglevectors;
-    AngularDirection force; 
-    AngularDirection velocity;
+    std::pair<Dir2, Dir2> anglevectors;
+    AngDir2 force; 
+    AngDir2 velocity;
     float spawn_ratio;  /* Particles per seconds. */
     std::vector<Particle> _particles;
 

@@ -12,7 +12,7 @@ class Circle: public Physical, public Texture {
   public: 
     Circle ();
     Circle (
-      SDL_Renderer* render, uint32_t radio, AngularDirection center, SDL_Color color, float density = 0, 
+      SDL_Renderer* render, uint32_t radio, AngDir2 center, SDL_Color color, float density = 0, 
       float elasticity = 0, float f_s = 0, float f_k = 0, bool movible = true, bool colidable = true
     );
     Circle (const Circle &);

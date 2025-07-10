@@ -1,5 +1,5 @@
 #include "../../../../headers/concepts/physical.hpp"
 
-AngularDirection Physical::get_velocity () const {
+AngDir2 Physical::get_velocity () const {
   return this->_velocity;
 }

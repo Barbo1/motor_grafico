@@ -1,5 +1,5 @@
 #include "../../../../headers/concepts/physical.hpp"
 
-void Physical::add_force (const AngularDirection & force) {
+void Physical::add_force (const AngDir2 & force) {
   this->_force = force;
 }

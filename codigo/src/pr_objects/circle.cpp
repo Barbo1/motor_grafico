@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../../headers/pr_objects/circle.hpp"
 
 #include <cmath>
@@ -8,7 +6,7 @@
 Circle::Circle (): Physical(), Texture(), radio(0) {}
 
 Circle::Circle (
-  SDL_Renderer* render, uint32_t radio, AngularDirection center, SDL_Color color, float density, float elasticity, 
+  SDL_Renderer* render, uint32_t radio, AngDir2 center, SDL_Color color, float density, float elasticity, 
   float f_s, float f_k, bool movible, bool colidable
 ) : Physical (center, density, 2 * M_PI * radio, elasticity, f_s, f_k, movible, colidable), 
   Texture(circle(render, radio, color)),

@@ -13,10 +13,10 @@ class Square: public Physical, public Texture {
 
   public: 
     Square(
-      SDL_Renderer*, uint32_t, uint32_t, AngularDirection, SDL_Color, 
+      SDL_Renderer*, uint32_t, uint32_t, AngDir2, SDL_Color, 
       float = 0, float = 0, float = 0, float = 0, bool = true, bool = true
     );
-    Square (uint32_t, uint32_t, Direction, SDL_Color);
+    Square (uint32_t, uint32_t, Dir2, SDL_Color);
     Square (const Square &);
     Square (Square &&);
     Square & operator= (const Square &);

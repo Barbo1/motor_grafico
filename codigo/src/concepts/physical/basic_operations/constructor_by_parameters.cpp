@@ -1,7 +1,7 @@
 #include "../../../../headers/concepts/physical.hpp"
 
 Physical::Physical (
-    AngularDirection position, float density, float area, float elasticity, 
+    AngDir2 position, float density, float area, float elasticity, 
     float f_s, float f_k, bool movible, bool colidable
 ) {
   this->position = position;

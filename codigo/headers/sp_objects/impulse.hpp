@@ -9,7 +9,7 @@
 class Impulse {
   private:
     Position position;
-    Direction force;
+    Dir2 force;
     float radius;
     Function intensity_distriution;
 

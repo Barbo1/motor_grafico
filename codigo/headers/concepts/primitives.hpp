@@ -11,7 +11,7 @@ enum Function {
   FT_SINUSOIDAL,
 };
 
-enum AngularType {
+enum AngType {
   AT_CONSTANT,
   AT_TIME,
   AT_POSITION,
@@ -22,55 +22,90 @@ enum AngularType {
 /* Low level data representation. */
 /* ------------------------------ */
 
-class Direction;
-class AngularDirection;
+class Dir2;
+class Dir3;
+class AngDir2;
 
 template<class T>
-concept DirFin = std::is_same_v<T, AngularDirection> || std::is_same_v<T, Direction>;
+concept DirFin = std::is_same_v<T, AngDir2> || std::is_same_v<T, Dir2>;
 
-class Direction {
+class Dir2 {
   public:
     float x;
     float y;
 
-    Direction ();
-    Direction (float, float);
-    Direction (const Direction &);
-    Direction (Direction &&);
-    Direction & operator= (const Direction &);
-    Direction & operator= (Direction &&);
-    bool operator== (const Direction &);
+    Dir2 ();
+    Dir2 (Dir3);
+    Dir2 (float, float);
+    Dir2 (const Dir2 &);
+    Dir2 (Dir2 &&);
+    Dir2 & operator= (const Dir2 &);
+    Dir2 & operator= (Dir2 &&);
+    bool operator== (const Dir2 &);
+    bool operator!= (const Dir2 &);
 
-    Direction operator- ();
+    Dir2 operator- ();
 
-    template<DirFin R> Direction operator+ (const R &);
-    template<DirFin R> Direction operator- (const R &);
-    Direction operator* (float);
+    template<DirFin R> Dir2 operator+ (const R &);
+    template<DirFin R> Dir2 operator- (const R &);
+    Dir2 operator* (float);
     template<DirFin R> float operator* (const R &);
     template<DirFin R> void operator+= (const R &);
     template<DirFin R> void operator-= (const R &);
     virtual void operator*= (float);
-    virtual Direction normalize ();
+    virtual Dir2 normalize ();
     virtual float modulo ();
 };
 
-class AngularDirection: public Direction {
+class Dir3 {
+  public:
+    float x;
+    float y;
+    float z;
+
+    Dir3 ();
+    Dir3 (float, float, float);
+    Dir3 (const Dir3 &);
+    Dir3 (Dir3 &&);
+    Dir3 & operator= (const Dir3 &);
+    Dir3 & operator= (Dir3 &&);
+    bool operator== (const Dir3 &);
+    bool operator!= (const Dir3 &);
+
+    Dir3 operator- ();
+
+    Dir3 operator+ (const Dir3 &);
+    Dir3 operator- (const Dir3 &);
+    Dir3 operator* (float);
+    float operator* (const Dir3 &);
+    void operator+= (const Dir3 &);
+    void operator-= (const Dir3 &);
+    void operator*= (float);
+    Dir3 normalize ();
+    float modulo ();
+
+    void rotate_x (float angle);
+    void rotate_y (float angle);
+    void rotate_z (float angle);
+};
+
+class AngDir2: public Dir2 {
   public:
     float a;
     
-    AngularDirection ();
-    AngularDirection (float, float, float);
-    AngularDirection (const AngularDirection &);
-    AngularDirection (AngularDirection &&);
-    AngularDirection & operator= (const AngularDirection &);
-    AngularDirection & operator= (AngularDirection &&);
-    bool operator== (const AngularDirection &);
+    AngDir2 ();
+    AngDir2 (float, float, float);
+    AngDir2 (const AngDir2 &);
+    AngDir2 (AngDir2 &&);
+    AngDir2 & operator= (const AngDir2 &);
+    AngDir2 & operator= (AngDir2 &&);
+    bool operator== (const AngDir2 &);
 
-    AngularDirection operator- ();
+    AngDir2 operator- ();
 
-    template<DirFin R> AngularDirection operator+ (R);
-    template<DirFin R> AngularDirection operator- (R);
-    AngularDirection operator* (float f);
+    template<DirFin R> AngDir2 operator+ (R);
+    template<DirFin R> AngDir2 operator- (R);
+    AngDir2 operator* (float f);
     template<DirFin R> float operator* (R);
     template<DirFin R> void operator+= (R);
     template<DirFin R> void operator-= (R);

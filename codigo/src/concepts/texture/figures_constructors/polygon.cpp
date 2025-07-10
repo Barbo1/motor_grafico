@@ -1,11 +1,11 @@
 #include "../../../../headers/concepts/texture.hpp"
     
-Texture Texture::polygon (SDL_Renderer* render, std::vector<Direction> points, SDL_Color color) {
+Texture Texture::polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color) {
   std::size_t many_points = points.size();
   if (many_points > 64) return Texture();
     
   /* Searching maximum and minimum coordenates. */
-  Direction max(points[0]), min(points[0]);
+  Dir2 max(points[0]), min(points[0]);
   for (auto& point: points) {
     if (max.x < point.x) max.x = point.x;
     if (min.x > point.x) min.x = point.x;
@@ -16,7 +16,7 @@ Texture Texture::polygon (SDL_Renderer* render, std::vector<Direction> points, S
   /* Calculating texture parameter. */
   int height = max.y - min.y;
   int width = max.x - min.x;
-  Direction center;
+  Dir2 center;
   for (auto& point: points) {
     point -= min;
     center += point;

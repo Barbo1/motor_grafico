@@ -5,11 +5,11 @@
 
 class NEdge: public Physical, public Texture {
   private:
-    std::vector<Direction> _points;
+    std::vector<Dir2> _points;
 
   public: 
     NEdge ();
-    NEdge (std::vector<Direction> & _points);
+    NEdge (std::vector<Dir2> & _points);
     NEdge (const NEdge &);
     NEdge (NEdge &&);
     NEdge & operator= (const NEdge &);

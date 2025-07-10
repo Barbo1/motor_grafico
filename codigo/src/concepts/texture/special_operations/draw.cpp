@@ -1,6 +1,6 @@
 #include "../../../../headers/concepts/texture.hpp"
 
-void Texture::draw (SDL_Renderer* render, const AngularDirection & position) const {
+void Texture::draw (SDL_Renderer* render, const AngDir2 & position) const {
   SDL_Rect dst;
   dst.x = static_cast<int>(position.x);
   dst.y = static_cast<int>(position.y); 

@@ -4,13 +4,13 @@
 #include <utility>
 
 Square::Square () : Physical (), Texture() {
-  this->position = AngularDirection {0, 0, 0};
+  this->position = AngDir2 {0, 0, 0};
   this->height = 0;
   this->width = 0;
 }
 
-Square::Square(
-  SDL_Renderer* render, uint32_t height, uint32_t width, AngularDirection center, SDL_Color color, 
+Square::Square (
+  SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, SDL_Color color, 
   float density, float elasticity, float f_s, float f_k, bool movible, bool colidable
 ): Physical (center, density, height * width, elasticity, f_s, f_k, movible, colidable), 
 Texture(square(render, height, width, color)) {

@@ -12,6 +12,7 @@
 #include "../headers/concepts/primitives.hpp"
 #include "../headers/concepts/texture.hpp"
 #include "../headers/pr_objects/square.hpp"
+#include "../headers/pr_objects/fig3D.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
@@ -52,18 +53,40 @@ int main () {
 
   bool step = true;
   bool cont = true;
-  AngularDirection gravity = AngularDirection (0, 2, 0);
+  AngDir2 gravity = AngDir2 (0, 2, 0);
 
-  std::vector<AngularDirection*> fig_vec = std::vector<AngularDirection*>();
+  std::vector<AngDir2*> fig_vec = std::vector<AngDir2*>();
   Square fig (render, 15, 50, {300, 100, 0}, SDL_Color {255, 255, 255, 0});
   fig.set_velocity({0, -1, 2});
   fig.set_force(gravity);
   SDL_Event event;
 
-  std::vector<Direction> points = std::vector<Direction>(
-    {{70, 274}, {329, 282}, {383, 149}, {247, 204}, {212, 39}, {62, 103}}
-  );
-  Texture tex = Texture::polygon (render, points, {255, 255, 255, 255});
+  Dir3 B = {-50, 50, 50};
+  Dir3 F = {-50, 50, -50};
+  Dir3 G = {-50, -50, -50};
+  Dir3 C = {-50, -50, 50};
+  Dir3 A = {50, 50, 50};
+  Dir3 E = {50, 50, -50};
+  Dir3 H = {50, -50, -50};
+  Dir3 D = {50, -50, 50};
+  std::vector<std::vector<Dir3>> points = {
+    {A, B, C, D},
+    {E, F, G, H},
+    {A, B, F, E},
+    {D, C, G, H},
+    {B, F, G, C},
+    {A, E, H, D}
+  };
+  fig3D cube = fig3D (points);
+  cube.set_color (std::vector<SDL_Color>{
+    {.r=255, .g=0, .b=0, .a=255},
+    {.r=0, .g=255, .b=0, .a=255},
+    {.r=0,  .g=0, .b=255, .a=255},
+    {.r=255,  .g=255, .b=0, .a=255},
+    {.r=0,  .g=255, .b=255, .a=255},
+    {.r=255,  .g=0, .b=255, .a=255},
+  });
+  cube.set_position({200, 200, 200});
 
   std::size_t tope = 70;
   std::size_t min = 5;
@@ -87,6 +110,7 @@ int main () {
       }
     }
 
+    SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
     SDL_RenderClear(render);
 
     for (auto& a: arr) {
@@ -100,7 +124,7 @@ int main () {
         .g = 255,
         .b = 255,
         .a = static_cast<Uint8>(cosi * 255)
-      }).draw(render, AngularDirection {
+      }).draw(render, AngDir2 {
         100 - (float)b, 
         100 - (float)b, 
         0
@@ -116,7 +140,8 @@ int main () {
       step = true;
     }
 
-    tex.draw (render, {100, 100, 0});
+    cube.rotate({0.02, 0.01, 0.013});
+    cube.draw(render);
 
     fig.calculate_movement(fig_vec);
     fig.draw(render);

@@ -1,5 +1,5 @@
 #include "../../../../headers/concepts/physical.hpp"
     
-AngularDirection Physical::get_position () const {
+AngDir2 Physical::get_position () const {
   return this->position;
 }

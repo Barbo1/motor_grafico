@@ -38,19 +38,19 @@ class ZStackable {
 class Window {
   private:
     typedef struct {
-      std::vector<AngularDirection> sld_forces;
+      std::vector<AngDir2> sld_forces;
       std::vector<ZStackable*> sld_objects;
     } WindowElem;
 
     std::vector<WindowElem> _slides;
     std::vector<uint32_t> _indexes;
     uint64_t _time;  /* increased by one each time a frame is calculated. */
-    std::vector<AngularDirection*> _external_forces;
+    std::vector<AngDir2*> _external_forces;
 
   public:
     Window (SDL_Color);
 
-    void add_one_frc (const uint8_t &, AngularDirection);
+    void add_one_frc (const uint8_t &, AngDir2);
     void app_all_frc ();
     void del_sld_frc (const uint8_t &);
     void del_all_frc ();
