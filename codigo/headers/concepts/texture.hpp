@@ -3,9 +3,8 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
-#include <cstdint>
 #include <vector>
-#include <array>
+#include <string>
 
 #include "./primitives.hpp"
 
@@ -35,7 +34,7 @@ void print_points (
 void print_polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
 
 class Texture {
-  private: 
+private: 
     int* use_count;
     SDL_Texture* texture;
     SDL_Point center;
@@ -66,6 +65,35 @@ class Texture {
     static Texture circunference (SDL_Renderer* render, int radio, int width, SDL_Color color);
     static Texture oval (SDL_Renderer* render, int height, int base, SDL_Color color);
     static Texture polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
+    static Texture image (SDL_Renderer* render, std::string path);
 
     ~Texture();
+};
+
+/*
+ tengo que refactorizar Texture y cambiarlo por lo siguiente:
+*/
+
+enum VisualType {
+  VT_TEXTURE,
+  VT_3DFIG,
+  VT_CONTIGUOUS,
+};
+
+/* Textura. */
+template <VisualType T>
+class Visualizer {
+  
+};
+
+/* Conjunto de puntos. */
+template <>
+class Visualizer<VT_CONTIGUOUS> {
+  
+};
+
+/* Figuras tridimensionales. */
+template <>
+class Visualizer<VT_3DFIG> {
+  
 };
