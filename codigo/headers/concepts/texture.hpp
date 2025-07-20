@@ -34,7 +34,7 @@ void print_points (
 void print_polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
 
 class Texture {
-private: 
+  private: 
     int* use_count;
     SDL_Texture* texture;
     SDL_Point center;
@@ -68,7 +68,15 @@ private:
     static Texture image (SDL_Renderer* render, std::string path);
 
     ~Texture();
+
+    friend Texture chargePNG (SDL_Renderer* render, const std::string& path);
+    friend Texture chargeJPEG (SDL_Renderer* render, const std::string& path);
+    friend Texture chargeBMP (SDL_Renderer* render, const std::string& path);
 };
+
+Texture chargePNG (SDL_Renderer* render, const std::string& path);
+Texture chargeJPEG (SDL_Renderer* render, const std::string& path);
+Texture chargeBMP (SDL_Renderer* render, const std::string& path);
 
 /*
  tengo que refactorizar Texture y cambiarlo por lo siguiente:
@@ -97,3 +105,5 @@ template <>
 class Visualizer<VT_3DFIG> {
   
 };
+
+#include <string>

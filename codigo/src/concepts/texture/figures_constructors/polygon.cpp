@@ -1,4 +1,5 @@
 #include "../../../../headers/concepts/texture.hpp"
+#include <array>
     
 Texture Texture::polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color) {
   std::size_t many_points = points.size();

@@ -8,6 +8,8 @@
 #include <array>
 #include <vector>
 
+/* Arrays of precalculated lenghts and extra bits needed to compute the compressed content. 
+ * */
 static std::array<uint16_t, 29> lenght_code_lenghts = {
   3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258
 };
@@ -21,6 +23,8 @@ static std::array<uint16_t, 30> distance_code_extras = {
   0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13
 };
 
+/* Function that takes the length code, and use it to read and return the lenght obtained. 
+ * */
 uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
   uint16_t extra, count_extra;
   lit_val -= 257;
@@ -38,6 +42,8 @@ uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
   return extra + lenght_code_lenghts[lit_val];
 }
 
+/* Function that takes the distance code, and use it to read and return the distance obtained. 
+ * */
 uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
   uint16_t extra, count_extra;
   if (distc > 29)
@@ -52,16 +58,18 @@ uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
   return extra + distance_code_lenghts[distc];
 }
 
+/* Inflate algorithm, following the specification of RFC-1951. */
 bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
   uint64_t pos = 16;
+ 
+  /* CMF and FLG comparation. */
   uint16_t cmf_flg = datastream[0] << 8 | datastream[1];
-
-  // cmp_flg % 31 == ((cmf_flg & 0x001F) + ((cmf_flg & 0xFFE0) >> 5))
   if ((cmf_flg & 0x0F00) != 0x0800 || (cmf_flg % 31) != 0) {
     std::cout << "zilb error: cmf or flg error found." << std::endl;
     return false;
   }
 
+  /* windos size comparation. */
   int window_size = cmf_flg & 0x00FF;
   window_size = (window_size & 0x000F) << 4 || (window_size & 0x00F0) >> 4;
   window_size += 8;
@@ -71,23 +79,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
   }
   if ((cmf_flg & 0x0020)) pos += 32;
 
-  /*
-  int data_size = datastream.size() - 4;
-  uint32_t s1 = 1, s2 = 0;
-  for (int j = pos >> 3; j < data_size; j++) {
-    s1 = (s1 + datastream[j]) % 65521;
-    s2 = (s2 + s1) % 65521;
-  }
-  
-  uint32_t adler = 
-    datastream [data_size] << 24 | datastream [data_size + 1] << 16 | 
-    datastream [data_size + 2] << 8 | datastream [data_size + 3];
-  if ((s2 << 16) + s1 != adler) {
-    std::cout << "zilb error: adler32 checksum missmatch." << std::endl;
-    return false;
-  }
-  */
-
+  /* begining of the iterations. */
   bool bfinal; 
   uint64_t dist, len;
   uint64_t lit_val, hlit, hdist, hclen, byt;
@@ -99,7 +91,6 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
 
       /* non-compressed block. */
       case 0:
-        std::cout << 0 << std::endl;
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
         lit_val = access_bit (&datastream[0], pos, 16);
         pos += 16;
@@ -110,6 +101,8 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
       /* compressed block with fixed huffman. */
       case 1:
         while (true) {
+          /* Reading fixed huffman tree entries.
+           * */
           byt = access_bit<false> (&datastream[0], pos, 6);
           if (0b001100 <= byt && byt <= 0b101111) {
             byt = byt << 2 | access_bit<false> (&datastream[0], pos, 2);
@@ -128,6 +121,8 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
             return false;
           }
 
+          /* Filtering the literal/length obtained.
+           * */
           if (lit_val < 256) output.push_back (lit_val);
           else if (lit_val == 256) break;
           else {
@@ -158,6 +153,8 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
           lenghts.push_back (access_bit (&datastream[0], pos, 3));
         lenghts.insert (lenghts.end (), 19 - hclen, 0);
 
+        /* Construction of the length code huffman tree. 
+         * */
         bool error;
         HuffmanTree huffman_1 (lenghts, 1, &error);
         if (error) {
@@ -166,6 +163,8 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         }
         HuffmanTree::iterator it1 (huffman_1);
 
+        /* Reading distances from the array. 
+         * */
         lenghts.clear ();
         lenghts.reserve(hlit + hdist);
         while (lenghts.size () < hlit + hdist) {
@@ -191,22 +190,27 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
           }
         }
 
+        /* Construction of the literal/lenghts huffman tree. 
+         * */
         HuffmanTree huffman_2 (
           std::vector<uint8_t> (lenghts.begin(), lenghts.begin() + hlit),
-          2,
+          0,
           &error
         );
         if (error) {
-          std::cout << "error creating huffman: codes overlapse." << std::endl;
+          std::cout << "error creating huffman: codes overlapse(1)." << std::endl;
           return false;
         }
+        
+        /* Construction of the distance huffman tree. 
+         * */
         HuffmanTree huffman_3 (
           std::vector<uint8_t> (lenghts.begin() + hlit, lenghts.begin () + hlit + hdist),
-          2,
+          0,
           &error
         );
         if (error) {
-          std::cout << "error creating huffman: codes overlapse." << std::endl;
+          std::cout << "error creating huffman: codes overlapse(2)." << std::endl;
           return false;
         }
 
@@ -258,5 +262,21 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
     /* descomprimo. */
   } while (!bfinal);
  
+  /* comparation of adler 32 code. */
+  uint32_t s1 = 1, s2 = 0;
+  for (auto& out: output) {
+    s1 = (s1 + out) % 65521;
+    s2 = (s2 + s1) % 65521;
+  }
+  
+  int data_size = datastream.size () - 4;
+  uint32_t adler = 
+    datastream [data_size] << 24 | datastream [data_size + 1] << 16 | 
+    datastream [data_size + 2] << 8 | datastream [data_size + 3];
+  if ((s2 << 16) + s1 != adler) {
+    std::cout << "zilb error: adler32 checksum missmatch." << std::endl;
+    return false;
+  }
+
   return true;
 }

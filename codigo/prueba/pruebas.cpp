@@ -91,6 +91,9 @@ int main () {
   std::size_t tope = 70;
   std::size_t min = 5;
   std::array<float, 3> arr = {static_cast<float>(tope), static_cast<float>(tope/2 + min), static_cast<float>(min)};
+
+  Texture cargada = chargePNG (render, "../images/img.png");
+
   int mid = 300;
 
   while (cont) {
@@ -145,6 +148,9 @@ int main () {
 
     fig.calculate_movement(fig_vec);
     fig.draw(render);
+
+    AngDir2 a = AngDir2(200, 200, 0);
+    cargada.draw(render, a);
 
     SDL_RenderPresent (render);
     SDL_Delay(16);

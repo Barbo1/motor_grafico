@@ -2,7 +2,7 @@
 #include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_render.h>
 #include <cmath>
-#include <iostream>
+#include <array>
 
 void print_polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color) {
   std::size_t many_points = points.size();
