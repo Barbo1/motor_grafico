@@ -5,6 +5,9 @@
 #include <array>
 #include <algorithm>
 
+#include <bitset>
+#include <iostream>
+
 struct huffnode {
   uint64_t elem;
   bool final;
@@ -55,20 +58,21 @@ class HuffmanTree {
 };
 
 std::array<uint8_t, 300> HuffmanTree::bl_count {};
-std::array<uint8_t, 300> HuffmanTree::next_code {};
+std::array<uint8_t, 300> HuffmanTree::next_code {0};
 
 HuffmanTree::HuffmanTree (const std::vector<uint8_t>& lengths, int type, bool* error) {
   *error = lengths.size() > 300;
   if (*error)
     return;
   uint8_t greater = *std::max_element (lengths.begin(), lengths.end());
-  this->bl_count = std::array<uint8_t, 300>{0};
+  for (int i = 0; i < greater + 1; i++)
+    this->bl_count[i] = 0;
   for (const uint8_t& v: lengths)
     this->bl_count[v]++;
 
   this->bl_count[0] = 0;
-  for (int bits = 1; bits <= greater; bits++)
-    this->next_code[bits] = (this->next_code[bits-1] + this->bl_count[bits-1]) << 1;
+  for (int bits = 0; bits < greater; bits++)
+    this->next_code[bits+1] = (this->next_code[bits] + this->bl_count[bits]) << 1;
 
   huffnode* node;
   this->root = new huffnode { .final = false, .izq = nullptr, .der = nullptr };
@@ -79,9 +83,13 @@ HuffmanTree::HuffmanTree (const std::vector<uint8_t>& lengths, int type, bool* e
       len = lengths[inv_symbol[n]];
     else
       len = lengths[n];
-    if (len != 0) {
+    if (len > 0) {
       node = this->root;
       uint8_t aux = this->next_code[len]++;
+
+      std::cout << "para " << n << " se tiene: " << std::endl 
+                << std::bitset<64>(aux) << std::endl << " " << len << std::endl;
+
       for (int8_t j = len - 1; j > -1; j--) {
         if ((1 << j) & aux) {
           if (node->der == nullptr)

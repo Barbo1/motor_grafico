@@ -91,6 +91,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
 
       /* non-compressed block. */
       case 0:
+        std::cout << "tipo 0" << std::endl;
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
         lit_val = access_bit (&datastream[0], pos, 16);
         pos += 16;
@@ -100,6 +101,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
 
       /* compressed block with fixed huffman. */
       case 1:
+        std::cout << "tipo 1" << std::endl;
         while (true) {
           /* Reading fixed huffman tree entries.
            * */
@@ -143,9 +145,13 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
 
       /* compressed block with dynamic huffman. */
       case 2: {
+        std::cout << "tipo 2" << std::endl;
         hlit = access_bit (&datastream[0], pos, 5) + 257;
         hdist = access_bit (&datastream[0], pos, 5) + 1;
         hclen = access_bit (&datastream[0], pos, 4) + 4;
+        std::cout << "hlit:" << hlit << std::endl;
+        std::cout << "hdist:" << hdist << std::endl;
+        std::cout << "hclen:" << hclen << std::endl;
 
         lenghts.clear ();
         lenghts.reserve (19);
@@ -156,9 +162,13 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         /* Construction of the length code huffman tree. 
          * */
         bool error;
+        std::cout << std::endl << "muestro arreglo(" << lenghts.size () << "): " << std::endl;
+        for (auto& l: lenghts)
+          std::cout << (int)l << ", ";
+        std::cout << std::endl << std::endl;
         HuffmanTree huffman_1 (lenghts, 1, &error);
         if (error) {
-          std::cout << "error creating huffman: codes overlapse." << std::endl;
+          std::cout << "error creating huffman: codes overlapse(0)." << std::endl;
           return false;
         }
         HuffmanTree::iterator it1 (huffman_1);
@@ -166,7 +176,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         /* Reading distances from the array. 
          * */
         lenghts.clear ();
-        lenghts.reserve(hlit + hdist);
+        lenghts.reserve (hlit + hdist);
         while (lenghts.size () < hlit + hdist) {
           if (!it1.advance (access_bit (&datastream[0], pos, 1))) {
             std::cout << "zilb error: readed unknown information(1)." << std::endl;
@@ -189,18 +199,16 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
             it1.go_back();
           }
         }
-
-        /* Construction of the literal/lenghts huffman tree. 
-         * */
-        HuffmanTree huffman_2 (
-          std::vector<uint8_t> (lenghts.begin(), lenghts.begin() + hlit),
-          0,
-          &error
-        );
-        if (error) {
-          std::cout << "error creating huffman: codes overlapse(1)." << std::endl;
-          return false;
-        }
+        
+        std::cout << std::endl << "otros dos arreglo:" << std::endl;
+        int m = 0;
+        for (; m < hlit; m++)
+          std::cout << (int)lenghts[m] << ", ";
+        std::cout << std::endl << std::endl;
+        for (; m < hdist + hlit; m++)
+          std::cout << (int)lenghts[m] << ", ";
+        std::cout << std::endl;
+        std::cout << "creo uno" << std::endl;
         
         /* Construction of the distance huffman tree. 
          * */
@@ -211,6 +219,18 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         );
         if (error) {
           std::cout << "error creating huffman: codes overlapse(2)." << std::endl;
+          return false;
+        }
+
+        /* Construction of the literal/lenghts huffman tree. 
+         * */
+        HuffmanTree huffman_2 (
+          std::vector<uint8_t> (lenghts.begin(), lenghts.begin() + hlit),
+          0,
+          &error
+        );
+        if (error) {
+          std::cout << "error creating huffman: codes overlapse(1)." << std::endl;
           return false;
         }
 
@@ -257,6 +277,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         break;
       }
       default:
+        std::cout << "zlib error: block type unrecognized" << std::endl;
         return false;
     }
     /* descomprimo. */

@@ -92,7 +92,8 @@ int main () {
   std::size_t min = 5;
   std::array<float, 3> arr = {static_cast<float>(tope), static_cast<float>(tope/2 + min), static_cast<float>(min)};
 
-  Texture cargada = chargePNG (render, "../images/img.png");
+  Texture cargada1 = chargePNG (render, "../images/img1.png");
+  Texture cargada2 = chargePNG (render, "../images/img2.png");
 
   int mid = 300;
 
@@ -149,8 +150,10 @@ int main () {
     fig.calculate_movement(fig_vec);
     fig.draw(render);
 
-    AngDir2 a = AngDir2(200, 200, 0);
-    cargada.draw(render, a);
+    AngDir2 a = AngDir2(300, 100, 0);
+    cargada1.draw(render, a);
+    a = AngDir2(300, 300, 0);
+    cargada2.draw(render, a);
 
     SDL_RenderPresent (render);
     SDL_Delay(16);
