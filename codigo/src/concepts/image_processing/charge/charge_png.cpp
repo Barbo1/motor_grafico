@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <bitset>
 
 const std::size_t SHIFTING_BUFFER_SIZE = 12;
 const std::size_t BUFFER_SIZE = 1 << SHIFTING_BUFFER_SIZE;
@@ -169,6 +168,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   /* Reading the rest of the file. */
   bool looping = true;
   uint32_t info_lenght;
+  uint64_t aux;
   while (pos < buff.size() && looping) {
     info_lenght = read_bytes(&buff[0], pos, 4);
     switch (read_bytes(&buff[0], pos, 4)) {
@@ -193,20 +193,23 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         plet_chnk_count++;
 
         palette.resize (palette_count);
-        for (int i = 0; i < palette_count; i++) {
+        for (int i = 0; i < palette_count; i++)
           palette[i] = {
             .r = static_cast<Uint8>(read_bytes(&buff[0], pos, 1)),
             .g = static_cast<Uint8>(read_bytes(&buff[0], pos, 1)),
             .b = static_cast<Uint8>(read_bytes(&buff[0], pos, 1)),
             .a = 255,
           };
-        }
         break;
   
       /* IDAT */
       case 0x49444154:
         std::cout << "reading IDAT." << std::endl;
-        idat_data.insert (idat_data.end (), buff.begin() + pos, buff.begin() + pos + info_lenght);
+        idat_data.insert (
+          idat_data.end (), 
+          buff.begin() + pos, 
+          buff.begin() + (pos + info_lenght)
+        );
         pos += info_lenght;
         break;
 
@@ -219,6 +222,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             << colortype << "."
             << std::endl;
           return Texture ();
+
         } else if (colortype == 3) {
           if (palette_count < info_lenght) {
             std::cout 
@@ -226,8 +230,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
               << std::endl;
             return Texture ();
           }
+
           for (int i = 0; i < info_lenght; i++)
             palette[i].a = read_bytes(&buff[0], pos, 1);
+
         } else if (colortype == 0) {
           if (height * width < info_lenght) {
             std::cout 
@@ -236,10 +242,13 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
               << std::endl;
             return Texture ();
           }
-          grayscale.resize (info_lenght);
+
+          aux = info_lenght / 2;
+          grayscale.resize (aux);
           uint64_t aux = (1 << sampledepth) - 1;
-          for (int i = 0; i < info_lenght; i++)
+          for (int i = 0; i < aux; i++)
             grayscale[i] = ((float)read_bytes(&buff[0], pos, 2) / aux) * 255;
+
         } else if (colortype == 2) {
           if (height * width < info_lenght) {
             std::cout 
@@ -248,12 +257,14 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
               << std::endl;
             return Texture ();
           }
-          truecolor.resize (info_lenght);
-          for (int i = 0; i < info_lenght; i++)
+
+          aux = info_lenght / 6;
+          truecolor.resize (aux);
+          for (int i = 0; i < aux; i++)
             truecolor.push_back({
               .r = static_cast<Uint8>(read_bytes(&buff[0], pos, 2)),
               .g = static_cast<Uint8>(read_bytes(&buff[0], pos, 2)),
-              .b = static_cast<Uint8>(read_bytes(&buff[0], pos, 2)),
+              .b = static_cast<Uint8>(read_bytes(&buff[0], pos, 2))
             });
         }
         break;
@@ -261,7 +272,6 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       /* IEND */
       case 0x49454E44:
         std::cout << "reading IEND." << std::endl;
-        pos += 4;
         looping = false;
         break;
 
@@ -275,9 +285,8 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
     pos += 4;
   }
 
-  for (int i = 0; i < 20; i++) {
-    std::cout << (int)idat_data[i] << std::endl;
-  }
+  for (int i = 0; i < 20; i++)
+    std::cout << std::bitset<8>(idat_data[i]) << std::endl;
 
   /* Descompression of IDAT field. */
   std::vector<uint8_t> output;

@@ -17,7 +17,7 @@
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
 const uint32_t width = 600;
-const SDL_Color bg_color = {0, 0, 0, 0};
+const SDL_Color bg_color = {30, 30, 30, 0};
 
 int main () {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -94,6 +94,8 @@ int main () {
 
   Texture cargada1 = chargePNG (render, "../images/img1.png");
   Texture cargada2 = chargePNG (render, "../images/img2.png");
+  Texture cargada3 = chargePNG (render, "../images/img3.png");
+  Texture cargada4 = chargePNG (render, "../images/img4.png");
 
   int mid = 300;
 
@@ -150,10 +152,10 @@ int main () {
     fig.calculate_movement(fig_vec);
     fig.draw(render);
 
-    AngDir2 a = AngDir2(300, 100, 0);
-    cargada1.draw(render, a);
-    a = AngDir2(300, 300, 0);
-    cargada2.draw(render, a);
+    cargada1.draw (render, AngDir2 (300, 100, 0));
+    cargada2.draw (render, AngDir2 (300, 300, 0));
+    cargada3.draw (render, AngDir2 (400, 300, 0));
+    cargada4.draw (render, AngDir2 (30, 400, 0));
 
     SDL_RenderPresent (render);
     SDL_Delay(16);

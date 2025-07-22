@@ -25,7 +25,7 @@ static std::array<uint16_t, 30> distance_code_extras = {
 
 /* Function that takes the length code, and use it to read and return the lenght obtained. 
  * */
-uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
+uint16_t use_extra_len (const uint8_t* iter, uint16_t lit_val, uint64_t& i) {
   uint16_t extra, count_extra;
   lit_val -= 257;
 
@@ -44,7 +44,7 @@ uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
 
 /* Function that takes the distance code, and use it to read and return the distance obtained. 
  * */
-uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
+uint16_t use_extra_dist (const uint8_t* iter, uint16_t distc, uint64_t& i) {
   uint16_t extra, count_extra;
   if (distc > 29)
     std::cout << "Problem reading distc" << std::endl;
@@ -59,31 +59,23 @@ uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
 }
 
 /* Inflate algorithm, following the specification of RFC-1951. */
-bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
-  uint64_t pos = 16;
+bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
  
   /* CMF and FLG comparation. */
   uint16_t cmf_flg = datastream[0] << 8 | datastream[1];
-  if ((cmf_flg & 0x0F00) != 0x0800 || (cmf_flg % 31) != 0) {
+  if ((datastream[0] & 0x0F) != 8 || (cmf_flg % 31) != 0) {
     std::cout << "zilb error: cmf or flg error found." << std::endl;
     return false;
   }
 
-  /* windos size comparation. */
-  int window_size = cmf_flg & 0x00FF;
-  window_size = (window_size & 0x000F) << 4 || (window_size & 0x00F0) >> 4;
-  window_size += 8;
-  if (window_size > 15) {
-    std::cout << "zilb error: window size over 32K bytes." << std::endl;
-    return false;
-  }
-  if ((cmf_flg & 0x0020)) pos += 32;
+  uint64_t pos = 16 | (datastream[1] & 0x20);
 
   /* begining of the iterations. */
   bool bfinal; 
   uint64_t dist, len;
   uint64_t lit_val, hlit, hdist, hclen, byt;
   std::vector<uint8_t> lenghts;
+  lenghts.reserve (300);
 
   do {
     bfinal = access_bit (&datastream[0], pos, 1);
@@ -97,6 +89,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         pos += 16;
         len = pos >> 3;
         output.insert (output.end (), datastream.begin () + len, datastream.begin () + len + lit_val);
+        pos += 8*lit_val;
         break;
 
       /* compressed block with fixed huffman. */
@@ -154,7 +147,6 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         std::cout << "hclen:" << hclen << std::endl;
 
         lenghts.clear ();
-        lenghts.reserve (19);
         for (int j = 0 ; j < hclen; j++)
           lenghts.push_back (access_bit (&datastream[0], pos, 3));
         lenghts.insert (lenghts.end (), 19 - hclen, 0);
@@ -176,7 +168,6 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
         /* Reading distances from the array. 
          * */
         lenghts.clear ();
-        lenghts.reserve (hlit + hdist);
         while (lenghts.size () < hlit + hdist) {
           if (!it1.advance (access_bit (&datastream[0], pos, 1))) {
             std::cout << "zilb error: readed unknown information(1)." << std::endl;
@@ -200,6 +191,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
           }
         }
         
+        std::cout << "largos -> " << lenghts.size () << " == " << (hlit + hdist) << std::endl;
         std::cout << std::endl << "otros dos arreglo:" << std::endl;
         int m = 0;
         for (; m < hlit; m++)
@@ -258,8 +250,7 @@ bool zlib_discompression (std::vector<uint8_t>& datastream, std::vector<uint8_t>
                   return false;
                 }
               }
-              dist = &it3;
-              dist = use_extra_dist (&datastream[0], dist, pos);
+              dist = use_extra_dist (&datastream[0], &it3, pos);
 
               /* copy elements. */
               if (dist > output.size()) {
