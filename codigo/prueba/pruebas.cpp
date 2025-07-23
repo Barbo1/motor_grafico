@@ -91,11 +91,11 @@ int main () {
   std::size_t tope = 70;
   std::size_t min = 5;
   std::array<float, 3> arr = {static_cast<float>(tope), static_cast<float>(tope/2 + min), static_cast<float>(min)};
-
   Texture cargada1 = chargePNG (render, "../images/img1.png");
+  Texture cargada5 = chargePNG (render, "../images/img5.png");
   Texture cargada2 = chargePNG (render, "../images/img2.png");
-  Texture cargada3 = chargePNG (render, "../images/img3.png");
   Texture cargada4 = chargePNG (render, "../images/img4.png");
+  Texture cargada3 = chargePNG (render, "../images/img3.png");
 
   int mid = 300;
 
@@ -154,8 +154,9 @@ int main () {
 
     cargada1.draw (render, AngDir2 (300, 100, 0));
     cargada2.draw (render, AngDir2 (300, 300, 0));
+    cargada5.draw (render, AngDir2 (30, 400, 0));
+    cargada4.draw (render, AngDir2 (500, 300, 0));
     cargada3.draw (render, AngDir2 (400, 300, 0));
-    cargada4.draw (render, AngDir2 (30, 400, 0));
 
     SDL_RenderPresent (render);
     SDL_Delay(16);

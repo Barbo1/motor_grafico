@@ -7,6 +7,12 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <algorithm>
+
+/* Symbols for the alphabet of lenghts. */
+static constexpr std::array<uint16_t, 19> symbol {
+  16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15
+};
 
 /* Arrays of precalculated lenghts and extra bits needed to compute the compressed content. 
  * */
@@ -23,10 +29,10 @@ static std::array<uint16_t, 30> distance_code_extras = {
   0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13
 };
 
-/* Function that takes the length code, and use it to read and return the lenght obtained. 
+/* Function that takes the length code, and use it to read and return the 
+ * total lenght obtained. 
  * */
-uint16_t use_extra_len (const uint8_t* iter, uint16_t lit_val, uint64_t& i) {
-  uint16_t extra, count_extra;
+uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
   lit_val -= 257;
 
   if (lit_val > 28)
@@ -34,33 +40,33 @@ uint16_t use_extra_len (const uint8_t* iter, uint16_t lit_val, uint64_t& i) {
   else if (lit_val == 28)
     return 258;
 
-  count_extra = lenght_code_extras[lit_val];
-  extra = 0;
+  uint16_t count_extra = lenght_code_extras [lit_val];
+  uint16_t extra = 0;
   if (count_extra > 0) 
     extra = access_bit (iter, i, count_extra);
 
-  return extra + lenght_code_lenghts[lit_val];
+  return extra + lenght_code_lenghts [lit_val];
 }
 
-/* Function that takes the distance code, and use it to read and return the distance obtained. 
+/* Function that takes the distance code, and use it to read and return the 
+ * total distance obtained. 
  * */
-uint16_t use_extra_dist (const uint8_t* iter, uint16_t distc, uint64_t& i) {
-  uint16_t extra, count_extra;
+uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
   if (distc > 29)
     std::cout << "Problem reading distc" << std::endl;
 
-  count_extra = distance_code_extras[distc];
-  
-  extra = 0;
+  uint16_t count_extra = distance_code_extras [distc];
+  uint16_t extra = 0;
   if (count_extra != 0) 
     extra = access_bit (iter, i, count_extra);
 
-  return extra + distance_code_lenghts[distc];
+  return extra + distance_code_lenghts [distc];
 }
 
 /* Inflate algorithm, following the specification of RFC-1951. */
-bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
- 
+bool inflate (std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
+  output.reserve (datastream.size ());
+
   /* CMF and FLG comparation. */
   uint16_t cmf_flg = datastream[0] << 8 | datastream[1];
   if ((datastream[0] & 0x0F) != 8 || (cmf_flg % 31) != 0) {
@@ -71,11 +77,11 @@ bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<ui
   uint64_t pos = 16 | (datastream[1] & 0x20);
 
   /* begining of the iterations. */
-  bool bfinal; 
+  bool bfinal;
   uint64_t dist, len;
   uint64_t lit_val, hlit, hdist, hclen, byt;
-  std::vector<uint8_t> lenghts;
-  lenghts.reserve (300);
+  std::array<uint8_t, 317> lenghts;
+  std::array<uint8_t, 317> aux;
 
   do {
     bfinal = access_bit (&datastream[0], pos, 1);
@@ -83,19 +89,22 @@ bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<ui
 
       /* non-compressed block. */
       case 0:
-        std::cout << "tipo 0" << std::endl;
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
-        lit_val = access_bit (&datastream[0], pos, 16);
-        pos += 16;
         len = pos >> 3;
-        output.insert (output.end (), datastream.begin () + len, datastream.begin () + len + lit_val);
-        pos += 8*lit_val;
+        lit_val = datastream [len] | datastream [len + 1] << 8;
+        len += 4;
+        output.insert (
+          output.end (), 
+          datastream.begin () + len, 
+          datastream.begin () + (len + lit_val)
+        );
+        pos += lit_val * 8 + 32;
         break;
 
       /* compressed block with fixed huffman. */
       case 1:
-        std::cout << "tipo 1" << std::endl;
         while (true) {
+
           /* Reading fixed huffman tree entries.
            * */
           byt = access_bit<false> (&datastream[0], pos, 6);
@@ -122,7 +131,11 @@ bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<ui
           else if (lit_val == 256) break;
           else {
             len = use_extra_len (&datastream[0], lit_val, pos);
-            dist = use_extra_dist (&datastream[0], (uint16_t)access_bit<false> (&datastream[0], pos, 5), pos);
+            dist = use_extra_dist (
+              &datastream[0], 
+              static_cast<uint16_t> (access_bit<false> (&datastream[0], pos, 5)), 
+              pos
+            );
 
             if (output.size() < dist) {
               std::cout << "zlib error: unreachable position in buffer(1)." << std::endl;
@@ -138,106 +151,118 @@ bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<ui
 
       /* compressed block with dynamic huffman. */
       case 2: {
-        std::cout << "tipo 2" << std::endl;
         hlit = access_bit (&datastream[0], pos, 5) + 257;
         hdist = access_bit (&datastream[0], pos, 5) + 1;
         hclen = access_bit (&datastream[0], pos, 4) + 4;
-        std::cout << "hlit:" << hlit << std::endl;
-        std::cout << "hdist:" << hdist << std::endl;
-        std::cout << "hclen:" << hclen << std::endl;
 
-        lenghts.clear ();
-        for (int j = 0 ; j < hclen; j++)
-          lenghts.push_back (access_bit (&datastream[0], pos, 3));
-        lenghts.insert (lenghts.end (), 19 - hclen, 0);
+        if (hlit > 285 || hdist > 30 || hclen > 19) {
+          std::cout << "zilb error: readed unknown information(0)." << std::endl;
+          return false;
+        }
 
         /* Construction of the length code huffman tree. 
          * */
+        int i = 0;
+        for (; i < hclen; i++)
+          lenghts[symbol[i]] = access_bit (&datastream[0], pos, 3);
+        for (; i < 19; i++)
+          lenghts[symbol[i]] = 0;
+
         bool error;
-        std::cout << std::endl << "muestro arreglo(" << lenghts.size () << "): " << std::endl;
-        for (auto& l: lenghts)
-          std::cout << (int)l << ", ";
-        std::cout << std::endl << std::endl;
-        HuffmanTree huffman_1 (lenghts, 1, &error);
+        HuffmanTree huffman_1 (lenghts, 19, &error);
         if (error) {
-          std::cout << "error creating huffman: codes overlapse(0)." << std::endl;
+          std::cout
+            << "zilb error: cannot create huffman trees to length codes trees."
+            << std::endl;
           return false;
         }
-        HuffmanTree::iterator it1 (huffman_1);
 
-        /* Reading distances from the array. 
+        /* Function to read the huffman codes. 
          * */
-        lenghts.clear ();
-        while (lenghts.size () < hlit + hdist) {
-          if (!it1.advance (access_bit (&datastream[0], pos, 1))) {
-            std::cout << "zilb error: readed unknown information(1)." << std::endl;
-            return false;
-          }
-          if (it1.finished()) {
+        HuffmanTree::iterator it1 (huffman_1);
+        uint64_t lenghts_index = 0;
+        while (lenghts_index < hlit + hdist) {
+
+          /* Advance iterator. */
+          while (it1.advance (access_bit (&datastream[0], pos, 1)) && !it1.finished());
+          
+          /* Check finding. */
+          if (it1.finished ()) {
             byt = &it1;
-            if (byt < 16)
-              lenghts.push_back (byt);
-            else if (byt == 16)
-              lenghts.insert (lenghts.end(), access_bit (&datastream[0], pos, 2) + 3, lenghts.back ());
-            else if (byt == 17)
-              lenghts.insert (lenghts.end(), access_bit (&datastream[0], pos, 3) + 3, 0);
-            else if (byt == 18)
-              lenghts.insert (lenghts.end(), access_bit (&datastream[0], pos, 7) + 11, 0);
+            if (byt < 16) 
+              lenghts [lenghts_index++] = byt;
             else {
-              std::cout << "zilb error: readed unknown information(2)." << std::endl;
-              return false;
+              len = byt;
+              byt = 0;
+              switch (len) {
+                case 16:
+                  if (lenghts_index == 0) {
+                    std::cout << "zilb error: readed unknown information(1)." << std::endl;
+                    return false;
+                  }
+                  len = access_bit (&datastream[0], pos, 2) + 3;
+                  byt = lenghts[lenghts_index - 1];
+                  break;
+                case 17:
+                  len = access_bit (&datastream[0], pos, 3) + 3;
+                  break;
+                case 18:
+                  len = access_bit (&datastream[0], pos, 7) + 11;
+                  break;
+                default:
+                  std::cout << "zilb error: readed unknown information(2)." << std::endl;
+                  return false;
+              }
+              if (lenghts_index + len > hlit + hdist) {
+                std::cout << "zilb error: readed unknown information(3)." << std::endl;
+                return false;
+              }
+              std::fill_n (lenghts.begin() + lenghts_index, len, byt);
+              lenghts_index += len;
             }
             it1.go_back();
+          } else {
+            std::cout << "zilb error: readed unknown information(4)." << std::endl;
+            return false;
           }
         }
-        
-        std::cout << "largos -> " << lenghts.size () << " == " << (hlit + hdist) << std::endl;
-        std::cout << std::endl << "otros dos arreglo:" << std::endl;
-        int m = 0;
-        for (; m < hlit; m++)
-          std::cout << (int)lenghts[m] << ", ";
-        std::cout << std::endl << std::endl;
-        for (; m < hdist + hlit; m++)
-          std::cout << (int)lenghts[m] << ", ";
-        std::cout << std::endl;
-        std::cout << "creo uno" << std::endl;
-        
-        /* Construction of the distance huffman tree. 
+
+        /* Reading and constructing of the literal/lengths huffman tree. 
          * */
-        HuffmanTree huffman_3 (
-          std::vector<uint8_t> (lenghts.begin() + hlit, lenghts.begin () + hlit + hdist),
-          0,
-          &error
-        );
+        HuffmanTree huffman_2 (lenghts, hlit, &error);
         if (error) {
-          std::cout << "error creating huffman: codes overlapse(2)." << std::endl;
-          return false;
+          std::cout 
+            << "zilb error: cannot create huffman trees to literal/length trees."
+            << std::endl;
+          return true;
         }
 
-        /* Construction of the literal/lenghts huffman tree. 
+        /* Reading and constructing of the distance huffman tree. 
          * */
-        HuffmanTree huffman_2 (
-          std::vector<uint8_t> (lenghts.begin(), lenghts.begin() + hlit),
-          0,
-          &error
-        );
+        std::copy (lenghts.begin() + hlit, lenghts.begin() + (hlit + hdist), aux.begin());
+        HuffmanTree huffman_3 (aux, hdist, &error);
         if (error) {
-          std::cout << "error creating huffman: codes overlapse(1)." << std::endl;
-          return false;
+          std::cout 
+            << "zilb error: cannot create huffman trees to distrance trees."
+            << std::endl;
+          return true;
         }
 
-        /* lectura de datos. */
+        /* Reading data. 
+         * */
         HuffmanTree::iterator it2 (huffman_2);
         HuffmanTree::iterator it3 (huffman_3);
         while (true) {
-          /* avanzo iterador de literales. */
+          /* Advance iterator. */
           if (!it2.advance (access_bit (&datastream[0], pos, 1))) {  
             std::cout << "zilb error: readed unknown information(3)." << std::endl;
             return false;
           }
 
+          /* Check finding. */
           if (it2.finished()) {
             lit_val = &it2;
+
             if (lit_val < 256) output.push_back (lit_val);
             else if (lit_val == 256) break;
             else {
@@ -252,7 +277,6 @@ bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<ui
               }
               dist = use_extra_dist (&datastream[0], &it3, pos);
 
-              /* copy elements. */
               if (dist > output.size()) {
                 std::cout << "zlib error: unreachable position in buffer(2)." << std::endl;
                 return false;
@@ -268,7 +292,6 @@ bool zlib_discompression (const std::vector<uint8_t>& datastream, std::vector<ui
         break;
       }
       default:
-        std::cout << "zlib error: block type unrecognized" << std::endl;
         return false;
     }
     /* descomprimo. */

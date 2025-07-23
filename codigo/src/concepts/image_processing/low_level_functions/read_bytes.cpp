@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <iostream>
-#include <bitset>
 
 template <bool LSB = true>
 uint64_t read_bytes (uint8_t* vec, uint64_t& pos, uint16_t N) {
