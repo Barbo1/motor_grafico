@@ -2,6 +2,17 @@
 
 #include <cstdint>
 
+uint64_t access_bit_png (const uint8_t* vec, uint64_t& pos, uint64_t N) {
+  uint64_t arr_pos = pos >> 3;
+  uint64_t mod_pos = 24 - (pos & 7);
+  uint64_t arr_res = mod_pos - N;
+  pos += N;
+
+  uint64_t ret = vec[arr_pos] << 16 | vec[arr_pos + 1] << 8 | vec[arr_pos + 2];
+  uint64_t mask = (1 << mod_pos) - (1 << arr_res);
+  return (ret & mask) >> arr_res;
+}
+
 /* Function to read the nexts N bits of an array of bits that follows the RFC-1951 specification.
  * It assumes that N < 14.
  * */
@@ -17,6 +28,9 @@ uint64_t access_bit (const uint8_t* vec, uint64_t& pos, uint16_t N) {
   return (ret >> mod_pos) & ((1 << N) - 1);
 }
 
+/* Function to read the nexts N bits of an array of bits that follows the RFC-1951 specification 
+ * in LSB order. It assumes that N < 8.
+ * */
 template<>
 uint64_t access_bit<false> (const uint8_t* vec, uint64_t& pos, uint16_t N) {
   uint64_t arr_pos = pos >> 3;

@@ -32,7 +32,7 @@ static std::array<uint16_t, 30> distance_code_extras = {
 /* Function that takes the length code, and use it to read and return the 
  * total lenght obtained. 
  * */
-uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
+uint16_t use_extra_len (const uint8_t* iter, uint16_t lit_val, uint64_t& i) {
   lit_val -= 257;
 
   if (lit_val > 28)
@@ -51,7 +51,7 @@ uint16_t use_extra_len (uint8_t* iter, uint16_t lit_val, uint64_t& i) {
 /* Function that takes the distance code, and use it to read and return the 
  * total distance obtained. 
  * */
-uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
+uint16_t use_extra_dist (const uint8_t* iter, uint16_t distc, uint64_t& i) {
   if (distc > 29)
     std::cout << "Problem reading distc" << std::endl;
 
@@ -64,7 +64,7 @@ uint16_t use_extra_dist (uint8_t* iter, uint16_t distc, uint64_t& i) {
 }
 
 /* Inflate algorithm, following the specification of RFC-1951. */
-bool inflate (std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
+bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
   output.reserve (datastream.size ());
 
   /* CMF and FLG comparation. */
@@ -155,7 +155,7 @@ bool inflate (std::vector<uint8_t>& datastream, std::vector<uint8_t>& output) {
         hdist = access_bit (&datastream[0], pos, 5) + 1;
         hclen = access_bit (&datastream[0], pos, 4) + 4;
 
-        if (hlit > 285 || hdist > 30 || hclen > 19) {
+        if (hlit > 286 || hdist > 30 || hclen > 19) {
           std::cout << "zilb error: readed unknown information(0)." << std::endl;
           return false;
         }

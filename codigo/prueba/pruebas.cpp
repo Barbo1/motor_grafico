@@ -91,12 +91,61 @@ int main () {
   std::size_t tope = 70;
   std::size_t min = 5;
   std::array<float, 3> arr = {static_cast<float>(tope), static_cast<float>(tope/2 + min), static_cast<float>(min)};
-  Texture cargada1 = chargePNG (render, "../images/img1.png");
-  Texture cargada5 = chargePNG (render, "../images/img5.png");
-  Texture cargada2 = chargePNG (render, "../images/img2.png");
-  Texture cargada4 = chargePNG (render, "../images/img4.png");
-  Texture cargada3 = chargePNG (render, "../images/img3.png");
 
+  std::vector<Texture> textures;
+  textures.push_back (chargePNG (render, "../images/pngs/basn0g01.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn0g02.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn0g04.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn0g16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn3p01.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn3p02.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn3p04.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn4a08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn4a16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn6a08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basn6a16.png"));
+
+  textures.push_back (chargePNG (render, "../images/pngs/tbbn0g04.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbbn2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbbn3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbgn2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbgn3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbrn2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbwn0g16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbwn3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tbyn3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tp0n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tp0n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tp0n3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tp1n3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/tm3n3p02.png"));
+
+  textures.push_back (chargePNG (render, "../images/pngs/f00n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f00n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f01n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f01n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f02n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f02n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f03n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f04n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f04n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/f99n0g04.png"));
+
+  textures.push_back (chargePNG (render, "../images/pngs/pp0n2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/pp0n6a08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/ps1n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/ps1n2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/ps2n0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/ps2n2c16.png"));
+  /*
+  textures.push_back (chargePNG (render, "../images/pngs/.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/.png"));
+*/
   int mid = 300;
 
   while (cont) {
@@ -152,11 +201,16 @@ int main () {
     fig.calculate_movement(fig_vec);
     fig.draw(render);
 
-    cargada1.draw (render, AngDir2 (300, 100, 0));
-    cargada2.draw (render, AngDir2 (300, 300, 0));
-    cargada5.draw (render, AngDir2 (30, 400, 0));
-    cargada4.draw (render, AngDir2 (500, 300, 0));
-    cargada3.draw (render, AngDir2 (400, 300, 0));
+    float posy = 0;
+    float posx = 300;
+    for (auto& tex: textures) {
+      tex.draw (render, AngDir2 (posx, posy, 0));
+      posy += 50;
+      if (posy == 600) {
+        posy = 0;
+        posx += 50;
+      }
+    }
 
     SDL_RenderPresent (render);
     SDL_Delay(16);

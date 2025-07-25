@@ -26,6 +26,16 @@ uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
     return static_cast<uint8_t>(diagonal);
 }
 
+Uint8 read_pixel (uint64_t sampledepth, float sample_scale, uint64_t val) {
+  float ret = sample_scale * val;
+  if (ret > 255)
+    return 255;
+  else if (ret < 0)
+    return 0;
+  else
+    return ret;
+}
+
 Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   std::fstream fil(path, std::ios::binary);
   fil.open (path);
@@ -112,7 +122,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       }
       break;
     case 3:
-      if ((bitdepth & 0x1F) == 0) {
+      if ((bitdepth & 0x0F) == 0) {
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
@@ -120,6 +130,12 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       }
       sampledepth = 8;
     case 0:
+      if ((bitdepth & 0x1F) == 0) {
+        std::cout 
+          << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
+          << std::endl;
+        return Texture();
+      }
       channels = 1;
       break;
     default: 
@@ -148,8 +164,6 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       << "PNG reading error: interlace method(code: " << intemethod << ") not recognized."
       << std::endl;
     return Texture();
-  } else if (intemethod == 1) {
-    std::cout << "interlace method equal to 1." << std::endl;
   }
 
   /* Palette information. */
@@ -157,12 +171,15 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   int palette_count = 0;
   int plet_chnk_count = 0;
 
-  /* grayscale information. */
-  std::vector<uint16_t> grayscale_alpha;
-
-  /* true color information. */
-  struct Color16{uint16_t r; uint16_t g; uint16_t b;};
-  std::vector<Color16> truecolor_trn;
+  /* background color. */
+  Uint8 color;
+  bool has_trns = false;
+  SDL_Color bkgc = {
+    .r = 0,
+    .g = 0,
+    .b = 0,
+    .a = 0
+  };  
 
   /* IDAT information. */
   std::vector<uint8_t> idat_data;
@@ -174,12 +191,17 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   uint64_t aux;
   while (pos < buff.size() && looping) {
     info_lenght = read_bytes(&buff[0], pos, 4);
-    aux = read_bytes(&buff[0], pos, 4);
-    switch (aux) {
+    if (pos + info_lenght > buff.size ()) {
+      std::cout 
+        << "PNG reading error: size of block greater than known information."
+        << std::endl;
+      return Texture ();
+    }
+
+    switch (read_bytes(&buff[0], pos, 4)) {
 
       /* PLET */
       case 0x504C5445:
-        std::cout << "reading PLET." << std::endl;
         if (colortype == 4 || colortype == 0) { 
           std::cout 
             << "PNG reading error: PLTE chunk present when it must not."
@@ -198,18 +220,18 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         plet_chnk_count++;
 
         palette.resize (palette_count);
-        for (int i = 0; i < palette_count; i++)
+        for (int i = 0; i < palette_count; i++) {
           palette[i] = {
-            .r = static_cast<Uint8>(buff[pos++]),
-            .g = static_cast<Uint8>(buff[pos++]),
-            .b = static_cast<Uint8>(buff[pos++]),
+            .r = buff[pos++],
+            .g = buff[pos++],
+            .b = buff[pos++],
             .a = 255,
           };
+        }
         break;
   
       /* IDAT */
       case 0x49444154:
-        std::cout << "reading IDAT." << std::endl;
         idat_data.insert (
           idat_data.end (), 
           buff.begin() + pos, 
@@ -220,72 +242,48 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
 
       /* tRNS */
       case 0x74524E53:
-        std::cout << "reading tRNS." << std::endl;
-        if (colortype > 3) {
-          std::cout 
-            << "PNG reading error: tRNS must not be defined for color type " 
-            << colortype << "."
-            << std::endl;
-          return Texture ();
+        has_trns = true;
+        switch (colortype) {
+          case 0:
+            color = read_bytes(&buff[0], pos, 2);
+            bkgc = { .r = color, .g = color, .b = color, .a = 255 };
+            break;
+          case 2:
+            bkgc = { 
+              .r = (Uint8)read_bytes(&buff[0], pos, 2), 
+              .g = (Uint8)read_bytes(&buff[0], pos, 2),
+              .b = (Uint8)read_bytes(&buff[0], pos, 2),
+              .a = 255
+            };
+            break;
+          case 3:
+            if (palette_count < info_lenght) {
+              std::cout 
+                << "PNG reading error: number of alpha entries in tRNS exceeded PLTE colors."
+                << std::endl;
+              return Texture ();
+            }
 
-        } else if (colortype == 3) {
-          if (palette_count < info_lenght) {
+            for (int i = 0; i < info_lenght; i++)
+              palette[i].a = buff[pos++];
+            break;
+          default:
             std::cout 
-              << "PNG reading error: number of alpha entries in tRNS exceeded PLTE colors."
+              << "PNG reading error: tRNS must not be defined for color type " 
+              << colortype << "."
               << std::endl;
             return Texture ();
-          }
-
-          for (int i = 0; i < info_lenght; i++)
-            palette[i].a = read_bytes(&buff[0], pos, 1);
-
-        } else if (colortype == 0) {
-          if (height * width < info_lenght) {
-            std::cout 
-              << "PNG reading error: number of grayscale entries in tRNS exceeded the "
-              << "number of pixels."
-              << std::endl;
-            return Texture ();
-          }
-
-          aux = info_lenght / 2;
-          grayscale_alpha.resize (aux);
-          uint64_t aux = (1 << sampledepth) - 1;
-          for (int i = 0; i < aux; i++)
-            grayscale_alpha[i] = ((float)read_bytes(&buff[0], pos, 2) / aux) * 255;
-
-        } else if (colortype == 2) {
-          if (height * width < info_lenght) {
-            std::cout 
-              << "PNG reading error: number of truecolor entries in tRNS exceeded " 
-              << "the number of pixels."
-              << std::endl;
-            return Texture ();
-          }
-
-          aux = info_lenght / 6;
-          truecolor_trn.resize (aux);
-          for (int i = 0; i < aux; i++)
-            truecolor_trn.push_back({
-              .r = static_cast<Uint8>(read_bytes(&buff[0], pos, 2)),
-              .g = static_cast<Uint8>(read_bytes(&buff[0], pos, 2)),
-              .b = static_cast<Uint8>(read_bytes(&buff[0], pos, 2))
-            });
         }
-        break;
 
+        break;
+      
       /* IEND */
       case 0x49454E44:
-        std::cout << "reading IEND." << std::endl;
         looping = false;
         break;
 
       /* The unused chunks are disregarded. */
       default:
-        char* name = reinterpret_cast<char*>(&aux);
-        std::cout << "chunk " 
-          << name[3] << name[2] << name[1] << name[0]
-          << " discarded." << std::endl;
         pos += info_lenght;
         break;
     }
@@ -299,14 +297,17 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   if (!inflate(idat_data, output))
     return Texture();
 
-  /* Apply reverse-filtering algorithm. */
+  /* Apply de-filtering algorithm. */
   uint64_t many = 0;
-  uint64_t bpp = (channels * sampledepth >> 3);
-  uint64_t scanline = 1 + ((width * channels * sampledepth - 1) >> 3);
+  uint64_t scanline = bitdepth * channels;
+  uint64_t bpp = 1 + ((scanline - 1) >> 3);
+  scanline = 1 + ((scanline * width - 1) >> 3);
 
   while (many < output.size()) {
-    switch (output[many++]) {
-      case 0: break;
+    aux = output[many++];
+    switch (aux) {
+      case 0: 
+        break;
       case 1:
         for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
           output[i] += output[j];
@@ -317,7 +318,6 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             output[i] += output[j];
         break;
       case 3:
-        /* evaluo si es la primera linea. */
         if (many > scanline) {
           int i = many, j = many - scanline - 1;
           for (; i < many + bpp; i++, j++)
@@ -347,7 +347,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         break;
       default:
         std::cout 
-          << "PNG reading error: filter type unknown."
+          << "PNG reading error: filter type " << aux << " unknown."
           << std::endl;
         return Texture ();
     }
@@ -356,45 +356,39 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
 
   /* Interlace changing. */
   
+  
   /* returning texture. */
   Uint32* pixels = new Uint32[height * width];
   uint64_t pixels_pos = 0;
   SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
-  pos = 8;
+  double sample_scale = 255;
+  sample_scale /= (1 << sampledepth) - 1;
 
+  auto get_new_pixel = [&] () {
+    return (Uint8)std::roundl (sample_scale * access_bit_png (&output[0], pos, bitdepth));
+  };
+
+  pos = 8;
   switch (colortype) {
     case 6:
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          Uint8 colorr = access_bit (&output[0], pos, sampledepth);
-          Uint8 colorg = access_bit (&output[0], pos, sampledepth);
-          Uint8 colorb = access_bit (&output[0], pos, sampledepth);
-          Uint8 colora = access_bit (&output[0], pos, sampledepth);
-          pixels[pixels_pos++] = SDL_MapRGBA (
-            format,
-            colorr,
-            colorg,
-            colorb,
-            colora
-          );
+          Uint8 colorr = get_new_pixel ();
+          Uint8 colorg = get_new_pixel ();
+          Uint8 colorb = get_new_pixel ();
+          Uint8 colora = get_new_pixel ();
+          pixels[pixels_pos++] = SDL_MapRGBA (format, colorr, colorg, colorb, colora);
         }
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
         pos += 8;
       }
       break;
     case 4:
-      std::cout << "color 4." << std::endl;
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          Uint8 color = access_bit (&output[0], pos, sampledepth);
-          Uint8 alpha = access_bit (&output[0], pos, sampledepth);
-          pixels[pixels_pos++] = SDL_MapRGBA (
-            format, 
-            color, 
-            color, 
-            color, 
-            alpha
-          );
+          Uint8 color = get_new_pixel ();
+          Uint8 alpha = get_new_pixel ();
+          pixels[pixels_pos++] = SDL_MapRGBA (format, color, color, color, alpha);
         }
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
         pos += 8;
@@ -407,8 +401,12 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       }
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          uint64_t plet_pos = access_bit (&output[0], pos, sampledepth);
-          pixels[pixels_pos++] = SDL_MapRGBA(
+          uint64_t plet_pos = access_bit_png (&output[0], pos, bitdepth);
+          if (plet_pos >= palette.size ()) {
+            std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
+            return Texture ();
+          }
+          pixels[pixels_pos++] = SDL_MapRGBA (
             format,
             palette[plet_pos].r,
             palette[plet_pos].g,
@@ -423,15 +421,12 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
     case 2:
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          Uint8 colorr = access_bit (&output[0], pos, sampledepth);
-          Uint8 colorg = access_bit (&output[0], pos, sampledepth);
-          Uint8 colorb = access_bit (&output[0], pos, sampledepth);
-          pixels[pixels_pos++] = SDL_MapRGBA(
-            format,
-            colorr,
-            colorg,
-            colorb,
-            255
+          Uint8 colorr = get_new_pixel ();
+          Uint8 colorg = get_new_pixel ();
+          Uint8 colorb = get_new_pixel ();
+          pixels[pixels_pos++] = SDL_MapRGBA (
+            format, colorr, colorg, colorb,
+            (has_trns && colorr == bkgc.r && colorg == bkgc.g && colorb == bkgc.b ? 0 : 255)
           );
         }
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
@@ -441,15 +436,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
     case 0:
       for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-          Uint8 color = access_bit (&output[0], pos, sampledepth);
-          pixels[pixels_pos] = SDL_MapRGBA (
-            format, 
-            color, 
-            color, 
-            color, 
-            grayscale_alpha[pixels_pos]
+          color = get_new_pixel ();
+          pixels[pixels_pos++] = SDL_MapRGBA (
+            format, color, color, color, (has_trns && bkgc.r == color ? 0 : 255)
           );
-          pixels_pos++;
         }
         pos += ((pos & 7) > 0) * (8 - (pos & 7));
         pos += 8;
