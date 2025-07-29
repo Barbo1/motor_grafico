@@ -68,8 +68,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
   output.reserve (datastream.size ());
 
   /* CMF and FLG comparation. */
-  uint16_t cmf_flg = datastream[0] << 8 | datastream[1];
-  if ((datastream[0] & 0x0F) != 8 || (cmf_flg % 31) != 0) {
+  if ((datastream[0] & 0x0F) != 8 || ((datastream[0] << 8 | datastream[1]) % 31) != 0) {
     std::cout << "zilb error: cmf or flg error found." << std::endl;
     return false;
   }
@@ -84,12 +83,12 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
   std::array<uint8_t, 317> aux;
 
   do {
-    bfinal = access_bit (&datastream[0], pos, 1);
+    bfinal = access_one_bit (&datastream[0], pos);
     switch (access_bit (&datastream[0], pos, 2)) {
 
       /* non-compressed block. */
       case 0:
-        pos += ((pos & 7) > 0) * (8 - (pos & 7));
+        pos += ~(pos-1) & 7;
         len = pos >> 3;
         lit_val = datastream [len] | datastream [len + 1] << 8;
         len += 4;
@@ -184,7 +183,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
         while (lenghts_index < hlit + hdist) {
 
           /* Advance iterator. */
-          while (it1.advance (access_bit (&datastream[0], pos, 1)) && !it1.finished());
+          while (it1.advance (access_one_bit (&datastream[0], pos)) && !it1.finished());
           
           /* Check finding. */
           if (it1.finished ()) {
@@ -254,7 +253,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
         HuffmanTree::iterator it3 (huffman_3);
         while (true) {
           /* Advance iterator. */
-          if (!it2.advance (access_bit (&datastream[0], pos, 1))) {  
+          if (!it2.advance (access_one_bit (&datastream[0], pos))) {  
             std::cout << "zilb error: readed unknown information(3)." << std::endl;
             return false;
           }
@@ -270,7 +269,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
 
               it3.go_back ();
               while (!it3.finished()) {
-                if (!it3.advance (access_bit (&datastream[0], pos, 1))) {  
+                if (!it3.advance (access_one_bit (&datastream[0], pos))) {  
                   std::cout << "zilb error: readed unknown information(4)." << std::endl;
                   return false;
                 }

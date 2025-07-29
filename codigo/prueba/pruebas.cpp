@@ -91,8 +91,8 @@ int main () {
   std::size_t tope = 70;
   std::size_t min = 5;
   std::array<float, 3> arr = {static_cast<float>(tope), static_cast<float>(tope/2 + min), static_cast<float>(min)};
-
   std::vector<Texture> textures;
+
   textures.push_back (chargePNG (render, "../images/pngs/basn0g01.png"));
   textures.push_back (chargePNG (render, "../images/pngs/basn0g02.png"));
   textures.push_back (chargePNG (render, "../images/pngs/basn0g04.png"));
@@ -108,6 +108,7 @@ int main () {
   textures.push_back (chargePNG (render, "../images/pngs/basn4a16.png"));
   textures.push_back (chargePNG (render, "../images/pngs/basn6a08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/basn6a16.png"));
+  textures.push_back (Texture());
 
   textures.push_back (chargePNG (render, "../images/pngs/tbbn0g04.png"));
   textures.push_back (chargePNG (render, "../images/pngs/tbbn2c16.png"));
@@ -123,6 +124,7 @@ int main () {
   textures.push_back (chargePNG (render, "../images/pngs/tp0n3p08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/tp1n3p08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/tm3n3p02.png"));
+  textures.push_back (Texture());
 
   textures.push_back (chargePNG (render, "../images/pngs/f00n0g08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/f00n2c08.png"));
@@ -134,6 +136,7 @@ int main () {
   textures.push_back (chargePNG (render, "../images/pngs/f04n0g08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/f04n2c08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/f99n0g04.png"));
+  textures.push_back (Texture());
 
   textures.push_back (chargePNG (render, "../images/pngs/pp0n2c16.png"));
   textures.push_back (chargePNG (render, "../images/pngs/pp0n6a08.png"));
@@ -141,11 +144,72 @@ int main () {
   textures.push_back (chargePNG (render, "../images/pngs/ps1n2c16.png"));
   textures.push_back (chargePNG (render, "../images/pngs/ps2n0g08.png"));
   textures.push_back (chargePNG (render, "../images/pngs/ps2n2c16.png"));
+  textures.push_back (Texture());
+  
+  textures.push_back (chargePNG (render, "../images/pngs/oi9n2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi9n0g16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi4n2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi4n0g16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi2n2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi1n2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi1n0g16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/oi2n0g16.png"));
+  textures.push_back (Texture());
+  
+  textures.push_back (chargePNG (render, "../images/pngs/z00n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/z03n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/z06n2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/z09n2c08.png"));
+  textures.push_back (Texture());
+ 
+  textures.push_back (chargePNG (render, "../images/pngs/basi0g01.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi0g02.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi0g04.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi0g08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi0g16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi2c08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi2c16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi3p01.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi3p02.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi3p04.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi3p08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi4a08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi4a16.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi6a08.png"));
+  textures.push_back (chargePNG (render, "../images/pngs/basi6a16.png"));
+  textures.push_back (Texture());
+
   /*
-  textures.push_back (chargePNG (render, "../images/pngs/.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/.png"));
-*/
+  std::cout << "muestra de corrompidos" << std::endl;
+  std::cout << "1 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xs1n0g01.png"));
+  std::cout << "2 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xs2n0g01.png"));
+  std::cout << "3 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xs4n0g01.png"));
+  std::cout << "4 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xs7n0g01.png"));
+  std::cout << "5 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xcrn0g04.png"));
+  std::cout << "6 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xlfn1g04.png"));
+  //std::cout << "7 ->" << std::endl;
+  //textures.push_back (chargePNG (render, "../images/pngs/xhdn0g08.png"));
+  std::cout << "8 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xc1n0g08.png"));
+  std::cout << "9 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xc9n2c08.png"));
+  std::cout << "10 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xd0n2c08.png"));
+  std::cout << "11 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xd3n2c08.png"));
+  std::cout << "12 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xd9n2c08.png"));
+  std::cout << "13 ->" << std::endl;
+  textures.push_back (chargePNG (render, "../images/pngs/xdtn0g01.png"));
+  //std::cout << "14 ->" << std::endl;
+  //textures.push_back (chargePNG (render, "../images/pngs/xcsn0g01.png"));
+  */
   int mid = 300;
 
   while (cont) {

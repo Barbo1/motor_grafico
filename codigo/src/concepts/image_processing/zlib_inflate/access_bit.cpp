@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+/* Function to read the nexts N bits, used in the PNG algorithm.
+ * It assumes that N < 16.
+ * */
 uint64_t access_bit_png (const uint8_t* vec, uint64_t& pos, uint64_t N) {
   uint64_t arr_pos = pos >> 3;
   uint64_t mod_pos = 24 - (pos & 7);
@@ -13,8 +16,18 @@ uint64_t access_bit_png (const uint8_t* vec, uint64_t& pos, uint64_t N) {
   return (ret & mask) >> arr_res;
 }
 
+
 /* Function to read the nexts N bits of an array of bits that follows the RFC-1951 specification.
- * It assumes that N < 14.
+ * It assumes that N < 16.
+ * */
+uint64_t access_one_bit (const uint8_t* vec, uint64_t& pos) {
+  uint64_t ret = vec[pos >> 3] & (1 << (pos & 7));
+  pos++;
+  return ret;
+}
+
+/* Function to read the nexts N bits of an array of bits that follows the RFC-1951 specification.
+ * It assumes that N < 16.
  * */
 template<bool LSB = true>
 uint64_t access_bit (const uint8_t* vec, uint64_t& pos, uint16_t N) {
