@@ -16,6 +16,8 @@ static int starting_col[7] = { 0, 4, 0, 2, 0, 1, 0 };
 static int starting_row[7] = { 0, 0, 4, 0, 2, 0, 1 };
 static int row_increment[7] = { 8, 8, 8, 4, 4, 2, 2 };
 static int col_increment[7] = { 8, 8, 4, 4, 2, 2, 1 };
+static int row_increment_sh[7] = { 3, 3, 3, 2, 2, 1, 1 };
+static int col_increment_sh[7] = { 3, 3, 2, 2, 1, 1, 0 };
 
 uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
   int16_t p = left + above - diagonal;
@@ -296,17 +298,16 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   /* Interlace changing. */
   SDL_Point center = SDL_Point {.x = width / 2, .y = height / 2}; 
   uint64_t many, scanline, bpp, pixels_pos;
-
-  Texture tex = Texture ();
-
-  Uint32* pixels = new Uint32[height * width];
-  SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
   double sample_scale = 255.f / ((1 << sampledepth) - 1);
 
-  auto get_new_pixel = [&] () {
-    return (Uint8)std::roundl (sample_scale * access_bit_png (&output[0], pos, bitdepth));
-  };
+  /* Pixels allocation. */
+  Uint32* pixels = new Uint32[height * width];
+  SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
 
+  /* Changes to output position. */
+  auto get_new_pixel = [&] (const std::vector<uint8_t>& output) {
+    return std::roundl (sample_scale * access_bit_png (&output[0], pos, bitdepth));
+  };
   auto to_the_next_byte = [&] () { pos += 8 + (~(pos - 1) & 7); };
 
   switch (intemethod) {
@@ -362,10 +363,11 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
 
             break;
           default:
-            delete [] pixels;
             std::cout 
               << "PNG reading error: filter type " << aux << " unknown."
               << std::endl;
+            SDL_FreeFormat(format);
+            delete [] pixels;
             return Texture ();
         }
         many += scanline;
@@ -377,10 +379,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         case 6:
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-              Uint8 colorr = get_new_pixel ();
-              Uint8 colorg = get_new_pixel ();
-              Uint8 colorb = get_new_pixel ();
-              Uint8 colora = get_new_pixel ();
+              Uint8 colorr = get_new_pixel (output);
+              Uint8 colorg = get_new_pixel (output);
+              Uint8 colorb = get_new_pixel (output);
+              Uint8 colora = get_new_pixel (output);
               pixels[pixels_pos++] = SDL_MapRGBA (format, colorr, colorg, colorb, colora);
             }
             to_the_next_byte ();
@@ -389,8 +391,8 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         case 4:
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-              Uint8 color = get_new_pixel ();
-              Uint8 alpha = get_new_pixel ();
+              Uint8 color = get_new_pixel (output);
+              Uint8 alpha = get_new_pixel (output);
               pixels[pixels_pos++] = SDL_MapRGBA (format, color, color, color, alpha);
             }
             to_the_next_byte ();
@@ -398,16 +400,18 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
           break;
         case 3:
           if (plet_chnk_count != 1)  {
-            std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
+            SDL_FreeFormat(format);
             delete [] pixels;
+            std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
             return Texture ();
           }
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
               uint64_t plet_pos = access_bit_png (&output[0], pos, bitdepth);
               if (plet_pos >= palette.size ()) {
-                std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
+                SDL_FreeFormat(format);
                 delete [] pixels;
+                std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
                 return Texture ();
               }
               pixels[pixels_pos++] = SDL_MapRGBA (
@@ -424,9 +428,9 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         case 2:
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-              Uint8 colorr = get_new_pixel ();
-              Uint8 colorg = get_new_pixel ();
-              Uint8 colorb = get_new_pixel ();
+              Uint8 colorr = get_new_pixel (output);
+              Uint8 colorg = get_new_pixel (output);
+              Uint8 colorb = get_new_pixel (output);
               pixels[pixels_pos++] = SDL_MapRGBA (
                 format, colorr, colorg, colorb,
                 (has_trns && colorr == bkgc.r && colorg == bkgc.g && colorb == bkgc.b ? 0 : 255)
@@ -438,7 +442,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         case 0:
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-              color = get_new_pixel ();
+              color = get_new_pixel (output);
               pixels[pixels_pos++] = SDL_MapRGBA (
                 format, color, color, color, (has_trns && bkgc.r == color ? 0 : 255)
               );
@@ -447,8 +451,9 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
           }
           break;
         default:
-          delete [] pixels;
           std::cout << "color type not found." << std::endl;
+          SDL_FreeFormat(format);
+          delete [] pixels;
           return Texture();
       }
       break;
@@ -457,22 +462,22 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
     case 1: {
 
       int itr, itc, h, w, total;
-      auto current_offset = output.begin ();
+      auto current = output.begin ();
       bpp = 1 + ((bitdepth * channels - 1) >> 3);
 
       std::vector<uint8_t> pass;
-      pass.reserve ((height + 1) * width >> 1);
+      pass.reserve ((height + 1) * width);
       for (int pass_index = 0; pass_index < 7; pass_index++) {
         many = 0;
 
-        w = 1 + (width - starting_col[pass_index] - 1) / col_increment[pass_index];
-        h = 1 + (height - starting_row[pass_index] - 1) / row_increment[pass_index];
+        w = 1 + ((width - starting_col[pass_index] - 1) >> col_increment_sh[pass_index]);
+        h = 1 + ((height - starting_row[pass_index] - 1) >> row_increment_sh[pass_index]);
         scanline = 1 + ((bitdepth * channels * w - 1) >> 3);
 
         total = h * (1 + scanline);
         pass.clear ();
-        pass.insert (pass.begin (), current_offset, current_offset + total);
-        current_offset += total;
+        pass.insert (pass.begin (), current, current + total);
+        current += total;
 
         /* Apply de-filtering algorithm. */
         many = 0;
@@ -519,64 +524,61 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
 
               break;
             default:
-              delete [] pixels;
               std::cout 
                 << "PNG reading error: filter type " << aux << " unknown."
                 << std::endl;
+              SDL_FreeFormat(format);
+              delete [] pixels;
               return Texture();
           }
           many += scanline;
         }
 
-        auto get_new_pixel = [&] () {
-          return (Uint8)std::roundl (sample_scale * access_bit_png (&pass[0], pos, bitdepth));
-        };
-
-        auto to_the_next_byte = [&] () { pos += 8 + (~(pos - 1) & 7); };
-
         pos = 8;
         switch (colortype) {
           case 6:
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
-              for (int j = starting_col[pass_index]; j < width; j += col_increment[pass_index]) {
-                Uint8 colorr = get_new_pixel ();
-                Uint8 colorg = get_new_pixel ();
-                Uint8 colorb = get_new_pixel ();
-                Uint8 colora = get_new_pixel ();
-                pixels[i*width + j] = SDL_MapRGBA (format, colorr, colorg, colorb, colora);
+              for (int j = i*width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
+                Uint8 colorr = get_new_pixel (pass);
+                Uint8 colorg = get_new_pixel (pass);
+                Uint8 colorb = get_new_pixel (pass);
+                Uint8 colora = get_new_pixel (pass);
+                pixels[j] = SDL_MapRGBA (format, colorr, colorg, colorb, colora);
               }
               to_the_next_byte ();
             }
             break;
           case 4:
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
-              for (int j = starting_col[pass_index]; j < width; j += col_increment[pass_index]) {
-                Uint8 color = get_new_pixel ();
-                Uint8 alpha = get_new_pixel ();
-                pixels[i*width + j] = SDL_MapRGBA (format, color, color, color, alpha);
+              for (int j = i*width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
+                Uint8 color = get_new_pixel (pass);
+                Uint8 alpha = get_new_pixel (pass);
+                pixels[j] = SDL_MapRGBA (format, color, color, color, alpha);
               }
               to_the_next_byte ();
             }
             break;
           case 3:
             if (plet_chnk_count != 1)  {
-              delete [] pixels;
               std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
+              SDL_FreeFormat(format);
+              delete [] pixels;
               return Texture ();
             }
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
-              for (int j = starting_col[pass_index]; j < width; j += col_increment[pass_index]) {
+              for (int j = i*width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
                 uint64_t plet_pos = access_bit_png (&pass[0], pos, bitdepth);
                 if (plet_pos >= palette.size ()) {
-                  std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
+                  SDL_FreeFormat(format);
                   delete [] pixels;
+                  std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
                   return Texture ();
                 }
-                pixels[i*width + j] = SDL_MapRGBA (
-                  format,
-                  palette[plet_pos].r,
+                pixels[j] = SDL_MapRGBA (
+                  format, 
+                  palette[plet_pos].r, 
                   palette[plet_pos].g,
-                  palette[plet_pos].b,
+                  palette[plet_pos].b, 
                   palette[plet_pos].a
                 );
               }
@@ -585,11 +587,11 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             break;
           case 2:
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
-              for (int j = starting_col[pass_index]; j < width; j += col_increment[pass_index]) {
-                Uint8 colorr = get_new_pixel ();
-                Uint8 colorg = get_new_pixel ();
-                Uint8 colorb = get_new_pixel ();
-                pixels[i*width + j] = SDL_MapRGBA (
+              for (int j = i * width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
+                Uint8 colorr = get_new_pixel (pass);
+                Uint8 colorg = get_new_pixel (pass);
+                Uint8 colorb = get_new_pixel (pass);
+                pixels[j] = SDL_MapRGBA (
                   format, colorr, colorg, colorb,
                   (has_trns && colorr == bkgc.r && colorg == bkgc.g && colorb == bkgc.b ? 0 : 255)
                 );
@@ -599,9 +601,9 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             break;
           case 0:
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
-              for (int j = starting_col[pass_index]; j < width; j += col_increment[pass_index]) {
-                color = get_new_pixel ();
-                pixels[i*width + j] = SDL_MapRGBA (
+              for (int j = i * width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
+                color = get_new_pixel (pass);
+                pixels[j] = SDL_MapRGBA (
                   format, color, color, color, (has_trns && bkgc.r == color ? 0 : 255)
                 );
               }
@@ -609,8 +611,9 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             }
             break;
           default:
-            delete [] pixels;
             std::cout << "color type not found." << std::endl;
+            SDL_FreeFormat(format);
+            delete [] pixels;
             return Texture();
         }
       }
@@ -618,9 +621,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       break;
     }
   }
-  SDL_FreeFormat(format);
 
-  tex = Texture (render, height, width, center, pixels);
+  Texture tex = Texture (render, height, width, center, pixels);
+
+  SDL_FreeFormat(format);
   delete [] pixels;
   return tex;
 }
