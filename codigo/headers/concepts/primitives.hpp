@@ -72,17 +72,19 @@ class Dir3 {
     bool operator== (const Dir3 &);
     bool operator!= (const Dir3 &);
 
-    Dir3 operator- ();
+    Dir3 operator- () const;
 
-    Dir3 operator+ (const Dir3 &);
-    Dir3 operator- (const Dir3 &);
-    Dir3 operator* (float);
-    float operator* (const Dir3 &);
+    Dir3 operator+ (const Dir3 &) const;
+    Dir3 operator- (const Dir3 &) const;
+    Dir3 operator* (float) const;
+    float operator* (const Dir3 &) const;
     void operator+= (const Dir3 &);
     void operator-= (const Dir3 &);
     void operator*= (float);
-    Dir3 normalize ();
-    float modulo ();
+    Dir3 cross (const Dir3&) const;
+
+    Dir3 normalize () const;
+    float modulo () const;
 
     void rotate_x (float angle);
     void rotate_y (float angle);

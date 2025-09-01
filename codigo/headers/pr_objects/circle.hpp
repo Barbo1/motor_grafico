@@ -5,8 +5,9 @@
 
 #include <SDL2/SDL.h>
 
-class Circle: public Physical, public Texture {
+class Circle: public Physical {
   private:
+    Visualizer<D2FIG> texture;
     uint32_t radio;
 
   public: 
@@ -19,7 +20,6 @@ class Circle: public Physical, public Texture {
     Circle (Circle &&);
     Circle & operator= (const Circle &);
     Circle & operator= (Circle &&);
-    ~Circle ();
 
     void set_radio (uint32_t);
     uint32_t get_radio ();

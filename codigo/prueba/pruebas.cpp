@@ -12,7 +12,6 @@
 #include "../headers/concepts/primitives.hpp"
 #include "../headers/concepts/texture.hpp"
 #include "../headers/pr_objects/square.hpp"
-#include "../headers/pr_objects/fig3D.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
@@ -53,163 +52,42 @@ int main () {
 
   bool step = true;
   bool cont = true;
-  AngDir2 gravity = AngDir2 (0, 2, 0);
-
-  std::vector<AngDir2*> fig_vec = std::vector<AngDir2*>();
-  Square fig (render, 15, 50, {300, 100, 0}, SDL_Color {255, 255, 255, 0});
-  fig.set_velocity({0, -1, 2});
-  fig.set_force(gravity);
   SDL_Event event;
 
+  AngDir2 gravity = AngDir2 (0, 2, 0);
+  std::vector<AngDir2*> fig_vec = std::vector<AngDir2*>();
+  Square fig (render, 15, 50, {300, 100, 0}, SDL_Color {255, 255, 255, 255});
+  fig.set_velocity({0, -1, 2});
+  fig.set_force(gravity);
+
+  Dir3 A = {50, 50, 50};
   Dir3 B = {-50, 50, 50};
+  Dir3 C = {-50, -50, 50};
+  Dir3 D = {50, -50, 50};
+  Dir3 E = {50, 50, -50};
   Dir3 F = {-50, 50, -50};
   Dir3 G = {-50, -50, -50};
-  Dir3 C = {-50, -50, 50};
-  Dir3 A = {50, 50, 50};
-  Dir3 E = {50, 50, -50};
   Dir3 H = {50, -50, -50};
-  Dir3 D = {50, -50, 50};
+
   std::vector<std::vector<Dir3>> points = {
-    {A, B, C, D},
-    {E, F, G, H},
-    {A, B, F, E},
-    {D, C, G, H},
-    {B, F, G, C},
-    {A, E, H, D}
+    {A, B, C}, {A, C, D}, {E, F, G}, {E, G, H},
+    {A, B, F}, {A, F, E}, {D, C, G}, {D, G, H},
+    {A, E, H}, {A, H, D}, {B, F, G}, {B, G, C}
   };
-  fig3D cube = fig3D (points);
-  cube.set_color (std::vector<SDL_Color>{
-    {.r=255, .g=0, .b=0, .a=255},
-    {.r=0, .g=255, .b=0, .a=255},
-    {.r=0,  .g=0, .b=255, .a=255},
-    {.r=255,  .g=255, .b=0, .a=255},
-    {.r=0,  .g=255, .b=255, .a=255},
-    {.r=255,  .g=0, .b=255, .a=255},
-  });
-  cube.set_position({200, 200, 200});
+  std::vector<Dir3> normals = {
+    {0,0,1}, {0,0,1}, {0,0,-1}, {0,0,-1},
+    {0,1,0}, {0,1,0}, {0,-1,0}, {0,-1,0},
+    {1,0,0}, {1,0,0}, {-1,0,0}, {-1,0,0}
+  };
+  Visualizer<D3FIG> cube = Visualizer<D3FIG> (points, normals);
+  cube.set_color (SDL_Color{.r=255, .g=0, .b=0, .a=255});
+  Dir3 cube_pos = Dir3 {200, 200, 200};
 
   std::size_t tope = 70;
   std::size_t min = 5;
   std::array<float, 3> arr = {static_cast<float>(tope), static_cast<float>(tope/2 + min), static_cast<float>(min)};
-  std::vector<Texture> textures;
+  std::vector<Visualizer<D2FIG>> textures;
 
-  textures.push_back (chargePNG (render, "../images/pngs/basn0g01.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn0g02.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn0g04.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn0g16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn3p01.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn3p02.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn3p04.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn4a08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn4a16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn6a08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basn6a16.png"));
-  textures.push_back (Texture());
-
-  textures.push_back (chargePNG (render, "../images/pngs/tbbn0g04.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbbn2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbbn3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbgn2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbgn3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbrn2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbwn0g16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbwn3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tbyn3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tp0n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tp0n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tp0n3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tp1n3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/tm3n3p02.png"));
-  textures.push_back (Texture());
-
-  textures.push_back (chargePNG (render, "../images/pngs/f00n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f00n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f01n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f01n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f02n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f02n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f03n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f04n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f04n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/f99n0g04.png"));
-  textures.push_back (Texture());
-
-  textures.push_back (chargePNG (render, "../images/pngs/pp0n2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/pp0n6a08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/ps1n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/ps1n2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/ps2n0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/ps2n2c16.png"));
-  textures.push_back (Texture());
-  
-  textures.push_back (chargePNG (render, "../images/pngs/oi9n2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi9n0g16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi4n2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi4n0g16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi2n2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi1n2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi1n0g16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/oi2n0g16.png"));
-  textures.push_back (Texture());
-  
-  textures.push_back (chargePNG (render, "../images/pngs/z00n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/z03n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/z06n2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/z09n2c08.png"));
-  textures.push_back (Texture());
- 
-  textures.push_back (chargePNG (render, "../images/pngs/basi0g01.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi0g02.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi0g04.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi0g08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi0g16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi2c08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi2c16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi3p01.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi3p02.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi3p04.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi3p08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi4a08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi4a16.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi6a08.png"));
-  textures.push_back (chargePNG (render, "../images/pngs/basi6a16.png"));
-  textures.push_back (Texture());
-
-  /*
-  std::cout << "muestra de corrompidos" << std::endl;
-  std::cout << "1 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xs1n0g01.png"));
-  std::cout << "2 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xs2n0g01.png"));
-  std::cout << "3 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xs4n0g01.png"));
-  std::cout << "4 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xs7n0g01.png"));
-  std::cout << "5 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xcrn0g04.png"));
-  std::cout << "6 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xlfn1g04.png"));
-  //std::cout << "7 ->" << std::endl;
-  //textures.push_back (chargePNG (render, "../images/pngs/xhdn0g08.png"));
-  std::cout << "8 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xc1n0g08.png"));
-  std::cout << "9 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xc9n2c08.png"));
-  std::cout << "10 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xd0n2c08.png"));
-  std::cout << "11 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xd3n2c08.png"));
-  std::cout << "12 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xd9n2c08.png"));
-  std::cout << "13 ->" << std::endl;
-  textures.push_back (chargePNG (render, "../images/pngs/xdtn0g01.png"));
-  //std::cout << "14 ->" << std::endl;
-  //textures.push_back (chargePNG (render, "../images/pngs/xcsn0g01.png"));
-  */
   int mid = 300;
 
   while (cont) {
@@ -238,7 +116,7 @@ int main () {
         a = min;
       std::size_t b = a;
       float cosi = 1 - a / tope;
-      Texture::circunference (render, b, std::roundl(0.3 * std::log2(b)), {
+      Visualizer<D2FIG>::circunference (render, b, std::roundl(0.3 * std::log2(b)), {
         .r = 255,
         .g = 255,
         .b = 255,
@@ -260,10 +138,25 @@ int main () {
     }
 
     cube.rotate({0.02, 0.01, 0.013});
-    cube.draw(render);
+    cube.draw(render, cube_pos);
 
     fig.calculate_movement(fig_vec);
     fig.draw(render);
+
+    print_triangle_c (
+      render, 
+      Dir2 {400, 403}, 
+      Dir2 {500, 450}, 
+      Dir2 {400, 450}, 
+      SDL_Color {.r = 255, .g = 255, .b = 255, .a = 255}
+    );
+    print_triangle_c (
+      render, 
+      Dir2 {450, 453}, 
+      Dir2 {500, 450}, 
+      Dir2 {400, 450}, 
+      SDL_Color {.r = 255, .g = 255, .b = 255, .a = 255}
+    );
 
     float posy = 0;
     float posx = 300;

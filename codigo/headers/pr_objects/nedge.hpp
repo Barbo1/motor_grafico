@@ -3,8 +3,9 @@
 #include "../concepts/physical.hpp"
 #include "../concepts/texture.hpp"
 
-class NEdge: public Physical, public Texture {
+class NEdge: public Physical {
   private:
+    Visualizer<D2FIG> texture;
     std::vector<Dir2> _points;
 
   public: 

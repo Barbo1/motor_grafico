@@ -3,39 +3,42 @@
 #include <cmath>
 #include <utility>
 
-Circle::Circle (): Physical(), Texture(), radio(0) {}
+Circle::Circle (): Physical(), radio(0) {
+  this->texture = Visualizer<D2FIG>();
+}
 
 Circle::Circle (
   SDL_Renderer* render, uint32_t radio, AngDir2 center, SDL_Color color, float density, float elasticity, 
   float f_s, float f_k, bool movible, bool colidable
 ) : Physical (center, density, 2 * M_PI * radio, elasticity, f_s, f_k, movible, colidable), 
-  Texture(circle(render, radio, color)),
   radio (radio)
-{}
-
-Circle::Circle (const Circle & circle) : Physical (circle), Texture (circle) {
-  this->radio = circle.radio;
+{
+  this->texture = Visualizer<D2FIG>::circle(render, radio, color);
 }
 
-Circle::Circle (Circle && circle) : Physical (circle), Texture (circle) {
+Circle::Circle (const Circle & circle) : Physical (circle) {
+  this->radio = circle.radio;
+  this->texture = circle.texture;
+}
+
+Circle::Circle (Circle && circle) : Physical (circle) {
   this->radio = std::exchange(circle.radio, 0);
+  this->texture = std::exchange(circle.texture, Visualizer<D2FIG>());
 }
 
 Circle & Circle::operator= (const Circle & circle) {
   this->Physical::operator=(circle);
-  this->Texture::operator=(circle);
+  this->texture = circle.texture;
   this->radio = circle.radio;
   return *this;
 }
 
 Circle & Circle::operator= (Circle && circle) {
   this->Physical::operator=(std::move(circle));
-  this->Texture::operator=(std::move(circle));
   this->radio = std::exchange(circle.radio, 0);
+  this->texture = std::exchange(circle.texture, Visualizer<D2FIG>());
   return *this;
 }
-
-Circle::~Circle () {}
 
 void Circle::set_radio (uint32_t radio) {
   this->radio = radio;
@@ -47,6 +50,6 @@ uint32_t Circle::get_radio () {
 
 void Circle::draw (SDL_Renderer * render) {
   if (this->radio != 0) {
-    this->Texture::draw(render, this->position);
+    this->texture.draw(render, this->position);
   }
 }

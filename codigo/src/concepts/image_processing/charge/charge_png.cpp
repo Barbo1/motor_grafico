@@ -2,10 +2,6 @@
 #include "../zlib_inflate/inflate.cpp"
 #include "../zlib_inflate/read_bytes.cpp"
 
-#include <SDL2/SDL_gamecontroller.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_stdinc.h>
-#include <cstdint>
 #include <fstream>
 #include <iostream>
 
@@ -33,12 +29,13 @@ uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
     return static_cast<uint8_t>(diagonal);
 }
 
-Texture chargePNG (SDL_Renderer* render, const std::string& path) {
+template <VisualType T>
+Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string& path) {
   std::fstream fil(path, std::ios::binary);
   fil.open (path);
   if (!fil.is_open ()) {
     std::cout << "The file was not found." << std::endl;
-    return Texture ();
+    return Visualizer<D2FIG> ();
   }
 
   fil.seekg (0, std::ios::end);
@@ -46,7 +43,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   if (count < 0) {
     fil.close ();
     std::cout << "Final position not found." << std::endl;
-    return Texture ();
+    return Visualizer<D2FIG> ();
   }
   fil.seekg (0, std::ios::beg);
 
@@ -54,7 +51,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   buff.resize (count);
   if (!fil.read ((char* )buff.data (), count)) {
     std::cout << "Error while reading data." << std::endl;
-    return Texture ();
+    return Visualizer<D2FIG> ();
   }
   fil.close ();
 
@@ -64,7 +61,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   if (buff[pos] != 0x89 || buff[pos + 1] != 0x50 || buff[pos + 2] != 0x4E || buff[pos + 3] != 0x47 || 
       buff[pos + 4] != 0x0D || buff[pos + 5] != 0x0A || buff[pos + 6] != 0x1A || buff[pos + 7] != 0x0A) {
     std::cout << "Failure in signature recognition." << std::endl;
-    return Texture ();
+    return Visualizer<D2FIG> ();
   }
   pos += 8;
 
@@ -72,7 +69,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   if (read_bytes (&buff[0], pos, 4) != 13 ||
       static_cast<uint32_t> (read_bytes (&buff[0], pos, 4)) != 0x49484452) { 
     std::cout << "IHDR chunk not founded." << std::endl;
-    return Texture ();
+    return Visualizer<D2FIG> ();
   }
 
   /* Reading image parameters. */
@@ -89,14 +86,14 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
     std::cout 
       << "PNG reading error: size of the total image must not be zero(width="
       << width << ", height=" << height << ")." << std::endl;
-    return Texture();
+    return Visualizer<D2FIG>();
   }
 
   if (((bitdepth - 1) & bitdepth) != 0) {
     std::cout 
       << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
       << std::endl;
-    return Texture();
+    return Visualizer<D2FIG>();
   }
 
   int sampledepth = bitdepth;
@@ -115,7 +112,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
-        return Texture();
+        return Visualizer<D2FIG>();
       }
       break;
     case 3:
@@ -123,7 +120,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
-        return Texture();
+        return Visualizer<D2FIG>();
       }
       sampledepth = 8;
     case 0:
@@ -131,7 +128,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
-        return Texture();
+        return Visualizer<D2FIG>();
       }
       channels = 1;
       break;
@@ -139,28 +136,28 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       std::cout 
         << "PNG reading error: color type(" << colortype << ") unsupported."
         << std::endl;
-      return Texture();
+      return Visualizer<D2FIG>();
   }
 
   if (compmethod != 0) {
     std::cout 
       << "PNG reading error: descompression method(code: " << compmethod << ") not recognized."
       << std::endl;
-    return Texture();
+    return Visualizer<D2FIG>();
   }
 
   if (filtmethod != 0) {
     std::cout 
       << "PNG reading error: filter method(code: " << filtmethod << ") not recognized."
       << std::endl;
-    return Texture();
+    return Visualizer<D2FIG>();
   }
 
   if (intemethod > 2) {
     std::cout 
       << "PNG reading error: interlace method(code: " << intemethod << ") not recognized."
       << std::endl;
-    return Texture();
+    return Visualizer<D2FIG>();
   }
 
   /* Palette information. */
@@ -193,7 +190,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
       std::cout 
         << "PNG reading error: size of block greater than known information."
         << std::endl;
-      return Texture ();
+      return Visualizer<D2FIG> ();
     }
 
     switch (read_bytes(&buff[0], pos, 4)) {
@@ -204,7 +201,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
           std::cout 
             << "PNG reading error: PLTE chunk present when it must not."
             << std::endl;
-          return Texture ();
+          return Visualizer<D2FIG> ();
         }
 
         palette_count = info_lenght / 3;
@@ -213,7 +210,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             << "PNG reading error: PLTE chunk has an unreadable format or gives contradictory"
             << " information due the currently obtained."
             << std::endl;
-          return Texture ();
+          return Visualizer<D2FIG> ();
         }
         plet_chnk_count++;
 
@@ -259,7 +256,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
               std::cout 
                 << "PNG reading error: number of alpha entries in tRNS exceeded PLTE colors."
                 << std::endl;
-              return Texture ();
+              return Visualizer<D2FIG> ();
             }
 
             for (int i = 0; i < info_lenght; i++)
@@ -270,7 +267,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
               << "PNG reading error: tRNS must not be defined for color type " 
               << colortype << "."
               << std::endl;
-            return Texture ();
+            return Visualizer<D2FIG> ();
         }
 
         break;
@@ -293,10 +290,9 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
   std::vector<uint8_t> output;
   output.reserve(idat_data.size());
   if (!inflate(idat_data, output))
-    return Texture();
+    return Visualizer<D2FIG>();
 
   /* Interlace changing. */
-  SDL_Point center = SDL_Point {.x = width / 2, .y = height / 2}; 
   uint64_t many, scanline, bpp, pixels_pos;
   double sample_scale = 255.f / ((1 << sampledepth) - 1);
 
@@ -363,12 +359,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
 
             break;
           default:
-            std::cout 
-              << "PNG reading error: filter type " << aux << " unknown."
-              << std::endl;
+            std::cout << "PNG reading error: filter type " << aux << " unknown." << std::endl;
             SDL_FreeFormat(format);
             delete [] pixels;
-            return Texture ();
+            return Visualizer<D2FIG> ();
         }
         many += scanline;
       }
@@ -403,7 +397,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             SDL_FreeFormat(format);
             delete [] pixels;
             std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
-            return Texture ();
+            return Visualizer<D2FIG> ();
           }
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
@@ -412,7 +406,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
                 SDL_FreeFormat(format);
                 delete [] pixels;
                 std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
-                return Texture ();
+                return Visualizer<D2FIG> ();
               }
               pixels[pixels_pos++] = SDL_MapRGBA (
                 format,
@@ -451,10 +445,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
           }
           break;
         default:
-          std::cout << "color type not found." << std::endl;
           SDL_FreeFormat(format);
           delete [] pixels;
-          return Texture();
+          std::cout << "color type not found." << std::endl;
+          return Visualizer<D2FIG>();
       }
       break;
 
@@ -529,7 +523,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
                 << std::endl;
               SDL_FreeFormat(format);
               delete [] pixels;
-              return Texture();
+              return Visualizer<D2FIG>();
           }
           many += scanline;
         }
@@ -563,7 +557,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
               std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
               SDL_FreeFormat(format);
               delete [] pixels;
-              return Texture ();
+              return Visualizer<D2FIG> ();
             }
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
               for (int j = i*width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
@@ -572,7 +566,7 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
                   SDL_FreeFormat(format);
                   delete [] pixels;
                   std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
-                  return Texture ();
+                  return Visualizer<D2FIG> ();
                 }
                 pixels[j] = SDL_MapRGBA (
                   format, 
@@ -611,10 +605,10 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
             }
             break;
           default:
-            std::cout << "color type not found." << std::endl;
             SDL_FreeFormat(format);
             delete [] pixels;
-            return Texture();
+            std::cout << "color type not found." << std::endl;
+            return Visualizer<D2FIG>();
         }
       }
 
@@ -622,9 +616,14 @@ Texture chargePNG (SDL_Renderer* render, const std::string& path) {
     }
   }
 
-  Texture tex = Texture (render, height, width, center, pixels);
+  Visualizer<T> tex = Visualizer<T> (render, height, width, pixels);
 
   SDL_FreeFormat(format);
   delete [] pixels;
   return tex;
 }
+
+template Visualizer<D2FIG> Visualizer<D2FIG>::chargePNG (
+  SDL_Renderer* render, 
+  const std::string& path
+);

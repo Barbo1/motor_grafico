@@ -3,7 +3,9 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
+#include <cstdint>
 #include <vector>
+#include <variant>
 #include <string>
 
 #include "./primitives.hpp"
@@ -25,85 +27,101 @@
  *  - todos los puntos estan correctamente ordenados (baja orden algoritmico)
  */
 
+enum VisualType {
+  D2FIG,
+  D3FIG,
+};
+
+/* Textura. */
+template <VisualType T>
+class Visualizer {
+  private: 
+    int* use_count;
+    SDL_Texture* texture;
+    int height;
+    int width;
+
+    Visualizer(SDL_Renderer* render, int height, int width, Uint32* pixels);
+    static Visualizer bounder (
+      SDL_Renderer* render, int* bounds, int height, int width, SDL_Color color
+    );
+
+  public:
+    Visualizer ();
+    Visualizer (const Visualizer & texture);
+    Visualizer (Visualizer && texture);
+    Visualizer & operator= (const Visualizer & texture);
+    Visualizer & operator= (Visualizer && texture);
+    bool valid ();
+
+    void draw (SDL_Renderer* render, const AngDir2 & position) const;
+
+    /* special constructors */
+    static Visualizer square (SDL_Renderer* render, int height, int base, SDL_Color color);
+    static Visualizer rounded_square (SDL_Renderer* render, int height, int base, int radio, SDL_Color color);
+    static Visualizer triangle (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
+    static Visualizer circle (SDL_Renderer* render, int radio, SDL_Color color);
+    static Visualizer circunference (SDL_Renderer* render, int radio, int width, SDL_Color color);
+    static Visualizer oval (SDL_Renderer* render, int height, int base, SDL_Color color);
+    static Visualizer polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
+    static Visualizer image (SDL_Renderer* render, std::string path);
+
+    ~Visualizer();
+
+    Visualizer<T> chargePNG (SDL_Renderer* render, const std::string& path);
+    Visualizer<T> chargeJPEG (SDL_Renderer* render, const std::string& path);
+    Visualizer<T> chargeBMP (SDL_Renderer* render, const std::string& path);
+};
+
+template class Visualizer<D2FIG>;
+
 /* shows in the render the points in the array. */
 void print_points (
   SDL_Renderer* render, std::vector<SDL_Point&> points, 
   SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
 );
 
-void print_polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
+void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
+void print_polygon_t (SDL_Renderer* render, std::vector<Dir2> points, const Visualizer<D2FIG>& texture);
 
-class Texture {
+void print_triangle_c (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
+void print_triangle_t (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, const Visualizer<D2FIG>& texture);
+
+/* Tridimentional figures with only three verteces faces. */
+template <>
+class Visualizer<D3FIG> {
   private: 
-    int* use_count;
-    SDL_Texture* texture;
-    SDL_Point center;
-    int height;
-    int width;
+    struct Face {
+      uint64_t nor;
+      uint64_t pos[3];
+      uint64_t map[3];
+    };
 
-    Texture(SDL_Renderer* render, int height, int width, SDL_Point & center, Uint32* pixels);
-    static Texture bounder (
-      SDL_Renderer* render, int* bounds, int height, int width, SDL_Color color, SDL_Point center
-    );
+    struct Info {
+      std::vector<Dir3> vectors;
+      std::vector<Dir3> normals;
+      std::vector<Dir2> mapping;
+      std::vector<Face> indeces;
+    };
+
+    std::variant<Visualizer<D2FIG>, SDL_Color> texture;
+    Info* info;
+    int* use_count;
 
   public:
-    Texture ();
-    Texture (const Texture & texture);
-    Texture (Texture && texture);
-    Texture & operator= (const Texture & texture);
-    Texture & operator= (Texture && texture);
+    Visualizer ();
+    Visualizer (std::vector<std::vector<Dir3>> points, std::vector<Dir3> normals);
+    Visualizer (std::string path);
+    Visualizer (const Visualizer &);
+    Visualizer (Visualizer &&);
+    ~Visualizer ();
+    Visualizer & operator= (const Visualizer &);
+    Visualizer & operator= (Visualizer &&);
 
-    void draw (SDL_Renderer* render, const AngDir2 & position) const;
+    void set_color (const SDL_Color& color);
+    void set_texture (const Visualizer<D2FIG>& color);
 
-    void set_center (Dir2 center);
+    void rotate (const Dir3& rotation);
 
-    /* special constructors */
-    static Texture square (SDL_Renderer* render, int height, int base, SDL_Color color);
-    static Texture rounded_square (SDL_Renderer* render, int height, int base, int radio, SDL_Color color);
-    static Texture triangle (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
-    static Texture circle (SDL_Renderer* render, int radio, SDL_Color color);
-    static Texture circunference (SDL_Renderer* render, int radio, int width, SDL_Color color);
-    static Texture oval (SDL_Renderer* render, int height, int base, SDL_Color color);
-    static Texture polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
-    static Texture image (SDL_Renderer* render, std::string path);
-
-    ~Texture();
-
-    friend Texture chargePNG (SDL_Renderer* render, const std::string& path);
-    friend Texture chargeJPEG (SDL_Renderer* render, const std::string& path);
-    friend Texture chargeBMP (SDL_Renderer* render, const std::string& path);
+    void draw (SDL_Renderer* render, const Dir3 & position) const;
 };
-
-Texture chargePNG (SDL_Renderer* render, const std::string& path);
-Texture chargeJPEG (SDL_Renderer* render, const std::string& path);
-Texture chargeBMP (SDL_Renderer* render, const std::string& path);
-
-/*
- tengo que refactorizar Texture y cambiarlo por lo siguiente:
-*/
-
-enum VisualType {
-  VT_TEXTURE,
-  VT_3DFIG,
-  VT_CONTIGUOUS,
-};
-
-/* Textura. */
-template <VisualType T>
-class Visualizer {
-  
-};
-
-/* Conjunto de puntos. */
-template <>
-class Visualizer<VT_CONTIGUOUS> {
-  
-};
-
-/* Figuras tridimensionales. */
-template <>
-class Visualizer<VT_3DFIG> {
-  
-};
-
-#include <string>

@@ -4,10 +4,12 @@
 #include "../concepts/texture.hpp"
 #include <cstdint>
 
-class Square: public Physical, public Texture {
+class Square: public Physical {
   private:
     int height;
     int width;
+
+    Visualizer<D2FIG> texture;
 
     Square ();
 
