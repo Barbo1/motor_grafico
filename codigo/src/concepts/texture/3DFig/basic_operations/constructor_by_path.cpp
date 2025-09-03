@@ -1,111 +1,17 @@
 #include "../../../../../headers/concepts/texture.hpp"
+#include "../../../file_processing/readers/normal_file_readed.cpp"
 #include <cstdint>
 #include <iostream>
-#include <fstream>
 #include <ranges>
 #include <vector>
 #include <cstdlib>
 
-const int NFR_BUFFER_LIMIT = 1024;
-class NormalFileReader {
-  private:
-    std::fstream fil;
-    char buffer[NFR_BUFFER_LIMIT];
-    int pos, lim;
-    bool is_lim;
-    std::string path;
-
-  public:
-    NormalFileReader (std::string path) {
-      this->path = path;
-      this->fil = std::fstream (path);
-
-      if (!fil.is_open()) {
-        std::cout 
-          << "Error: cannot open the file while charging vizualizer from " + path + "." 
-          << std::endl;
-
-        this->lim = this->pos;
-        this->is_lim = true;
-      } else {
-        this->pos = NFR_BUFFER_LIMIT - 1;
-        this->is_lim = false;
-      }
-    }
-
-    bool finished () {
-      return this->is_lim && this->pos == this->lim;
-    }
-
-    void finish () {
-      this->is_lim = true;
-      this->lim = this->pos;
-    }
-  
-    char reading () {
-      if (this->finished()) 
-        return (char)EOF;
-
-      this->pos++;
-
-      if (this->pos == NFR_BUFFER_LIMIT) {
-        this->fil.read(this->buffer, NFR_BUFFER_LIMIT);
-        this->pos = 0;
-        if (fil.eof()) {
-          this->lim = this->fil.gcount();
-          this->is_lim = true;
-        }
-      }
-      return this->buffer[this->pos];
-    }
-
-    void skipping (char stop) {
-      while (!this->finished() && this->buffer[this->pos] != stop) {
-        this->pos++;
-        if (this->pos == NFR_BUFFER_LIMIT) {
-          this->fil.read(this->buffer, NFR_BUFFER_LIMIT);
-          this->pos = 0;
-          if (this->fil.eof()) {
-            this->lim = this->fil.gcount();
-            this->is_lim = true;
-          }
-        }
-      }
-    } 
-
-    std::string reading_word () {
-      char let;
-      std::string str = "";
-      while((let = this->reading()) != ' ' && let != '\n' && let != EOF)
-        str += let;
-      return str;
-    }
-
-    float reading_float () {
-      if (this->finished()) 
-        return 0;
-
-      std::string str = this->reading_word();
-      char * last;
-      float ret = strtof(str.c_str(), &last);
-      if (*last != '\0') {
-        std::cout 
-          << "Error: the file " + this->path + " hasn't a proper structure(1)." 
-          << std::endl;
-        std::exit(-1);
-      }
-      return ret;
-    }
-
-    std::string get_path () {
-      return this->path;
-    }
-
-    ~NormalFileReader () {
-      this->fil.close();
-    }
-};
-
+/* Constructs a 3D figure due the information given a .obj file referenced by the 
+ * variable path. If it will be assosiated with an image, it is referenced by the 
+ * varialbe img. Both are paths to the corresponding files. The uv_hiding variable 
+ * tells the implementation to not read the uv mapping vectors, so that a plain 
+ * object could be defined.
+ * */
 Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding) {
   this->info = new Info {
     .vectors = std::vector<Dir3>(), 
@@ -126,16 +32,20 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
   while (!file.finished()) {
     str = file.reading_word();
 
+    /* the current line of the file corresponds to... */
+    /* ... a positon vector(three dimentions). */
     if (str == "v") {
       this->info->vectors.push_back(
         Dir3 { file.reading_float(), file.reading_float(), file.reading_float() }
       );
 
+    /* ... a normal vector(three dimentions). */
     } else if (str == "vn") {
       this->info->normals.push_back(
         Dir3 { file.reading_float(), file.reading_float(), file.reading_float() }
       );
 
+    /* ... a uv mapping vector(two dimentions). */
     } else if (str == "vt") {
       if (uv_hiding) {
         file.reading_word();
@@ -146,6 +56,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
         );
       }
 
+    /* ... the information of a face. */
     } else if (str == "f") {
       Face ret;
       uint64_t arr[3];
@@ -157,7 +68,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
 
         if (std::ranges::distance(parts) != 3) {
           std::cout 
-            << "Error: the file " << file.get_path()  << " has faces with more than 3 verteces." 
+            << "Error: the file " << path  << " has faces with more than 3 verteces." 
             << std::endl;
           std::exit(-1);
         }
@@ -168,7 +79,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
 
           if (res == 0) {
             std::cout 
-              << "Error: the file " << file.get_path() << " hasn't a proper structure(2)." 
+              << "Error: the file " << path << " hasn't a proper structure(2)." 
               << std::endl;
             std::exit(-1);
           }
@@ -178,7 +89,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
 
         if (this->info->vectors.size() <= arr[0]) {
           std::cout 
-            << "Error: the file " << file.get_path() << " hasn't a proper structure(3)."
+            << "Error: the file " << path << " hasn't a proper structure(3)."
             << std::endl;
           std::exit(-1);
         } else {
@@ -189,7 +100,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
         else {
           if (this->info->mapping.size() <= arr[1]) {
             std::cout 
-              << "Error: the file " << file.get_path() << " hasn't a proper structure(4)."
+              << "Error: the file " << path << " hasn't a proper structure(4)."
               << std::endl;
             std::exit(-1);
           } else {
@@ -200,7 +111,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
         if (i == 0) {
           if (this->info->normals.size() <= arr[2]) {
             std::cout 
-              << "Error: the file " << file.get_path() << " hasn't a proper structure(5)."
+              << "Error: the file " << path << " hasn't a proper structure(5)."
               << std::endl;
             std::exit(-1);
           } else {
@@ -209,7 +120,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
         } else {
           if (ret.nor != arr[2]) {
             std::cout 
-              << "Error: the file " << file.get_path() << " hasn't a proper structure(6)."
+              << "Error: the file " << path << " hasn't a proper structure(6)."
               << std::endl;
             std::exit(-1);
           }
@@ -218,16 +129,18 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
 
       this->info->indeces.push_back(ret);
 
+    /* ... a new object(only one object accepted). */
     } else if (str == "o") {
       obj_count++;
       if (obj_count >= 2)
         file.finish();
     }
 
+    /* skipping data until the end of the line. */
     file.skipping('\n');
   }
 
-  /* Agregado de imagen. */
+  /* Aggregating an image if present. */
   if (img != "") {
     int w, h;
     Uint32* pixels = charging_PNG_to_memory (img, w, h);
@@ -239,7 +152,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
       if (std::get<SDL_Surface*>(this->texture) == nullptr) {
         std::cout 
           << "Error: There were an error charging the image from the path" 
-          << file.get_path() << "." << std::endl;
+          << path << "." << std::endl;
         std::exit(-1);
       }
     }

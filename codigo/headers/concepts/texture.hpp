@@ -12,7 +12,7 @@
 #include "./primitives.hpp"
 
 /*
- * hay que(entre varias texturas):
+ * hay que(entre varias texturas bidimencionales):
  *  - juntar dos texturas -> append
  *  - tomar la direrencia -> differ
  *  - tomar todo lo de una y quitar lo de la otra -> abstain
@@ -34,8 +34,8 @@ void print_points (
   SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
 );
 
+/* Functions meant to print plain bidimentional figures. */
 void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
-
 void print_triangle_c (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
 
 enum VisualType {
@@ -43,7 +43,7 @@ enum VisualType {
   D3FIG,
 };
 
-/* Textura. */
+/* This kind of Visualizer represents a bidimentional texture. */
 template <VisualType T>
 class Visualizer {
   private: 
@@ -92,13 +92,13 @@ Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
 Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
 Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
 
+/* Function meant to print a bidimentional figures with a uv mapping. */
 void print_polygon_t (
   SDL_Renderer* render, 
   std::vector<Dir2> points, 
   std::vector<Dir2> uvs, 
   const Visualizer<D2FIG>& texture
 );
-
 void print_triangle_t (
   SDL_Renderer* render, 
   Dir2 point1, Dir2 point2, Dir2 point3, 
@@ -106,7 +106,7 @@ void print_triangle_t (
   SDL_Surface* texture
 );
 
-/* Tridimentional figures with only three verteces faces. */
+/* This kind of Visualizer represents a tridimentional figures, posibly with uv mapping. */
 template <>
 class Visualizer<D3FIG> {
   private: 

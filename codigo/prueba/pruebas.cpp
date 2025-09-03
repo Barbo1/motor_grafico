@@ -3,15 +3,12 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_events.h>
-#include <cstddef>
 #include <iostream>
 #include <stdlib.h>
 #include <cmath>
-#include <array>
 
 #include "../headers/concepts/primitives.hpp"
 #include "../headers/concepts/texture.hpp"
-#include "../headers/pr_objects/square.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
@@ -55,8 +52,8 @@ int main () {
   SDL_Event event;
 
   Visualizer<D3FIG> mesita = Visualizer<D3FIG> ("../images/cube.obj", "../images/rubik.png");
-  mesita.resize(50);
-  Dir3 cube_pos = Dir3 {200, 200, 200};
+  mesita.resize(60);
+  Dir3 cube_pos = Dir3 {200, 200, 100};
 
   while (cont) {
     if (SDL_PollEvent(&event)) {
