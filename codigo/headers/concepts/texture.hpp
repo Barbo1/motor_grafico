@@ -3,6 +3,7 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
+#include <SDL2/SDL_surface.h>
 #include <cstdint>
 #include <vector>
 #include <variant>
@@ -26,6 +27,16 @@
  * es mejor si:
  *  - todos los puntos estan correctamente ordenados (baja orden algoritmico)
  */
+
+/* shows in the render the points in the array. */
+void print_points (
+  SDL_Renderer* render, std::vector<SDL_Point&> points, 
+  SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
+);
+
+void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
+
+void print_triangle_c (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
 
 enum VisualType {
   D2FIG,
@@ -68,24 +79,32 @@ class Visualizer {
 
     ~Visualizer();
 
-    Visualizer<T> chargePNG (SDL_Renderer* render, const std::string& path);
-    Visualizer<T> chargeJPEG (SDL_Renderer* render, const std::string& path);
-    Visualizer<T> chargeBMP (SDL_Renderer* render, const std::string& path);
+    friend Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
+    friend Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
+    friend Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
 };
 
 template class Visualizer<D2FIG>;
 
-/* shows in the render the points in the array. */
-void print_points (
-  SDL_Renderer* render, std::vector<SDL_Point&> points, 
-  SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
+Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & height);
+
+Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
+Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
+Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
+
+void print_polygon_t (
+  SDL_Renderer* render, 
+  std::vector<Dir2> points, 
+  std::vector<Dir2> uvs, 
+  const Visualizer<D2FIG>& texture
 );
 
-void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
-void print_polygon_t (SDL_Renderer* render, std::vector<Dir2> points, const Visualizer<D2FIG>& texture);
-
-void print_triangle_c (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
-void print_triangle_t (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, const Visualizer<D2FIG>& texture);
+void print_triangle_t (
+  SDL_Renderer* render, 
+  Dir2 point1, Dir2 point2, Dir2 point3, 
+  Dir2 uv1, Dir2 uv2, Dir2 uv3, 
+  SDL_Surface* texture
+);
 
 /* Tridimentional figures with only three verteces faces. */
 template <>
@@ -104,14 +123,14 @@ class Visualizer<D3FIG> {
       std::vector<Face> indeces;
     };
 
-    std::variant<Visualizer<D2FIG>, SDL_Color> texture;
+    std::variant<SDL_Surface*, SDL_Color> texture;
     Info* info;
     int* use_count;
 
   public:
     Visualizer ();
     Visualizer (std::vector<std::vector<Dir3>> points, std::vector<Dir3> normals);
-    Visualizer (std::string path);
+    Visualizer (std::string path, std::string img = "", bool uv_hiding = false);
     Visualizer (const Visualizer &);
     Visualizer (Visualizer &&);
     ~Visualizer ();
@@ -119,9 +138,10 @@ class Visualizer<D3FIG> {
     Visualizer & operator= (Visualizer &&);
 
     void set_color (const SDL_Color& color);
-    void set_texture (const Visualizer<D2FIG>& color);
+    void set_texture (SDL_Surface* texture);
 
     void rotate (const Dir3& rotation);
+    void resize (float coef);
 
     void draw (SDL_Renderer* render, const Dir3 & position) const;
 };

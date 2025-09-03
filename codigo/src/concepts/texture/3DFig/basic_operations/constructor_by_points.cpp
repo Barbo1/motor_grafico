@@ -11,6 +11,7 @@ Visualizer<D3FIG>::Visualizer (std::vector<std::vector<Dir3>> points, std::vecto
 
   this->info = new Info {
     .vectors = std::vector<Dir3>(), 
+    .normals = std::vector<Dir3>(),
     .mapping = std::vector<Dir2>({Dir2{0,0}}),
     .indeces = std::vector<Face>()
   };

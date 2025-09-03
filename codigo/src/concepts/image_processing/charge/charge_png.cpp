@@ -2,6 +2,7 @@
 #include "../zlib_inflate/inflate.cpp"
 #include "../zlib_inflate/read_bytes.cpp"
 
+#include <SDL2/SDL_stdinc.h>
 #include <fstream>
 #include <iostream>
 
@@ -29,13 +30,12 @@ uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
     return static_cast<uint8_t>(diagonal);
 }
 
-template <VisualType T>
-Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string& path) {
+Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & height) {
   std::fstream fil(path, std::ios::binary);
   fil.open (path);
   if (!fil.is_open ()) {
     std::cout << "The file was not found." << std::endl;
-    return Visualizer<D2FIG> ();
+    return nullptr;
   }
 
   fil.seekg (0, std::ios::end);
@@ -43,7 +43,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
   if (count < 0) {
     fil.close ();
     std::cout << "Final position not found." << std::endl;
-    return Visualizer<D2FIG> ();
+    return nullptr;
   }
   fil.seekg (0, std::ios::beg);
 
@@ -51,7 +51,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
   buff.resize (count);
   if (!fil.read ((char* )buff.data (), count)) {
     std::cout << "Error while reading data." << std::endl;
-    return Visualizer<D2FIG> ();
+    return nullptr;
   }
   fil.close ();
 
@@ -61,7 +61,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
   if (buff[pos] != 0x89 || buff[pos + 1] != 0x50 || buff[pos + 2] != 0x4E || buff[pos + 3] != 0x47 || 
       buff[pos + 4] != 0x0D || buff[pos + 5] != 0x0A || buff[pos + 6] != 0x1A || buff[pos + 7] != 0x0A) {
     std::cout << "Failure in signature recognition." << std::endl;
-    return Visualizer<D2FIG> ();
+    return nullptr;
   }
   pos += 8;
 
@@ -69,12 +69,12 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
   if (read_bytes (&buff[0], pos, 4) != 13 ||
       static_cast<uint32_t> (read_bytes (&buff[0], pos, 4)) != 0x49484452) { 
     std::cout << "IHDR chunk not founded." << std::endl;
-    return Visualizer<D2FIG> ();
+    return nullptr;
   }
 
   /* Reading image parameters. */
-  int width = read_bytes(&buff[0], pos, 4);
-  int height = read_bytes(&buff[0], pos, 4);
+  width = read_bytes(&buff[0], pos, 4);
+  height = read_bytes(&buff[0], pos, 4);
   int bitdepth = read_bytes(&buff[0], pos, 1);
   int colortype  = read_bytes(&buff[0], pos, 1);
   int compmethod = read_bytes(&buff[0], pos, 1);
@@ -86,14 +86,14 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
     std::cout 
       << "PNG reading error: size of the total image must not be zero(width="
       << width << ", height=" << height << ")." << std::endl;
-    return Visualizer<D2FIG>();
+    return nullptr;
   }
 
   if (((bitdepth - 1) & bitdepth) != 0) {
     std::cout 
       << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
       << std::endl;
-    return Visualizer<D2FIG>();
+    return nullptr;
   }
 
   int sampledepth = bitdepth;
@@ -112,7 +112,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
-        return Visualizer<D2FIG>();
+        return nullptr;
       }
       break;
     case 3:
@@ -120,7 +120,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
-        return Visualizer<D2FIG>();
+        return nullptr;
       }
       sampledepth = 8;
     case 0:
@@ -128,7 +128,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
         std::cout 
           << "PNG reading error: bit depth(" << bitdepth << ") unsupported."
           << std::endl;
-        return Visualizer<D2FIG>();
+        return nullptr;
       }
       channels = 1;
       break;
@@ -136,28 +136,28 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
       std::cout 
         << "PNG reading error: color type(" << colortype << ") unsupported."
         << std::endl;
-      return Visualizer<D2FIG>();
+        return nullptr;
   }
 
   if (compmethod != 0) {
     std::cout 
       << "PNG reading error: descompression method(code: " << compmethod << ") not recognized."
       << std::endl;
-    return Visualizer<D2FIG>();
+    return nullptr;
   }
 
   if (filtmethod != 0) {
     std::cout 
       << "PNG reading error: filter method(code: " << filtmethod << ") not recognized."
       << std::endl;
-    return Visualizer<D2FIG>();
+    return nullptr;
   }
 
   if (intemethod > 2) {
     std::cout 
       << "PNG reading error: interlace method(code: " << intemethod << ") not recognized."
       << std::endl;
-    return Visualizer<D2FIG>();
+    return nullptr;
   }
 
   /* Palette information. */
@@ -190,7 +190,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
       std::cout 
         << "PNG reading error: size of block greater than known information."
         << std::endl;
-      return Visualizer<D2FIG> ();
+      return nullptr;
     }
 
     switch (read_bytes(&buff[0], pos, 4)) {
@@ -201,7 +201,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
           std::cout 
             << "PNG reading error: PLTE chunk present when it must not."
             << std::endl;
-          return Visualizer<D2FIG> ();
+          return nullptr;
         }
 
         palette_count = info_lenght / 3;
@@ -210,7 +210,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
             << "PNG reading error: PLTE chunk has an unreadable format or gives contradictory"
             << " information due the currently obtained."
             << std::endl;
-          return Visualizer<D2FIG> ();
+          return nullptr;
         }
         plet_chnk_count++;
 
@@ -256,7 +256,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
               std::cout 
                 << "PNG reading error: number of alpha entries in tRNS exceeded PLTE colors."
                 << std::endl;
-              return Visualizer<D2FIG> ();
+              return nullptr;
             }
 
             for (int i = 0; i < info_lenght; i++)
@@ -267,7 +267,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
               << "PNG reading error: tRNS must not be defined for color type " 
               << colortype << "."
               << std::endl;
-            return Visualizer<D2FIG> ();
+            return nullptr;
         }
 
         break;
@@ -290,7 +290,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
   std::vector<uint8_t> output;
   output.reserve(idat_data.size());
   if (!inflate(idat_data, output))
-    return Visualizer<D2FIG>();
+    return nullptr;
 
   /* Interlace changing. */
   uint64_t many, scanline, bpp, pixels_pos;
@@ -362,7 +362,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
             std::cout << "PNG reading error: filter type " << aux << " unknown." << std::endl;
             SDL_FreeFormat(format);
             delete [] pixels;
-            return Visualizer<D2FIG> ();
+            return nullptr;
         }
         many += scanline;
       }
@@ -397,7 +397,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
             SDL_FreeFormat(format);
             delete [] pixels;
             std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
-            return Visualizer<D2FIG> ();
+            return nullptr;
           }
           for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
@@ -406,7 +406,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
                 SDL_FreeFormat(format);
                 delete [] pixels;
                 std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
-                return Visualizer<D2FIG> ();
+                return nullptr;
               }
               pixels[pixels_pos++] = SDL_MapRGBA (
                 format,
@@ -448,7 +448,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
           SDL_FreeFormat(format);
           delete [] pixels;
           std::cout << "color type not found." << std::endl;
-          return Visualizer<D2FIG>();
+          return nullptr;
       }
       break;
 
@@ -523,7 +523,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
                 << std::endl;
               SDL_FreeFormat(format);
               delete [] pixels;
-              return Visualizer<D2FIG>();
+              return nullptr;
           }
           many += scanline;
         }
@@ -557,7 +557,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
               std::cout << "PNG error: PLTE chunk not founded when needed." << std::endl;
               SDL_FreeFormat(format);
               delete [] pixels;
-              return Visualizer<D2FIG> ();
+              return nullptr;
             }
             for (int i = starting_row[pass_index]; i < height; i += row_increment[pass_index]) {
               for (int j = i*width + starting_col[pass_index]; j < (i + 1) * width; j += col_increment[pass_index]) {
@@ -566,7 +566,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
                   SDL_FreeFormat(format);
                   delete [] pixels;
                   std::cout << "PNG error: readed PLTE index of unknown color." << std::endl;
-                  return Visualizer<D2FIG> ();
+                  return nullptr;
                 }
                 pixels[j] = SDL_MapRGBA (
                   format, 
@@ -608,7 +608,7 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
             SDL_FreeFormat(format);
             delete [] pixels;
             std::cout << "color type not found." << std::endl;
-            return Visualizer<D2FIG>();
+            return nullptr;
         }
       }
 
@@ -616,14 +616,17 @@ Visualizer<T> Visualizer<T>::chargePNG (SDL_Renderer* render, const std::string&
     }
   }
 
-  Visualizer<T> tex = Visualizer<T> (render, height, width, pixels);
-
   SDL_FreeFormat(format);
-  delete [] pixels;
-  return tex;
+  return pixels;
 }
 
-template Visualizer<D2FIG> Visualizer<D2FIG>::chargePNG (
-  SDL_Renderer* render, 
-  const std::string& path
-);
+Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path) {
+  Visualizer<D2FIG> tex;
+  int w, h;
+  Uint32 * pixels = charging_PNG_to_memory(path, w, h);
+  if (pixels != nullptr) {
+    tex = Visualizer<D2FIG> (render, h, w, pixels);
+    delete [] pixels;
+  } else tex = Visualizer<D2FIG> ();
+  return tex;
+}

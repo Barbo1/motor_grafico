@@ -1,6 +1,6 @@
 #include "../../../../../headers/concepts/primitives.hpp"
 
-Dir2 Dir2::operator* (float f) {
+Dir2 Dir2::operator* (float f) const {
   return Dir2 (
     this->x * f,
     this->y * f 

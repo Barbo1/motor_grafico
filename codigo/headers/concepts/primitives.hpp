@@ -46,15 +46,15 @@ class Dir2 {
 
     Dir2 operator- ();
 
-    template<DirFin R> Dir2 operator+ (const R &);
-    template<DirFin R> Dir2 operator- (const R &);
-    Dir2 operator* (float);
-    template<DirFin R> float operator* (const R &);
+    template<DirFin R> Dir2 operator+ (const R &) const;
+    template<DirFin R> Dir2 operator- (const R &) const;
+    Dir2 operator* (float) const;
+    template<DirFin R> float operator* (const R &) const;
     template<DirFin R> void operator+= (const R &);
     template<DirFin R> void operator-= (const R &);
     virtual void operator*= (float);
     virtual Dir2 normalize ();
-    virtual float modulo ();
+    virtual float modulo () const;
 };
 
 class Dir3 {
@@ -103,12 +103,12 @@ class AngDir2: public Dir2 {
     AngDir2 & operator= (AngDir2 &&);
     bool operator== (const AngDir2 &);
 
-    AngDir2 operator- ();
+    AngDir2 operator- () const;
 
-    template<DirFin R> AngDir2 operator+ (R);
-    template<DirFin R> AngDir2 operator- (R);
-    AngDir2 operator* (float f);
-    template<DirFin R> float operator* (R);
+    template<DirFin R> AngDir2 operator+ (R) const;
+    template<DirFin R> AngDir2 operator- (R) const;
+    AngDir2 operator* (float f) const;
+    template<DirFin R> float operator* (R) const;
     template<DirFin R> void operator+= (R);
     template<DirFin R> void operator-= (R);
 };
