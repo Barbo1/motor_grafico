@@ -1,12 +1,16 @@
 #include <fstream>
-#include <iostream>
+#include <cstdint>
 
-/* This object is used to read files securely and effitiently in space. It 
- * is meant to read data by characters of 8 bits(bytes), hence the Normal 
- * part of the name. The NFR_BUFFER_LIMIT is the internal buffer size used
- * to read the data. 
+/* This object is used to read files securely and effitiently in space. It is meant to read data 
+ * by characters(hence the Normal part of the name) and sequentialy. The NFR_BUFFER_LIMIT is the 
+ * length of the internal buffer size used to read the data. The errors returned could be:
+ *  ->  0: no error,
+ *  -> -1: an EOF error: the folder is seted in finished state,
+ *  -> -2: an reading error: inconsistent information between readed and expected.
  * */
+
 const int NFR_BUFFER_LIMIT = 1024;
+
 class NormalFileReader {
   private:
     std::ifstream fil;
@@ -17,18 +21,16 @@ class NormalFileReader {
 
   public:
     /* Opens the file due the path. */
-    NormalFileReader (std::string path) {
+    NormalFileReader (std::string path, int * error) {
       this->path = path;
       this->fil = std::ifstream (path, std::ios::in | std::ios::binary);
 
       if (!fil.is_open()) {
-        std::cout 
-          << "Error: cannot open the file " + path + "." 
-          << std::endl;
-
+        *error = -1;
         this->lim = this->pos;
         this->is_lim = true;
       } else {
+        *error = 0;
         this->pos = NFR_BUFFER_LIMIT - 1;
         this->is_lim = false;
       }
@@ -46,7 +48,7 @@ class NormalFileReader {
     }
   
     /* Function that returns the next character of data. */
-    char reading () {
+    char read_char () {
       if (this->finished()) 
         return (char)EOF;
 
@@ -64,7 +66,7 @@ class NormalFileReader {
     }
 
     /* Reads characters until the character passed by parameter is found. */
-    void skipping (char stop) {
+    void skip_until (char stop) {
       while (!this->finished() && this->buffer[this->pos] != stop) {
         this->pos++;
         if (this->pos == NFR_BUFFER_LIMIT) {
@@ -79,10 +81,10 @@ class NormalFileReader {
     } 
 
     /* Read a word in the file and return it. */
-    std::string reading_word () {
+    std::string read_word () {
       char let;
       std::string str = "";
-      while((let = this->reading()) != ' ' && let != '\n' && let != EOF)
+      while((let = this->read_char()) != ' ' && let != '\n' && let != EOF)
         str += let;
       return str;
     }
@@ -90,19 +92,34 @@ class NormalFileReader {
     /* Read a float in the file and return it. This is meant to be used 
      * when the data readed constitutes a word, which is entirely a float.
      * */
-    float reading_float () {
-      if (this->finished()) 
+    uint64_t read_int (int * error) {
+      if (this->finished()) {
+        *error = -1;
         return 0;
+      } else *error = 0;
 
-      std::string str = this->reading_word();
+      std::string str = this->read_word();
+      char * last;
+      uint64_t ret = strtoull(str.c_str(), &last, 0);
+      if (*last != '\0')
+        *error = -2;
+      return ret;
+    }
+
+    /* Read a int in the file and return it. This is meant to be used 
+     * when the data readed constitutes a word, which is entirely an int.
+     * */
+    float read_float (int * error) {
+      if (this->finished()) {
+        *error = -1;
+        return 0;
+      } else *error = 0;
+
+      std::string str = this->read_word();
       char * last;
       float ret = strtof(str.c_str(), &last);
-      if (*last != '\0') {
-        std::cout 
-          << "Error: the file " + this->path + " hasn't a proper structure(1)." 
-          << std::endl;
-        std::exit(-1);
-      }
+      if (*last != '\0')
+        *error = -2;
       return ret;
     }
 

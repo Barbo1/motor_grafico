@@ -1,5 +1,4 @@
 #include "../../../../../headers/concepts/texture.hpp"
-
 #include <utility>
 
 template <VisualType T>

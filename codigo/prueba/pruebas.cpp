@@ -51,8 +51,8 @@ int main () {
   bool cont = true;
   SDL_Event event;
 
-  Visualizer<D3FIG> mesita = Visualizer<D3FIG> ("../images/cube.obj", "../images/rubik.png");
-  mesita.resize(60);
+  Visualizer<D3FIG> mesita = Visualizer<D3FIG>::prism(render, 50, 80, 30);
+  mesita.set_texture("../images/rubik.png");
   Dir3 cube_pos = Dir3 {200, 200, 100};
 
   while (cont) {

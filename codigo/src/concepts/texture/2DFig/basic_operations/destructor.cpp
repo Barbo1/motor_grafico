@@ -1,5 +1,4 @@
 #include "../../../../../headers/concepts/texture.hpp"
-#include <iostream>
 
 template <VisualType T>
 Visualizer<T>::~Visualizer () {

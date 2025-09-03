@@ -82,6 +82,7 @@ class Visualizer {
     friend Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
     friend Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
     friend Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
+    friend class Visualizer<D3FIG>;
 };
 
 template class Visualizer<D2FIG>;
@@ -138,10 +139,16 @@ class Visualizer<D3FIG> {
     Visualizer & operator= (Visualizer &&);
 
     void set_color (const SDL_Color& color);
-    void set_texture (SDL_Surface* texture);
+    void set_texture (const std::string & img);
 
     void rotate (const Dir3& rotation);
     void resize (float coef);
 
     void draw (SDL_Renderer* render, const Dir3 & position) const;
+    
+    /* special constructors */
+    static Visualizer prism (SDL_Renderer* render, float base, float height, float depth);
+    static Visualizer pyramid (SDL_Renderer* render, float height, float base_rad, int base_vert);
+
+    friend class Visualizer<D2FIG>;
 };

@@ -16,5 +16,4 @@ Visualizer<T> & Visualizer<T>::operator= (const Visualizer & texture) {
   return *this;
 }
 
-
 template Visualizer<D2FIG> & Visualizer<D2FIG>::operator= (const Visualizer & texture);
