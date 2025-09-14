@@ -1,4 +1,4 @@
-#include "../../../../headers/concepts/texture.hpp"
+#include "../../../../headers/concepts/visualizer.hpp"
 #include "../zlib_inflate/inflate.cpp"
 #include "../zlib_inflate/read_bytes.cpp"
 

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "../concepts/physical.hpp"
-#include "../concepts/texture.hpp"
+#include "../concepts/visualizer.hpp"
 
 #include <SDL2/SDL.h>
+#include <cstdint>
 
 class Circle: public Physical {
   private:
@@ -25,4 +26,8 @@ class Circle: public Physical {
     uint32_t get_radio ();
 
     void draw (SDL_Renderer *);
+
+    friend Physical;
+    friend bool test_collition (Physical &, Physical &);
+    friend void make_collition (Physical &, Physical &);
 };

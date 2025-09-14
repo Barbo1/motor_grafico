@@ -7,17 +7,15 @@
 #define DRAW_RATE 0.036666
 #define MOVEMENT_BOUND 0.0001
 
-enum ObjectType {
-  CIRCLE,
-  SQUARE,
-  POLYGON
-};
-
 /* some clarifications:
  * - density * area == weight 
  * - all objects are collidable
  * - for consistency, the position is kept out.
  * */
+
+class Circle;
+class Square;
+class NEdge;
 
 class Physical {
   private:
@@ -42,23 +40,29 @@ class Physical {
 
   public:
     Physical (
-        AngDir2 position, float density, float area, 
-        float elasticity, float f_s, float f_k, bool movible, 
-        bool colidable
+      AngDir2 position, float density, float area, 
+      float elasticity, float f_s, float f_k, bool movible, 
+      bool colidable
     );
     Physical ();
 
-    void set_position (AngDir2);
-    AngDir2 get_position () const;
+    virtual void set_position (AngDir2);
+    virtual AngDir2 get_position () const;
 
-    void set_force (const AngDir2 &);
-    void add_force (const AngDir2 &);
-    AngDir2 get_force () const;
+    virtual void set_force (const AngDir2 &);
+    virtual void add_force (const AngDir2 &);
+    virtual AngDir2 get_force () const;
 
-    void set_velocity (const AngDir2 &);
-    void add_velocity (const AngDir2 &);
-    AngDir2 get_velocity () const;
+    virtual void set_velocity (const AngDir2 &);
+    virtual void add_velocity (const AngDir2 &);
+    virtual AngDir2 get_velocity () const;
 
     /* calcule the movement of the object and move it. */
-    void calculate_movement(std::vector<AngDir2*> & external_forces);
+    virtual void calculate_movement(const std::vector<AngDir2*> & external_forces);
 };
+
+/* take two objects and verifies if they have collide. */
+bool test_collition (Physical &, Physical &);
+    
+/* take two objects and generate the collition. */
+void deduce_colition (Physical &, Physical &);

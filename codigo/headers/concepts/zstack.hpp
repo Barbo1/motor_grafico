@@ -6,61 +6,47 @@
  * may appear first in the screen. 
  * */
 
+#include <cstdint>
 #include <vector>
+#include <map>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
 
 #include "./primitives.hpp"
+#include "./physical.hpp"
+#include "../pr_objects/square.hpp"
+#include "../pr_objects/circle.hpp"
+#include "../pr_objects/nedge.hpp"
 
 /* ---------------- */
 /* Particle Source. */
 /* ---------------- */
 
-class ZStackable {
-  private: 
-    bool deletable; /* a ZStackable object can decide if he can be destoryed by ZStack. */
-    bool modified; /* true if the ZStackable object has changed in velocity or forces. */
-    bool inherit; /* if false, the object will never inherit the forces in the ZStack. */
-
-  public:
-    virtual void draw (SDL_Renderer *) = 0;
-
-    void set_deletable (const bool &);
-    bool get_deletable ();
-
-    void set_modified (const bool &);
-    bool get_modified();
-
-    void set_inherit (const bool &);
-    bool get_inherit ();
-};
-
-class Window {
+class ZStack {
   private:
     typedef struct {
       std::vector<AngDir2> sld_forces;
-      std::vector<ZStackable*> sld_objects;
-    } WindowElem;
+      std::vector<Physical*> sld_objects;
+    } ZStackSlide;
 
-    std::vector<WindowElem> _slides;
-    std::vector<uint32_t> _indexes;
+    std::map<uint64_t, std::vector<ZStackSlide>> slide;
     uint64_t _time;  /* increased by one each time a frame is calculated. */
+
     std::vector<AngDir2*> _external_forces;
 
   public:
-    Window (SDL_Color);
+    ZStack (SDL_Color);
+    ~ZStack ();
 
     void add_one_frc (const uint8_t &, AngDir2);
     void app_all_frc ();
     void del_sld_frc (const uint8_t &);
     void del_all_frc ();
 
-    uint32_t add_sld_obj (const uint8_t &, const ZStackable&);
-    void add_one_obj (const ZStackable&);
+    uint32_t add_sld_obj (const uint8_t &, const Physical&);
+    void add_one_obj (const Physical&);
     void del_sld_obj (const uint8_t &);
     void del_all_obj ();
 
     void draw ();
-    
-    ~Window ();
 };

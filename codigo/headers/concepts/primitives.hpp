@@ -55,6 +55,7 @@ class Dir2 {
     virtual void operator*= (float);
     virtual Dir2 normalize ();
     virtual float modulo () const;
+    virtual float modulo2 () const;
 };
 
 class Dir3 {
@@ -85,6 +86,7 @@ class Dir3 {
 
     Dir3 normalize () const;
     float modulo () const;
+    float modulo2 () const;
 
     void rotate_x (float angle);
     void rotate_y (float angle);

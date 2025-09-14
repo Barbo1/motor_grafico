@@ -1,4 +1,4 @@
-file(GLOB_RECURSE FILES_TEX "texture/*.cpp")
+file(GLOB_RECURSE FILES_TEX "visualizer/*.cpp")
 file(GLOB_RECURSE FILES_PHY "physical/*.cpp")
 file(GLOB_RECURSE FILES_PRI "primitives/*.cpp")
 file(GLOB_RECURSE FILES_IMG "file_processing/charge/*.cpp")

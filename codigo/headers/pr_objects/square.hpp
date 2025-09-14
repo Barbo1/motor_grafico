@@ -1,14 +1,13 @@
 #pragma once
 
 #include "../concepts/physical.hpp"
-#include "../concepts/texture.hpp"
+#include "../concepts/visualizer.hpp"
 #include <cstdint>
 
 class Square: public Physical {
   private:
     int height;
     int width;
-
     Visualizer<D2FIG> texture;
 
     Square ();
@@ -25,4 +24,6 @@ class Square: public Physical {
     Square & operator= (Square &&);
 
     void draw (SDL_Renderer *);
+
+    friend Physical;
 };

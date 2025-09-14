@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../concepts/physical.hpp"
-#include "../concepts/texture.hpp"
+#include "../concepts/visualizer.hpp"
 
 class NEdge: public Physical {
   private:
@@ -17,4 +17,6 @@ class NEdge: public Physical {
     NEdge & operator= (NEdge &&);
 
     void draw (SDL_Renderer *);
+
+    friend Physical;
 };

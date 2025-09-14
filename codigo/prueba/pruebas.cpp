@@ -8,7 +8,7 @@
 #include <cmath>
 
 #include "../headers/concepts/primitives.hpp"
-#include "../headers/concepts/texture.hpp"
+#include "../headers/concepts/visualizer.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
@@ -47,15 +47,23 @@ int main () {
     return -1;
   }
 
-  bool step = true;
   bool cont = true;
   SDL_Event event;
 
-  Visualizer<D3FIG> mesita = Visualizer<D3FIG>::prism(render, 50, 80, 30);
+  Visualizer<D3FIG> mesita = Visualizer<D3FIG>::prism(render, 1, 1, 1);
+  //mesita.set_color(SDL_Color {255, 255, 255, 255});
   mesita.set_texture("../images/rubik.png");
-  Dir3 cube_pos = Dir3 {200, 200, 100};
+  mesita.resize(60);
+  Dir3 cube_pos = Dir3 {300, 300, 300};
 
   while (cont) {
+    SDL_Delay(16);
+    SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
+    SDL_RenderClear(render);
+
+    mesita.rotate({0.02, 0.01, 0.013});
+    mesita.draw(render, cube_pos);
+    
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_QUIT:
@@ -72,14 +80,7 @@ int main () {
       }
     }
 
-    SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
-    SDL_RenderClear(render);
-
-    mesita.rotate({0.02, 0.01, 0.013});
-    mesita.draw(render, cube_pos);
-
     SDL_RenderPresent (render);
-    SDL_Delay(16);
   } 
   
   SDL_DestroyRenderer (render);
