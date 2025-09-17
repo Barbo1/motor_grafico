@@ -6,16 +6,17 @@
 
 class Square: public Physical {
   private:
-    int height;
-    int width;
+    int32_t height;
+    int32_t width;
     Visualizer<D2FIG> texture;
 
     Square ();
 
   public: 
-    Square(
-      SDL_Renderer*, uint32_t, uint32_t, AngDir2, SDL_Color, 
-      float = 0, float = 0, float = 0, float = 0, bool = true, bool = true
+    Square (
+      SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
+      SDL_Color color, float density = 0, float f_s = 0, float f_k = 0, 
+      bool movible = true, bool colidable = true
     );
     Square (uint32_t, uint32_t, Dir2, SDL_Color);
     Square (const Square &);
@@ -26,4 +27,6 @@ class Square: public Physical {
     void draw (SDL_Renderer *);
 
     friend Physical;
+    friend bool test_collition (Physical &, Physical &);
+    friend void deduce_collition (Physical &, Physical &);
 };

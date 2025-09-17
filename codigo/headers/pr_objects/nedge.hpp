@@ -19,4 +19,6 @@ class NEdge: public Physical {
     void draw (SDL_Renderer *);
 
     friend Physical;
+    friend bool test_collition (Physical &, Physical &);
+    friend void deduce_collition (Physical &, Physical &);
 };

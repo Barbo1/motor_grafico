@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <cmath>
 
-#include "../headers/concepts/primitives.hpp"
-#include "../headers/concepts/visualizer.hpp"
+#include "../headers/pr_objects/square.hpp"
+#include "../headers/pr_objects/circle.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 800;
@@ -50,19 +50,47 @@ int main () {
   bool cont = true;
   SDL_Event event;
 
-  Visualizer<D3FIG> mesita = Visualizer<D3FIG>::prism(render, 1, 1, 1);
-  //mesita.set_color(SDL_Color {255, 255, 255, 255});
-  mesita.set_texture("../images/rubik.png");
-  mesita.resize(60);
-  Dir3 cube_pos = Dir3 {300, 300, 300};
+  Circle c1 = Circle(
+    render, 15, AngDir2 {120, 100, 0}, 
+    SDL_Color {255,255,255,255}, 1.2, 
+    0, 0, true, true 
+  );
+  c1.set_velocity(AngDir2 {20, 13, 0});
+
+  /*
+  Square c2 = Square(
+    render, 50, 30, AngDir2 {200, 120, 0}, 
+    SDL_Color {255,255,255,255}, 4.6, 
+    0, 0, true, true
+  );
+
+  Circle c2 = Circle(
+    render, 30, AngDir2 {200, 120, 0}, 
+    SDL_Color {255,255,255,255}, 4.6, 
+    0, 0, true, true 
+  );
+   * */
+  Square c2 = Square(
+    render, 50, 30, AngDir2 {200, 160, 0}, 
+    SDL_Color {255,255,255,255}, 4.6, 
+    0, 0, true, true
+  );
+
+  const std::vector<AngDir2 *> external_forces;
 
   while (cont) {
     SDL_Delay(16);
     SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
     SDL_RenderClear(render);
 
-    mesita.rotate({0.02, 0.01, 0.013});
-    mesita.draw(render, cube_pos);
+    c1.calculate_movement(external_forces);
+    c2.calculate_movement(external_forces);
+
+    if (test_collition(c1, c2))
+      deduce_collition(c1, c2);
+
+    c1.draw(render);
+    c2.draw(render);
     
     if (SDL_PollEvent(&event)) {
       switch (event.type) {

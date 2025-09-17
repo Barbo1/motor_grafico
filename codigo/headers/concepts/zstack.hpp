@@ -14,9 +14,6 @@
 
 #include "./primitives.hpp"
 #include "./physical.hpp"
-#include "../pr_objects/square.hpp"
-#include "../pr_objects/circle.hpp"
-#include "../pr_objects/nedge.hpp"
 
 /* ---------------- */
 /* Particle Source. */

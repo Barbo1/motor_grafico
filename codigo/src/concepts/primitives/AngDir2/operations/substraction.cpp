@@ -4,11 +4,11 @@ template<DirFin R> AngDir2 AngDir2::operator- (R d) const {
   float angle = this->a;
   if constexpr (std::is_same_v<R, AngDir2>)
     angle -= d.a;
-  return AngDir2 {
+  return AngDir2 (
     this->x - d.x,
     this->y - d.y,
     angle
-  };
+  );
 }
 
 template<DirFin R> void AngDir2::operator-= (R d) {

@@ -1,9 +1,10 @@
 #include "../../../../../headers/concepts/primitives.hpp"
 
-Dir2 Dir2::normalize () {
+AngDir2 AngDir2::normalize () {
   float inorm = 1/this->modulo();
-  return Dir2 (
+  return AngDir2 (
     this->x * inorm,
-    this->y * inorm
+    this->y * inorm,
+    this->a
   );
 }

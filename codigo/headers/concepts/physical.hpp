@@ -27,12 +27,9 @@ class Physical {
     bool _colidalble; /* The cilition with objects don't have effect. */
     int _index; /* For printing proposes. Greater means first showed. */
 
-    Dir2 _gcenter;
-
   protected:
     float _area; /* px^2 */
     float _density; /* kg/px^2 */
-    float _elasticity; /* Near 0 means rigid, near 0 marks complete elastic. */
     float _f_s; /* static fritction. */
     float _f_k; /* kinetic fritction. */
 
@@ -40,9 +37,8 @@ class Physical {
 
   public:
     Physical (
-      AngDir2 position, float density, float area, 
-      float elasticity, float f_s, float f_k, bool movible, 
-      bool colidable
+      AngDir2 position, float density, float area, float f_s, 
+      float f_k, bool movible, bool colidable
     );
     Physical ();
 
@@ -57,12 +53,17 @@ class Physical {
     virtual void add_velocity (const AngDir2 &);
     virtual AngDir2 get_velocity () const;
 
+    virtual float get_mass () const;
+
     /* calcule the movement of the object and move it. */
     virtual void calculate_movement(const std::vector<AngDir2*> & external_forces);
+
+    friend bool test_collition (Physical &, Physical &);
+    friend void deduce_collition (Physical &, Physical &);
 };
 
 /* take two objects and verifies if they have collide. */
 bool test_collition (Physical &, Physical &);
     
 /* take two objects and generate the collition. */
-void deduce_colition (Physical &, Physical &);
+void deduce_collition (Physical &, Physical &);
