@@ -12,7 +12,6 @@ enum Function {
 };
 
 enum AngType {
-  AT_CONSTANT,
   AT_TIME,
   AT_POSITION,
   AT_VELOCITY,

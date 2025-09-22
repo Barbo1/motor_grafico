@@ -50,12 +50,24 @@ int main () {
   bool cont = true;
   SDL_Event event;
 
+  /*
+  Square c1 = Square(
+    render, 15, 15, AngDir2 {120, 120, 0}, 
+    SDL_Color {255,255,255,255}, 2.1, 
+    0, 0, true, true
+  );
   Circle c1 = Circle(
-    render, 15, AngDir2 {120, 100, 0}, 
-    SDL_Color {255,255,255,255}, 1.2, 
+    render, 15, AngDir2 {120, 120, 0}, 
+    SDL_Color {255,255,255,255}, 2.1, 
     0, 0, true, true 
   );
-  c1.set_velocity(AngDir2 {20, 13, 0});
+  */
+  Circle c1 = Circle(
+    render, 15, AngDir2 {120, 120, 0}, 
+    SDL_Color {255,255,255,255}, 2.1, 
+    0, 0, true, true 
+  );
+  c1.set_force(AngDir2 {0, 2, 0});
 
   /*
   Square c2 = Square(
@@ -71,7 +83,7 @@ int main () {
   );
    * */
   Square c2 = Square(
-    render, 50, 30, AngDir2 {200, 160, 0}, 
+    render, 30, 100, AngDir2 {200, 200, 0}, 
     SDL_Color {255,255,255,255}, 4.6, 
     0, 0, true, true
   );
@@ -79,15 +91,15 @@ int main () {
   const std::vector<AngDir2 *> external_forces;
 
   while (cont) {
-    SDL_Delay(16);
+    SDL_Delay(10);
     SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
     SDL_RenderClear(render);
 
     c1.calculate_movement(external_forces);
-    c2.calculate_movement(external_forces);
 
-    if (test_collition(c1, c2))
+    if (test_collition(c1, c2)) {
       deduce_collition(c1, c2);
+    }
 
     c1.draw(render);
     c2.draw(render);

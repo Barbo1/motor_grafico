@@ -1,33 +1,52 @@
 #pragma once
 
-#include<vector>
-#include<SDL2/SDL_pixels.h>
+#include <cstdint>
+#include <array>
+#include <SDL2/SDL_pixels.h>
 
 #include "../concepts/primitives.hpp"
+#include "../concepts/visualizer.hpp"
 #include "../concepts/physical.hpp"
 
 /* ---------------- */
 /* Particle Source. */
 /* ---------------- */
 
-const float BLUR_LIMIT = 0.001;
-
-class Particle: public Physical {
-  Position position;
-  float blur; /* if blur less than BLUR_LIMIT, the particle is destroyed. */
+struct Particle {
+  AngDir2 position;
+  AngDir2 velocity;
+  
+  float coef; /*  */
+  float blur; /* if blur less becomes 0, the particle is destroyed. */
 };
 
-class ParticleSource : private ZStackable {
+template <std::size_t N>
+class ParticleSource {
   private:
-    Position position;
-    std::vector<SDL_Color> colors;
-    std::pair<Dir2, Dir2> anglevectors;
-    AngDir2 force; 
-    AngDir2 velocity;
-    float spawn_ratio;  /* Particles per seconds. */
-    std::vector<Particle> _particles;
+    AngDir2 init_position;
+    AngDir2 init_velocity;
+
+    /* Particles per frames. */
+    uint32_t spawn_ratio;
+    uint32_t frames_since_new_particule;
+
+    std::pair<Dir2, Dir2> change_angle;
+    float force_coef;
+
+    Visualizer<D2FIG> texture;
+    std::array<Particle, N> particles;
 
   public:
-    void draw (SDL_Renderer *);
-};
+    ParticleSource<N>(
+      SDL_Renderer * render, const AngDir2 & position, const AngDir2 & velocity, 
+      const std::pair<Dir2, Dir2> & change_angle, float force_coef, 
+      Visualizer<D2FIG> texture, uint32_t spawn_ratio = 12
+    );
+    
+    /* calcula siguiente movimiento del las particular. Destruye particulas si llegan a la 
+     * condicion, crea en caso de que se pueda e increemnta spawn_ratio. 
+     * */
+    void calculate_movement(const AngDir2 & external_force);
 
+    void draw (SDL_Renderer * render);
+};

@@ -1,11 +1,13 @@
 #pragma once 
 
-#include "../pr_concepts/physical.hpp"
+#include "../concepts/physical.hpp"
 
 class Gear: private Physical {
   private: 
     std::vector<Physical*> objects;
-    bool fixed;
+    AngDir2 position;
+    AngDir2 velocity;
+    AngDir2 force;
     
   public:
     Gear ();

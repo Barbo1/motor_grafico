@@ -8,7 +8,6 @@ Physical::Physical () {
   this->_f_k = 0;
   this->_movible = true;
   this->_colidalble = false;
-  this->_index = 0;
   this->_force = {0, 0, 0};
   this->_velocity = {0, 0, 0};
 }

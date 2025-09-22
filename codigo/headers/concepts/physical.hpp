@@ -7,16 +7,6 @@
 #define DRAW_RATE 0.036666
 #define MOVEMENT_BOUND 0.0001
 
-/* some clarifications:
- * - density * area == weight 
- * - all objects are collidable
- * - for consistency, the position is kept out.
- * */
-
-class Circle;
-class Square;
-class NEdge;
-
 class Physical {
   private:
     /* forces and velocity. */
@@ -25,7 +15,6 @@ class Physical {
 
     bool _movible; /* The external forces adn velocities don't affect it.  */
     bool _colidalble; /* The cilition with objects don't have effect. */
-    int _index; /* For printing proposes. Greater means first showed. */
 
   protected:
     float _area; /* px^2 */
@@ -60,6 +49,8 @@ class Physical {
 
     friend bool test_collition (Physical &, Physical &);
     friend void deduce_collition (Physical &, Physical &);
+    friend void correct_collition (Physical &, Physical &);
+    friend Dir2 collition_point (Physical &, Physical &);
 };
 
 /* take two objects and verifies if they have collide. */
@@ -67,3 +58,12 @@ bool test_collition (Physical &, Physical &);
     
 /* take two objects and generate the collition. */
 void deduce_collition (Physical &, Physical &);
+
+/* Given that a collition had ocurred, this function corrects the superposition of the
+ * objects moving the first slightly, so that the only point in it is the one returned
+ * by collition_point.
+ * */
+void correct_collition (Physical &, Physical &);
+    
+/* Returns the point of the collition between two objects. */
+Dir2 collition_point (Physical &, Physical &);

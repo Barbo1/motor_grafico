@@ -11,7 +11,6 @@ Physical::Physical (
   this->_f_k = f_k;
   this->_movible = movible;
   this->_colidalble = colidable;
-  this->_index = 0;
   this->_force = {0, 0, 0};
   this->_velocity = {0, 0, 0};
 }
