@@ -10,23 +10,29 @@ bool test_collition (Physical & obj1, Physical & obj2) {
 
   Circle * cir1, * cir2;
   Square * sq1, * sq2;
+  Dir2 diff;
 
   if ((cir1 = dynamic_cast<Circle *>(&obj1)) && (cir2 = dynamic_cast<Circle *>(&obj2))) {
-    Dir2 diff = cir1->position - cir2->position;
+    diff = cir1->position - cir2->position;
     uint32_t&& radio = cir1->radio + cir2->radio;
-    return diff.modulo2() <= (radio * radio);
+    return diff.modulo2() < (radio * radio);
 
   } else if ((sq1 = dynamic_cast<Square *>(&obj1)) && (sq2 = dynamic_cast<Square *>(&obj2))) {
-    Dir2 diff = (sq1->position - sq2->position).abs();
-    float height = sq1->height + sq2->height;
-    float width = sq1->width + sq2->width;
-    return diff.y < height && diff.x < width;
+    diff = (sq1->position - sq2->position).abs();
+    return diff.y < sq1->height + sq2->height && diff.x < sq1->width + sq2->width;
 
-  } else if (((cir1 = dynamic_cast<Circle *>(&obj1)) && (sq2 = dynamic_cast<Square *>(&obj2))) ||
-      ((cir1 = dynamic_cast<Circle *>(&obj2)) && (sq2 = dynamic_cast<Square *>(&obj1)))) {
-    Dir2 diff = (cir1->position - sq2->position).abs();
-    diff.x = std::max (diff.x - sq2->width, 0.0f);
-    diff.y = std::max (diff.y - sq2->height, 0.0f);
+  } else if (((cir1 = dynamic_cast<Circle *>(&obj1)) && (sq1 = dynamic_cast<Square *>(&obj2))) ||
+      ((cir1 = dynamic_cast<Circle *>(&obj2)) && (sq1 = dynamic_cast<Square *>(&obj1)))) {
+  
+    auto max0 = [] (float a) {
+      uint32_t c = std::bit_cast<uint32_t>(a);
+      c &= ~((int32_t)(c & 0x80000000) >> 31);
+      return std::bit_cast<float>(c);
+    };
+
+    diff = (cir1->position - sq1->position).abs();
+    diff.x = max0 (diff.x - sq1->width);
+    diff.y = max0 (diff.y - sq1->height);
     return diff.modulo2() < cir1->radio * cir1->radio;
   }
 

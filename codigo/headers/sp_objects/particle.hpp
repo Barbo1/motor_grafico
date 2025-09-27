@@ -6,11 +6,6 @@
 
 #include "../concepts/primitives.hpp"
 #include "../concepts/visualizer.hpp"
-#include "../concepts/physical.hpp"
-
-/* ---------------- */
-/* Particle Source. */
-/* ---------------- */
 
 struct Particle {
   AngDir2 position;
@@ -19,6 +14,10 @@ struct Particle {
   float coef; /*  */
   float blur; /* if blur less becomes 0, the particle is destroyed. */
 };
+
+/* ---------------- */
+/* Particle Source. */
+/* ---------------- */
 
 template <std::size_t N>
 class ParticleSource {
@@ -30,7 +29,7 @@ class ParticleSource {
     uint32_t spawn_ratio;
     uint32_t frames_since_new_particule;
 
-    std::pair<Dir2, Dir2> change_angle;
+    std::pair<float, float> change_angle;
     float force_coef;
 
     Visualizer<D2FIG> texture;
@@ -39,7 +38,7 @@ class ParticleSource {
   public:
     ParticleSource<N>(
       SDL_Renderer * render, const AngDir2 & position, const AngDir2 & velocity, 
-      const std::pair<Dir2, Dir2> & change_angle, float force_coef, 
+      const std::pair<float, float> & change_angle, float force_coef, 
       Visualizer<D2FIG> texture, uint32_t spawn_ratio = 12
     );
     

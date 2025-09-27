@@ -30,7 +30,7 @@ class Circle: public Physical {
 
     friend Physical;
     friend bool test_collition (Physical &, Physical &);
-    friend void deduce_collition (Physical &, Physical &);
+    friend void resolve_collition (Physical &, Physical &);
     friend void correct_collition (Physical &, Physical &);
     friend Dir2 collition_point (Physical &, Physical &);
 };

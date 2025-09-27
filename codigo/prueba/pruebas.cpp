@@ -63,11 +63,12 @@ int main () {
   );
   */
   Circle c1 = Circle(
-    render, 15, AngDir2 {120, 120, 0}, 
+    render, 15, AngDir2 {250, 120, 0}, 
     SDL_Color {255,255,255,255}, 2.1, 
     0, 0, true, true 
   );
   c1.set_force(AngDir2 {0, 2, 0});
+  c1.set_velocity(AngDir2 {13, 0, 0});
 
   /*
   Square c2 = Square(
@@ -98,7 +99,7 @@ int main () {
     c1.calculate_movement(external_forces);
 
     if (test_collition(c1, c2)) {
-      deduce_collition(c1, c2);
+      resolve_collition(c1, c2);
     }
 
     c1.draw(render);

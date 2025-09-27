@@ -8,30 +8,17 @@
 #include <vector>
 #include <variant>
 #include <string>
-
 #include "./primitives.hpp"
 
-/*
- * hay que(entre varias texturas bidimencionales):
- *  - juntar dos texturas -> append
- *  - tomar la direrencia -> differ
- *  - tomar todo lo de una y quitar lo de la otra -> abstain
- *  - tomar todo lo de una y agregar de la otra solo lo que se solape -> overlap
- *
- * hay que(dentro de una textura):
- *  - añadir nuevos nivieles -> add_level
- *  - añadir un punto a un nivel(en orden) -> add_point
- *  - añadir puntos a un nivel(en orden) -> add_point
- *  - juntar los puntos que hay en dos indices y colocarlo en uno solo(con las propiedades del primer indice) -> join_level
- *
- * es mejor si:
- *  - todos los puntos estan correctamente ordenados (baja orden algoritmico)
- */
-
-/* shows in the render the points in the array. */
+/* Shows in the render the points in the array. */
 void print_points (
   SDL_Renderer* render, std::vector<SDL_Point&> points, 
   SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
+);
+
+/* Shows in the render the line between the two points. */
+void print_line (
+  SDL_Renderer* render, SDL_Point point1, SDL_Point point2, SDL_Color color
 );
 
 /* Functions meant to print plain bidimentional figures. */
@@ -80,7 +67,6 @@ class Visualizer {
     friend Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
     friend Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
     friend Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
-    friend class Visualizer<D3FIG>;
 };
 
 template class Visualizer<D2FIG>;
@@ -147,6 +133,4 @@ class Visualizer<D3FIG> {
     /* special constructors */
     static Visualizer prism (SDL_Renderer* render, float base, float height, float depth);
     static Visualizer pyramid (SDL_Renderer* render, float height, float base_rad, int base_vert);
-
-    friend class Visualizer<D2FIG>;
 };
