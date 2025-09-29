@@ -23,8 +23,8 @@ void resolve_collition (Physical & ob1, Physical & ob2) {
     float denom = 1.f / (mass_1 + mass_2);
     float coef_3 = (mass_1 - mass_2);
 
-    float new_elem = (*vel_elem1 * coef_3 + 2.f * *vel_elem2 * mass_2) * denom;
-    *vel_elem2 = (2.f * *vel_elem1 * mass_1 - *vel_elem2 * coef_3) * denom * ob2._movible;
+    float new_elem = (coef_3 * *vel_elem1 + 2.f * mass_2 * *vel_elem2) * denom;
+    *vel_elem2 = (2.f * mass_1 * *vel_elem1 - coef_3 * *vel_elem2) * denom * ob2._movible;
     *vel_elem1 = new_elem * ob1._movible;
 
     *(&sq1->position.x + pos) += *(&diff.x + pos);
@@ -35,6 +35,7 @@ void resolve_collition (Physical & ob1, Physical & ob2) {
     float mass_1 = cir1->get_mass(), mass_2 = cir2->get_mass();
     AngDir2 n = (cir1->position - cir2->position).fnormalize();
     float p = (cir1->_velocity - cir2->_velocity) * n * 2.f / (mass_1 + mass_2);
+
     cir1->_velocity -= n * (p * mass_2 * cir1->_movible);
     cir2->_velocity += n * (p * mass_1 * cir2->_movible);
 
@@ -48,7 +49,7 @@ void resolve_collition (Physical & ob1, Physical & ob2) {
     ) {
 
     float mass_1 = sq1->get_mass(), mass_2 = cir1->get_mass();
-    AngDir2 diff = cir1->position - sq1->position;
+    AngDir2 diff = sq1->position - cir1->position;
     Dir2 diffa = diff.abs();
 
     bool pos = diffa.x < sq1->width;
@@ -57,13 +58,10 @@ void resolve_collition (Physical & ob1, Physical & ob2) {
       float * vel_elem2 = &cir1->_velocity.x + pos;
 
       float denom = 1.f / (mass_1 + mass_2);
+      float coef_3 = (mass_1 - mass_2);
 
-      float coef_3 = (mass_1 - mass_2) * denom, 
-            coef_2 = 2.f * mass_2 * denom, 
-            coef_1 = 2.f * mass_1 * denom;
-
-      float new_elem = *vel_elem1 * coef_3 + *vel_elem2 * coef_2;
-      *vel_elem2 = (*vel_elem1 * coef_1 - *vel_elem2 * coef_3) * cir1->_movible;
+      float new_elem = (coef_3 * *vel_elem1 + 2.f * mass_2 * *vel_elem2) * denom;
+      *vel_elem2 = (2.f * mass_1 * *vel_elem1 - coef_3 * *vel_elem2) * denom * cir1->_movible;
       *vel_elem1 = new_elem * sq1->_movible;
 
       *(&ob1.position.x + pos) += *(&diffa.x + pos) - (cir1->radio + (pos ? sq1->height : sq1->width));
@@ -71,14 +69,13 @@ void resolve_collition (Physical & ob1, Physical & ob2) {
       return;
 
     } else {
-      AngDir2 col_point = AngDir2 {
-        sq1->position.x + static_cast<float>(sq1->width * (((int32_t) (*(uint32_t*)&diff.x & 0x80000000) >> 30) + 1)),
-        sq1->position.y + static_cast<float>(sq1->height * (((int32_t) (*(uint32_t*)&diff.y & 0x80000000) >> 30) + 1)),
+      AngDir2 b = AngDir2 {
+        diff.x - static_cast<float>(sq1->width * (((int32_t) (*(uint32_t*)&diff.x & 0x80000000) >> 30) + 1)),
+        diff.y - static_cast<float>(sq1->height * (((int32_t) (*(uint32_t*)&diff.y & 0x80000000) >> 30) + 1)),
         0
       };
-      AngDir2 b = col_point - cir1->position;
       AngDir2 n = b.fnormalize();
-      float p = (cir1->_velocity - sq1->_velocity) * n * 2.f / (mass_1 + mass_2);
+      float p = ((cir1->_velocity - sq1->_velocity) * n) * 2.f / (mass_1 + mass_2);
 
       sq1->_velocity += n * (p * mass_2 * sq1->_movible);
       cir1->_velocity -= n * (p * mass_1 * cir1->_movible);

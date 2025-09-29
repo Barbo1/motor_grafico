@@ -54,19 +54,7 @@ class Visualizer {
 
     void draw (SDL_Renderer* render, const AngDir2 & position) const;
 
-    /* special constructors */
-    static Visualizer square (SDL_Renderer* render, int height, int base, SDL_Color color);
-    static Visualizer rounded_square (SDL_Renderer* render, int height, int base, int radio, SDL_Color color);
-    static Visualizer triangle (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
-    static Visualizer circle (SDL_Renderer* render, int radio, SDL_Color color);
-    static Visualizer circunference (SDL_Renderer* render, int radio, int width, SDL_Color color);
-    static Visualizer oval (SDL_Renderer* render, int height, int base, SDL_Color color);
-    static Visualizer polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
-    static Visualizer image (SDL_Renderer* render, std::string path);
-
     friend Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
-    friend Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
-    friend Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
 };
 
 template class Visualizer<D2FIG>;
@@ -74,8 +62,6 @@ template class Visualizer<D2FIG>;
 Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & height);
 
 Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
-Visualizer<D2FIG> chargeJPEG (SDL_Renderer* render, const std::string& path);
-Visualizer<D2FIG> chargeBMP (SDL_Renderer* render, const std::string& path);
 
 /* Function meant to print a bidimentional figures with a uv mapping. */
 void print_polygon_t (
@@ -84,6 +70,7 @@ void print_polygon_t (
   std::vector<Dir2> uvs, 
   const Visualizer<D2FIG>& texture
 );
+
 void print_triangle_t (
   SDL_Renderer* render, 
   Dir2 point1, Dir2 point2, Dir2 point3, 

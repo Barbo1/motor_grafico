@@ -10,23 +10,6 @@
 #include "./primitives.hpp"
 #include "./visualizer.hpp"
 
-/*
- * hay que(entre varias texturas bidimencionales):
- *  - juntar dos texturas -> append
- *  - tomar la direrencia -> differ
- *  - tomar todo lo de una y quitar lo de la otra -> abstain
- *  - tomar todo lo de una y agregar de la otra solo lo que se solape -> overlap
- *
- * hay que(dentro de una textura):
- *  - añadir nuevos nivieles -> add_level
- *  - añadir un punto a un nivel(en orden) -> add_point
- *  - añadir puntos a un nivel(en orden) -> add_point
- *  - juntar los puntos que hay en dos indices y colocarlo en uno solo(con las propiedades del primer indice) -> join_level
- *
- * es mejor si:
- *  - todos los puntos estan correctamente ordenados (baja orden algoritmico)
- */
-
 class ImageModifier {
   private: 
     SDL_Surface* texture;
@@ -74,6 +57,4 @@ class ImageModifier {
     static ImageModifier image (SDL_Renderer* render, std::string path);
 
     static ImageModifier chargePNG (SDL_Renderer* render, const std::string& path);
-    static ImageModifier chargeJPEG (SDL_Renderer* render, const std::string& path);
-    static ImageModifier chargeBMP (SDL_Renderer* render, const std::string& path);
 };

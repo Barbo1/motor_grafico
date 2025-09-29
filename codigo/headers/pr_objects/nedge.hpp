@@ -6,11 +6,11 @@
 class NEdge: public Physical {
   private:
     Visualizer<D2FIG> texture;
-    std::vector<Dir2> _points;
+    std::vector<Dir2> points;
 
   public: 
     NEdge ();
-    NEdge (std::vector<Dir2> & _points);
+    NEdge (SDL_Renderer* render, const std::vector<Dir2> & points, SDL_Color color);
     NEdge (const NEdge &);
     NEdge (NEdge &&);
     NEdge & operator= (const NEdge &);

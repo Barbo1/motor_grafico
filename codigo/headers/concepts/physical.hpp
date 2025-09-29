@@ -44,7 +44,6 @@ class Physical {
 
     virtual float get_mass () const;
 
-    /* calcule the movement of the object and move it. */
     virtual void calculate_movement(const std::vector<AngDir2*> & external_forces);
 
     friend bool test_collition (Physical &, Physical &);
@@ -52,18 +51,3 @@ class Physical {
     friend void correct_collition (Physical &, Physical &);
     friend Dir2 collition_point (Physical &, Physical &);
 };
-
-/* take two objects and verifies if they have collide. */
-bool test_collition (Physical &, Physical &);
-    
-/* take two objects and generate the collition. */
-void resolve_collition (Physical &, Physical &);
-
-/* Given that a collition had ocurred, this function corrects the superposition of the
- * objects moving the first slightly, so that the only point in it is the one returned
- * by collition_point.
- * */
-void correct_collition (Physical &, Physical &);
-    
-/* Returns the point of the collition between two objects. */
-Dir2 collition_point (Physical &, Physical &);
