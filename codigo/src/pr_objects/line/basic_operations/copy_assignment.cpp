@@ -2,6 +2,6 @@
 
 Line & Line::operator= (const Line & line) {
   this->slope = line.slope;
-  this->intersection = line.intersection;
+  this->deviation = line.deviation;
   return *this;
 }

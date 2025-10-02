@@ -1,7 +1,6 @@
-#include "../../../../../headers/concepts/visualizer.hpp"
-
-template <VisualType T>
-Visualizer<T> Visualizer<T>::oval (SDL_Renderer* render, int height, int base, SDL_Color color) {
+#include "../../../../headers/concepts/image_modifier.hpp"
+   
+ImageModifier ImageModifier::oval (int height, int base, SDL_Color color) {
   int* bounds = new int[4*height- 4];
   int* biter = bounds;
 
@@ -25,9 +24,7 @@ Visualizer<T> Visualizer<T>::oval (SDL_Renderer* render, int height, int base, S
     *(biter++) += sum;
   }
 
-  Visualizer<T> ret = bounder(render, bounds, 2*height, 2*base, color);
+  ImageModifier ret = ImageModifier::bounder(bounds, 2*height, 2*base, color);
   delete [] bounds;
   return ret;
 }
-
-template Visualizer<D2FIG> Visualizer<D2FIG>::oval (SDL_Renderer* render, int height, int base, SDL_Color color);

@@ -30,6 +30,8 @@ enum VisualType {
   D3FIG,
 };
 
+class ImageModifier;
+
 /* This kind of Visualizer represents a bidimentional texture. */
 template <VisualType T>
 class Visualizer {
@@ -40,9 +42,6 @@ class Visualizer {
     int width;
 
     Visualizer(SDL_Renderer* render, int height, int width, Uint32* pixels);
-    static Visualizer bounder (
-      SDL_Renderer* render, int* bounds, int height, int width, SDL_Color color
-    );
 
   public:
     Visualizer ();
@@ -54,6 +53,7 @@ class Visualizer {
 
     void draw (SDL_Renderer* render, const AngDir2 & position) const;
 
+    friend ImageModifier;
     friend Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
 };
 

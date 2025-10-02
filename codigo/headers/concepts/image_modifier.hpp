@@ -14,18 +14,18 @@ class ImageModifier {
   private: 
     SDL_Surface* texture;
     
-    ImageModifier (SDL_Renderer* render, Uint32* pixels);
+    ImageModifier (int height, int width, Uint32* pixels);
+    static ImageModifier bounder (int* bounds, int height, int width, SDL_Color color);
 
   public:
     ImageModifier ();
-    ImageModifier (SDL_Renderer* render, std::string path);
     ImageModifier (const ImageModifier & texture);
     ImageModifier (ImageModifier && texture);
     ImageModifier & operator= (const ImageModifier & texture);
     ImageModifier & operator= (ImageModifier && texture);
     ~ImageModifier ();
 
-    Visualizer<D2FIG> cast ();
+    Visualizer<D2FIG> cast (SDL_Renderer* render);
     SDL_Color operator() (uint32_t, uint32_t);
 
     /* Modifications. */
@@ -47,14 +47,13 @@ class ImageModifier {
     ImageModifier& proyect (Dir2 point1, Dir2 point2, Dir2 point3, Dir2 point4);
 
     /* Special constructors. */
-    static ImageModifier square (SDL_Renderer* render, int height, int base, SDL_Color color);
-    static ImageModifier rounded_square (SDL_Renderer* render, int height, int base, int radio, SDL_Color color);
-    static ImageModifier triangle (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
-    static ImageModifier circle (SDL_Renderer* render, int radio, SDL_Color color);
-    static ImageModifier circunference (SDL_Renderer* render, int radio, int width, SDL_Color color);
-    static ImageModifier oval (SDL_Renderer* render, int height, int base, SDL_Color color);
-    static ImageModifier polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
-    static ImageModifier image (SDL_Renderer* render, std::string path);
+    static ImageModifier square (int height, int base, SDL_Color color);
+    static ImageModifier rounded_square (int height, int base, int radio, SDL_Color color);
+    static ImageModifier triangle (Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
+    static ImageModifier circle (int radio, SDL_Color color);
+    static ImageModifier circunference (int radio, int width, SDL_Color color);
+    static ImageModifier oval (int height, int base, SDL_Color color);
+    static ImageModifier polygon (std::vector<Dir2> points, SDL_Color color);
 
-    static ImageModifier chargePNG (SDL_Renderer* render, const std::string& path);
+    static ImageModifier chargePNG (const std::string& path);
 };

@@ -1,10 +1,9 @@
-#include "../../../../../headers/concepts/visualizer.hpp"
+#include "../../../../headers/concepts/image_modifier.hpp"
 #include <array>
-    
-template <VisualType T>
-Visualizer<T> Visualizer<T>::polygon (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color) {
+   
+ImageModifier ImageModifier::polygon (std::vector<Dir2> points, SDL_Color color) {
   std::size_t many_points = points.size();
-  if (many_points > 64) return Visualizer<T>();
+  if (many_points > 64) return ImageModifier();
     
   /* Searching maximum and minimum coordenates. */
   Dir2 max(points[0]), min(points[0]);
@@ -78,16 +77,10 @@ FIN:
   }
   *biter = height * width;
   
-  Visualizer<T> ret = bounder(render, bounds, height, width, color);
+  ImageModifier ret = bounder(bounds, height, width, color);
   delete [] bounds;
   return ret; 
 }
-
-template Visualizer<D2FIG> Visualizer<D2FIG>::polygon (
-  SDL_Renderer* render, 
-  std::vector<Dir2> points, 
-  SDL_Color color
-);
 
 /* Sorting
   std::array<uint64_t, 65> order{0};

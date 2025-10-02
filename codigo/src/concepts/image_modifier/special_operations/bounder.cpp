@@ -1,7 +1,6 @@
-#include "../../../../../headers/concepts/visualizer.hpp"
+#include "../../../../headers/concepts/image_modifier.hpp"
 
-template <VisualType T>
-Visualizer<T> Visualizer<T>::bounder (SDL_Renderer* render, int* bounds, int height, int width, SDL_Color color) {
+ImageModifier ImageModifier::bounder (int* bounds, int height, int width, SDL_Color color) {
   Uint32* pixels = new Uint32[height * width];
   int * piter = bounds;
 
@@ -23,15 +22,5 @@ Visualizer<T> Visualizer<T>::bounder (SDL_Renderer* render, int* bounds, int hei
     pixels[i] = current;
   }
 
-  Visualizer<T> ret = Visualizer<T>(render, height, width, pixels);
-  delete [] pixels;
-  return ret;
+  return ImageModifier(height, width, pixels);
 }
-
-template Visualizer<D2FIG> Visualizer<D2FIG>::bounder (
-  SDL_Renderer* render, 
-  int* bounds, 
-  int height, 
-  int width, 
-  SDL_Color color
-);

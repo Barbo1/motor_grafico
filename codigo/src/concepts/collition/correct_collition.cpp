@@ -1,7 +1,7 @@
-#include "../../../../headers/concepts/physical.hpp"
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/pr_objects/nedge.hpp"
+#include "../../../headers/concepts/physical.hpp"
+#include "../../../headers/pr_objects/circle.hpp"
+#include "../../../headers/pr_objects/square.hpp"
+#include "../../../headers/pr_objects/nedge.hpp"
 #include <cstdint>
 #include <cmath>
 

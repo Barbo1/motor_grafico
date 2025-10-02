@@ -27,7 +27,7 @@ class NormalFileReader {
 
       if (!fil.is_open()) {
         *error = -1;
-        this->lim = this->pos;
+        this->lim = this->pos = 0;
         this->is_lim = true;
       } else {
         *error = 0;

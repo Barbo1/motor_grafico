@@ -1,8 +1,7 @@
-#include "../../../../../headers/concepts/visualizer.hpp"
+#include "../../../../headers/concepts/image_modifier.hpp"
 #include "../utils/circle_bound_maker.cpp"
    
-template <VisualType T>
-Visualizer<T> Visualizer<T>::circunference (SDL_Renderer* render, int radio, int width, SDL_Color color) {
+ImageModifier ImageModifier::circunference (int radio, int width, SDL_Color color) {
   std::size_t r1 = radio - width;
   std::size_t b1 = 4*radio - 4;
   std::size_t b2 = 4*r1 - 4;
@@ -31,14 +30,7 @@ Visualizer<T> Visualizer<T>::circunference (SDL_Renderer* render, int radio, int
 
   bounds3[k] = 4*radio*radio;
 
-  Visualizer<T> ret = bounder(render, bounds3, 2*radio, 2*radio, color);
+  ImageModifier ret = ImageModifier::bounder(bounds3, 2*radio, 2*radio, color);
   delete [] bounds3;
   return ret;
 }
-
-template Visualizer<D2FIG> Visualizer<D2FIG>::circunference (
-  SDL_Renderer* render, 
-  int radio, 
-  int width, 
-  SDL_Color color
-);

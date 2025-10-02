@@ -1,10 +1,15 @@
 #include "../../../../headers/pr_objects/circle.hpp"
+#include "../../../../headers/concepts/image_modifier.hpp"
 
 Circle::Circle (
-  SDL_Renderer* render, uint32_t radio, AngDir2 center, SDL_Color color, float density,
-  float f_s, float f_k, bool movible, bool colidable
+  SDL_Renderer* render, uint32_t radio, AngDir2 center, float density, 
+  float f_s, float f_k, bool movible, bool colidable, 
+  SDL_Color* color
 ) : 
   Physical (center, density, M_PI * radio * radio, f_s, f_k, movible, colidable), 
-  radio (radio),
-  texture(Visualizer<D2FIG>::circle(render, radio, color))
-{}
+  radio (radio)
+{
+  if (color != nullptr) {
+    this->texture = ImageModifier::circle(radio, *color).cast(render);
+  }
+}

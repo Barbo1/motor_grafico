@@ -1,7 +1,8 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
+#include <SDL2/SDL_render.h>
 
-template <VisualType T>
-Visualizer<T>::Visualizer (SDL_Renderer* render, int height, int width, Uint32* pixels) {
+template<>
+Visualizer<D2FIG>::Visualizer (SDL_Renderer* render, int height, int width, Uint32* pixels) {
   this->use_count = new int(1);
   this->width = width;
   this->height = height;
@@ -12,10 +13,3 @@ Visualizer<T>::Visualizer (SDL_Renderer* render, int height, int width, Uint32* 
   this->texture = SDL_CreateTextureFromSurface(render, sur);
   SDL_FreeSurface(sur);
 }
-
-template Visualizer<D2FIG>::Visualizer (
-  SDL_Renderer* render, 
-  int height, 
-  int width, 
-  Uint32* pixels
-);

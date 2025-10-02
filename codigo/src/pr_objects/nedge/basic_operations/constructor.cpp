@@ -1,6 +1,9 @@
 #include "../../../../headers/pr_objects/nedge.hpp"
+#include "../../../../headers/concepts/image_modifier.hpp"
 
-NEdge::NEdge (SDL_Renderer* render, const std::vector<Dir2> & points, SDL_Color color) {
+NEdge::NEdge (SDL_Renderer* render, const std::vector<Dir2> & points, SDL_Color* color) {
   this->points = points;
-  this->texture = Visualizer<D2FIG>::polygon(render, points, color);
+  if (color != nullptr) {
+    this->texture = ImageModifier::polygon(points, *color).cast(render);
+  }
 }

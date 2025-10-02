@@ -62,14 +62,15 @@ int main () {
     0, 0, true, true 
   );
   */
+  SDL_Color color = SDL_Color {255,255,255,255};
   Circle c1 = Circle(
     render, 15, AngDir2 {250, 120, 0}, 
-    SDL_Color {255,255,255,255}, 2.1, 
-    0, 0, true, true 
+    2.1, 0, 0, true, true, &color
   );
   c1.set_force(AngDir2 {0, 2, 0});
   c1.set_velocity(AngDir2 {13, 0, 0});
 
+  std::cout << 1 << std::endl;
   /*
   Square c2 = Square(
     render, 50, 30, AngDir2 {200, 120, 0}, 
@@ -83,10 +84,10 @@ int main () {
     0, 0, true, true 
   );
    * */
+  color = SDL_Color {255,255,255,255};
   Square c2 = Square(
     render, 30, 100, AngDir2 {200, 200, 0}, 
-    SDL_Color {255,255,255,255}, 4.6, 
-    0, 0, true, true
+    4.6, 0, 0, true, true, &color
   );
 
   const std::vector<AngDir2 *> external_forces;

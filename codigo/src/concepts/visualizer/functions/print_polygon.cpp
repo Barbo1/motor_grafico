@@ -1,6 +1,4 @@
-#include "../../../../../headers/concepts/visualizer.hpp"
-#include <SDL2/SDL_blendmode.h>
-#include <SDL2/SDL_render.h>
+#include "../../../../headers/concepts/visualizer.hpp"
 #include <cmath>
 #include <array>
 

@@ -1,6 +1,5 @@
 #include "../../../../headers/pr_objects/line.hpp"
 
-Line::Line (float slope, float deviation) {
-  this->slope = slope;
+void Line::set_deviation (float deviation) {
   this->deviation = deviation;
 }

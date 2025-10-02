@@ -3,6 +3,6 @@
 
 Line & Line::operator= (Line && line) {
   this->slope = std::exchange (line.slope, 0);
-  this->intersection = std::exchange (line.intersection, 0);
+  this->deviation = std::exchange (line.deviation, 0);
   return *this;
 }

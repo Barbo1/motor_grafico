@@ -15,8 +15,8 @@ class Square: public Physical {
   public: 
     Square (
       SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
-      SDL_Color color, float density = 0, float f_s = 0, float f_k = 0, 
-      bool movible = true, bool colidable = true
+      float density = 0, float f_s = 0, float f_k = 0, bool movible = true, 
+      bool colidable = true, SDL_Color* color = nullptr
     );
     Square (uint32_t, uint32_t, Dir2, SDL_Color);
     Square (const Square &);

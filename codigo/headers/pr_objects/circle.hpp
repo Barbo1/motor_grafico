@@ -14,9 +14,9 @@ class Circle: public Physical {
   public: 
     Circle ();
     Circle (
-      SDL_Renderer* render, uint32_t radio, AngDir2 center, SDL_Color color, 
-      float density = 0, float f_s = 0, float f_k = 0, bool movible = true, 
-      bool colidable = true
+      SDL_Renderer* render, uint32_t radio, AngDir2 center, float density = 0, 
+      float f_s = 0, float f_k = 0, bool movible = true, bool colidable = true, 
+      SDL_Color* color = nullptr
     );
     Circle (const Circle &);
     Circle (Circle &&);

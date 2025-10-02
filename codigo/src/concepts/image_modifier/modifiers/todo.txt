@@ -1,0 +1,17 @@
+
+ImageModifier& resize (uint32_t hieght, uint32_t width);
+ImageModifier& shift (const Dir2& offset);
+ImageModifier& xshear (float angle);
+ImageModifier& yshear (float angle);
+ImageModifier& rotate90 ();
+ImageModifier& rotate180 ();
+ImageModifier& rotate270 ();
+
+ImageModifier& operator| (const ImageModifier& img); /* Union. */
+ImageModifier& operator& (const ImageModifier& img); /* Intersection. */
+ImageModifier& operator- (const ImageModifier& img); /* Difference. */
+ImageModifier& operator* (const ImageModifier& img); /* Overlap. */
+
+ImageModifier& rbpp (uint32_t number_reduction); /* reduce bits per pixel. */
+ImageModifier& apply (Uint32 (*fun)(Uint32));
+ImageModifier& proyect (Dir2 point1, Dir2 point2, Dir2 point3, Dir2 point4);

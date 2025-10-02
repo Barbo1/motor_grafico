@@ -1,8 +1,7 @@
-#include "../../../../headers/concepts/physical.hpp"
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/pr_objects/nedge.hpp"
-#include <algorithm>
+#include "../../../headers/concepts/physical.hpp"
+#include "../../../headers/pr_objects/circle.hpp"
+#include "../../../headers/pr_objects/square.hpp"
+#include "../../../headers/pr_objects/nedge.hpp"
 
 bool test_collition (Physical & obj1, Physical & obj2) {
   if (!obj1._colidalble || !obj2._colidalble) 

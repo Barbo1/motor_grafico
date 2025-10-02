@@ -1,8 +1,7 @@
-#include "../../../../../headers/concepts/visualizer.hpp"
+#include "../../../../headers/concepts/image_modifier.hpp"
 #include <cstdint>
 
-template <VisualType T>
-Visualizer<T> Visualizer<T>::triangle (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
+ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
   if (point2.y < point1.y) std::swap (point2, point1);
   if (point3.y < point2.y) std::swap (point3, point2);
   if (point2.y < point1.y) std::swap (point2, point1);
@@ -61,14 +60,5 @@ Visualizer<T> Visualizer<T>::triangle (SDL_Renderer* render, Dir2 point1, Dir2 p
 
   *biter = height * width + 1;
 
-  Visualizer<T> ret = bounder(render, bounds.data(), height, width, color);
-  return ret;
+  return ImageModifier::bounder(bounds.data(), height, width, color);
 }
-
-template Visualizer<D2FIG> Visualizer<D2FIG>::triangle (
-  SDL_Renderer* render, 
-  Dir2 point1, 
-  Dir2 point2, 
-  Dir2 point3, 
-  SDL_Color color
-);

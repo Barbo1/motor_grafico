@@ -10,7 +10,7 @@ class NEdge: public Physical {
 
   public: 
     NEdge ();
-    NEdge (SDL_Renderer* render, const std::vector<Dir2> & points, SDL_Color color);
+    NEdge (SDL_Renderer* render, const std::vector<Dir2> & points, SDL_Color* color = nullptr);
     NEdge (const NEdge &);
     NEdge (NEdge &&);
     NEdge & operator= (const NEdge &);
