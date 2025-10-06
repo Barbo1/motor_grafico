@@ -52,13 +52,12 @@ class Dir2 {
     template<DirFin R> float operator* (const R &) const;
     template<DirFin R> void operator+= (const R &);
     template<DirFin R> void operator-= (const R &);
-    Dir2 normalize ();
-    Dir2 fnormalize ();
 
     virtual void operator*= (float);
     virtual Dir2 abs ();
     virtual float modulo () const;
     virtual float modulo2 () const;
+    Dir2 normalize ();
 };
 
 class Dir3 {
@@ -88,9 +87,10 @@ class Dir3 {
     void operator*= (float);
     Dir3 cross (const Dir3&) const;
 
-    Dir3 normalize () const;
+    Dir3 abs ();
     float modulo () const;
     float modulo2 () const;
+    Dir3 normalize () const;
 
     void rotate_x (float angle);
     void rotate_y (float angle);
@@ -112,9 +112,7 @@ class AngDir2: public Dir2 {
     AngDir2 operator- () const;
     AngDir2 operator* (float f) const;
     float angle () const;
-    float fangle () const;
     AngDir2 normalize ();
-    AngDir2 fnormalize ();
 
     template<DirFin R> AngDir2 operator+ (R) const;
     template<DirFin R> AngDir2 operator- (R) const;

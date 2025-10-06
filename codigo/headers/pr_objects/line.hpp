@@ -4,6 +4,9 @@
 
 #include <SDL2/SDL.h>
 
+class Circle;
+class Square;
+
 class Line {
   private:
     float slope;
@@ -12,6 +15,7 @@ class Line {
   public: 
     Line ();
     Line (float slope, float deviation);
+    Line (Dir2 p1, Dir2 p2);
     Line (const Line &);
     Line (Line &&);
     Line & operator= (const Line &);
@@ -24,5 +28,10 @@ class Line {
     void set_deviation (float);
 
     friend bool test_collition (Physical &, Line &);
+    friend bool test_collition (Circle&, Line&);
+    friend bool test_collition (Square&, Line&);
+
     friend void resolve_collition (Physical &, Line &);
+    friend void resolve_collition (Circle&, Line&);
+    friend void resolve_collition (Square&, Line&);
 };

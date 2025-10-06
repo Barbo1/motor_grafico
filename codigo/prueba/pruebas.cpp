@@ -9,10 +9,11 @@
 
 #include "../headers/pr_objects/square.hpp"
 #include "../headers/pr_objects/circle.hpp"
+#include "../headers/pr_objects/line.hpp"
 
 const char window_name[] = "Ventana";
-const uint32_t height = 800;
-const uint32_t width = 600;
+const uint32_t height = 600;
+const uint32_t width = 800;
 const SDL_Color bg_color = {30, 30, 30, 0};
 
 int main () {
@@ -25,8 +26,8 @@ int main () {
     window_name, 
     SDL_WINDOWPOS_UNDEFINED, 
     SDL_WINDOWPOS_UNDEFINED, 
-    height, 
     width, 
+    height, 
     SDL_WINDOW_SHOWN
   );
   if (window == nullptr) {
@@ -63,14 +64,13 @@ int main () {
   );
   */
   SDL_Color color = SDL_Color {255,255,255,255};
-  Circle c1 = Circle(
-    render, 15, AngDir2 {250, 120, 0}, 
-    2.1, 0, 0, true, true, &color
+  Square c1 = Square(
+    render, 15, 15, AngDir2 {160, 120, 0}, 2.1, 
+    0, 0, true, true, &color
   );
   c1.set_force(AngDir2 {0, 2, 0});
-  c1.set_velocity(AngDir2 {13, 0, 0});
+  c1.set_velocity(AngDir2 {23, 0, 0});
 
-  std::cout << 1 << std::endl;
   /*
   Square c2 = Square(
     render, 50, 30, AngDir2 {200, 120, 0}, 
@@ -90,6 +90,8 @@ int main () {
     4.6, 0, 0, true, true, &color
   );
 
+  Line l1 = Line (Dir2 {(float)width, 1.8*height/2}, Dir2 {0.f, height});
+
   const std::vector<AngDir2 *> external_forces;
 
   while (cont) {
@@ -101,6 +103,10 @@ int main () {
 
     if (test_collition(c1, c2)) {
       resolve_collition(c1, c2);
+    }
+    
+    if (test_collition(c1, l1)) {
+      resolve_collition(c1, l1);
     }
 
     c1.draw(render);

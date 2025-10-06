@@ -11,7 +11,7 @@ Dir2 collition_point (Physical & ob1, Physical & ob2) {
   bool b;
 
   if ((cir1 = dynamic_cast<Circle*>(&ob1)) && (cir2 = dynamic_cast<Circle*>(&ob2))) {
-    Dir2 ret = (cir1->position - cir2->position).fnormalize();
+    Dir2 ret = (cir1->position - cir2->position).normalize();
     ret *= cir2->radio;
     return ret;
   } else if ((cir1 = dynamic_cast<Circle*>(&ob1)) && (sq1 = dynamic_cast<Square*>(&ob2))) {
@@ -37,7 +37,7 @@ Dir2 collition_point (Physical & ob1, Physical & ob2) {
         cir1->position.y
     };
     ret -= cir1->position;
-    ret = ret.fnormalize();
+    ret = ret.normalize();
     ret *= cir1->radio;
     ret += cir1->position;
     return ret;

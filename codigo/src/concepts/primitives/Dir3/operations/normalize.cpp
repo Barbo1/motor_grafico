@@ -1,5 +1,5 @@
 #include "../../../../../headers/concepts/primitives.hpp"
-#include "../../utils/fisqrt.cpp"
+#include "../../../../../headers/concepts/operations.hpp"
 
 Dir3 Dir3::normalize () const {
   float inorm = fisqrt(this->x * this->x + this->y * this->y + this->z * this->z);

@@ -6,6 +6,9 @@
 #include <SDL2/SDL.h>
 #include <cstdint>
 
+class Square;
+class Line;
+
 class Circle: public Physical {
   private:
     Visualizer<D2FIG> texture;
@@ -29,8 +32,19 @@ class Circle: public Physical {
     void draw (SDL_Renderer *);
 
     friend Physical;
+
     friend bool test_collition (Physical &, Physical &);
+    friend bool test_collition (Circle&, Circle&);
+    friend bool test_collition (Circle&, Square&);
+    friend bool test_collition (Square&, Circle&);
+    friend bool test_collition (Circle&, Line&);
+
     friend void resolve_collition (Physical &, Physical &);
+    friend void resolve_collition (Circle&, Circle&);
+    friend void resolve_collition (Circle&, Square&);
+    friend void resolve_collition (Square&, Circle&);
+    friend void resolve_collition (Circle&, Line&);
+
     friend void correct_collition (Physical &, Physical &);
     friend Dir2 collition_point (Physical &, Physical &);
 };

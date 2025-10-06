@@ -4,6 +4,9 @@
 #include "../concepts/visualizer.hpp"
 #include <cstdint>
 
+class Circle;
+class Line;
+
 class Square: public Physical {
   private:
     int32_t height;
@@ -27,8 +30,19 @@ class Square: public Physical {
     void draw (SDL_Renderer *);
 
     friend Physical;
+
     friend bool test_collition (Physical &, Physical &);
+    friend bool test_collition (Square&, Square&);
+    friend bool test_collition (Circle&, Square&);
+    friend bool test_collition (Square&, Circle&);
+    friend bool test_collition (Square&, Line&);
+
     friend void resolve_collition (Physical &, Physical &);
+    friend void resolve_collition (Square&, Square&);
+    friend void resolve_collition (Square&, Circle&);
+    friend void resolve_collition (Circle&, Square&);
+    friend void resolve_collition (Square&, Line&);
+
     friend void correct_collition (Physical &, Physical &);
     friend Dir2 collition_point (Physical &, Physical &);
 };

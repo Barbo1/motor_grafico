@@ -1,6 +1,6 @@
-#pragma once
+#include "../../../headers/concepts/operations.hpp"
 
-static float fisqrt (float x) {
+float fisqrt (float x) {
   union {int xi; float xf;};
 
   xf = x;

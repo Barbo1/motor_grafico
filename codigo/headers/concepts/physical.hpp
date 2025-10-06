@@ -8,7 +8,7 @@
 #define MOVEMENT_BOUND 0.0001
 
 class Physical {
-  private:
+  protected:
     /* forces and velocity. */
     AngDir2 _velocity;
     AngDir2 _force;
@@ -16,7 +16,6 @@ class Physical {
     bool _movible; /* The external forces adn velocities don't affect it.  */
     bool _colidalble; /* The cilition with objects don't have effect. */
 
-  protected:
     float _area; /* px^2 */
     float _density; /* kg/px^2 */
     float _f_s; /* static fritction. */
@@ -31,6 +30,7 @@ class Physical {
     );
     Physical ();
 
+    virtual float get_mass () const;
     virtual void set_position (AngDir2);
     virtual AngDir2 get_position () const;
 
@@ -41,8 +41,6 @@ class Physical {
     virtual void set_velocity (const AngDir2 &);
     virtual void add_velocity (const AngDir2 &);
     virtual AngDir2 get_velocity () const;
-
-    virtual float get_mass () const;
 
     virtual void calculate_movement(const std::vector<AngDir2*> & external_forces);
 

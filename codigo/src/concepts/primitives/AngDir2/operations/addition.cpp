@@ -8,7 +8,7 @@ template<DirFin R> AngDir2 AngDir2::operator+ (R d) const {
     this->x + d.x,
     this->y + d.y,
     angle
-    );
+  );
 }
 
 template<DirFin R> void AngDir2::operator+= (R d) {

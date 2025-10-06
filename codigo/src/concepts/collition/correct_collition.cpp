@@ -20,7 +20,7 @@ void correct_collition (Physical & ob1, Physical & ob2) {
 
   } else if ((cir1 = dynamic_cast<Circle*>(&ob1)) && (cir2 = dynamic_cast<Circle*>(&ob2))) {
     float mass_1 = cir1->get_mass(), mass_2 = cir2->get_mass();
-    AngDir2 n = (cir1->position - cir2->position).fnormalize();
+    AngDir2 n = (cir1->position - cir2->position).normalize();
     cir1->position = cir2->position;
     cir1->position += n * (cir1->radio + cir2->radio);
     return;
@@ -44,7 +44,7 @@ void correct_collition (Physical & ob1, Physical & ob2) {
         diff.y - static_cast<float>(sq1->height * (((int32_t) (*(uint32_t*)&diff.y & 0x80000000) >> 30) + 1)),
         0
       };
-      b -= b.fnormalize() * cir1->radio;
+      b -= b.normalize() * cir1->radio;
       cir1->position += b * a;
       sq1->position -= b * (1-a);
       return;
