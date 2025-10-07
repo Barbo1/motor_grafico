@@ -27,6 +27,14 @@ class Square: public Physical {
     Square & operator= (const Square &);
     Square & operator= (Square &&);
 
+    void set_texture (Visualizer<D2FIG>);
+    Visualizer<D2FIG> get_texture ();
+
+    void set_height (float);
+    void set_width (float);
+    float get_height ();
+    float get_width ();
+
     void draw (SDL_Renderer *);
 
     friend Physical;

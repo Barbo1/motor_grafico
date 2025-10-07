@@ -64,17 +64,17 @@ void correct_collition (NEdge&, Line&);
 
 /* Returns the point of the collition between two objects. */
 Dir2 collition_point (Physical&, Physical&);
-Dir2 collition_collition (Square&, Square&);
-Dir2 collition_collition (Square&, Circle&);
-Dir2 collition_collition (Circle&, Square&);
-Dir2 collition_collition (Square&, Circle&);
-Dir2 collition_collition (Circle&, NEdge&);
-Dir2 collition_collition (Square&, NEdge&);
-Dir2 collition_collition (NEdge&, NEdge&);
-Dir2 collition_collition (NEdge&, Circle&);
-Dir2 collition_collition (NEdge&, Square&);
+Dir2 collition_point (Square&, Square&);
+Dir2 collition_point (Square&, Circle&);
+Dir2 collition_point (Circle&, Square&);
+Dir2 collition_point (Square&, Circle&);
+Dir2 collition_point (Circle&, NEdge&);
+Dir2 collition_point (Square&, NEdge&);
+Dir2 collition_point (NEdge&, NEdge&);
+Dir2 collition_point (NEdge&, Circle&);
+Dir2 collition_point (NEdge&, Square&);
 
-Dir2 collition_collition (Physical&, Line&);
-Dir2 collition_collition (Square&, Line&);
-Dir2 collition_collition (Circle&, Line&);
-Dir2 collition_collition (NEdge&, Line&);
+Dir2 collition_point (Physical&, Line&);
+Dir2 collition_point (Square&, Line&);
+Dir2 collition_point (Circle&, Line&);
+Dir2 collition_point (NEdge&, Line&);

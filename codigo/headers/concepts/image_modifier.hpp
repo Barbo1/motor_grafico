@@ -33,6 +33,8 @@ class ImageModifier {
     ImageModifier& shift (const Dir2& offset);
     ImageModifier& xshear (float angle);
     ImageModifier& yshear (float angle);
+    ImageModifier& mirrorx ();
+    ImageModifier& mirrory ();
     ImageModifier& rotate90 ();
     ImageModifier& rotate180 ();
     ImageModifier& rotate270 ();
@@ -44,7 +46,7 @@ class ImageModifier {
 
     ImageModifier& rbpp (uint32_t number_reduction); /* reduce bits per pixel. */
     ImageModifier& apply (Uint32 (*fun)(Uint32));
-    ImageModifier& proyect (Dir2 point1, Dir2 point2, Dir2 point3, Dir2 point4);
+    ImageModifier& project (Dir2 point1, Dir2 point2, Dir2 point3, Dir2 point4);
 
     /* Special constructors. */
     static ImageModifier square (int height, int base, SDL_Color color);

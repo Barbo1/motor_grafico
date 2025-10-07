@@ -29,6 +29,9 @@ class Circle: public Physical {
     void set_radio (uint32_t);
     uint32_t get_radio ();
 
+    void set_texture (Visualizer<D2FIG>);
+    Visualizer<D2FIG> get_texture ();
+
     void draw (SDL_Renderer *);
 
     friend Physical;

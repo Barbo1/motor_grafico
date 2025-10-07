@@ -3,6 +3,7 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_stdinc.h>
 #include <iostream>
 #include <stdlib.h>
 #include <cmath>
@@ -10,6 +11,7 @@
 #include "../headers/pr_objects/square.hpp"
 #include "../headers/pr_objects/circle.hpp"
 #include "../headers/pr_objects/line.hpp"
+#include "../headers/concepts/image_modifier.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 600;
@@ -63,12 +65,16 @@ int main () {
     0, 0, true, true 
   );
   */
+
   SDL_Color color = SDL_Color {255,255,255,255};
-  Square c1 = Square(
-    render, 15, 15, AngDir2 {160, 120, 0}, 2.1, 
-    0, 0, true, true, &color
+  ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
+  ImageModifier img_mod_1 = ImageModifier::circle(15, color);
+  Circle c1 = Circle(
+    render, 15, AngDir2 {120, 120, 0}, 
+    2.1, 0, 0, true, true 
   );
-  c1.set_force(AngDir2 {0, 2, 0});
+  c1.set_texture((img_mod_1 & img_mod_2).cast(render));
+  c1.set_force(AngDir2 {0, 3, 0});
   c1.set_velocity(AngDir2 {23, 0, 0});
 
   /*
@@ -85,11 +91,13 @@ int main () {
   );
    * */
   color = SDL_Color {255,255,255,255};
+  img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
+  img_mod_1 = ImageModifier::square(60, 200, color);
   Square c2 = Square(
     render, 30, 100, AngDir2 {200, 200, 0}, 
     4.6, 0, 0, true, true, &color
   );
-
+  c2.set_texture((img_mod_1 & img_mod_2).cast(render));
   Line l1 = Line (Dir2 {(float)width, 1.8*height/2}, Dir2 {0.f, height});
 
   const std::vector<AngDir2 *> external_forces;

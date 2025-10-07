@@ -16,6 +16,9 @@ class NEdge: public Physical {
     NEdge & operator= (const NEdge &);
     NEdge & operator= (NEdge &&);
 
+    void set_texture (Visualizer<D2FIG>);
+    Visualizer<D2FIG> get_texture ();
+
     void draw (SDL_Renderer *);
 
     friend Physical;

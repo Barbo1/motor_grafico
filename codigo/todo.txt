@@ -1,0 +1,5 @@
+- operaciones de imagenes
+- rozamiento de colisiones(todas las necesarias)
+- colisiones de poligonos con circulos
+- colisiones de poligonos con cuadrados
+- colisiones de poligonos con poligonos
