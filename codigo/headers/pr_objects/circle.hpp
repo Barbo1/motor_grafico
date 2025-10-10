@@ -11,8 +11,8 @@ class Line;
 
 class Circle: public Physical {
   private:
-    Visualizer<D2FIG> texture;
     uint32_t radio;
+    Visualizer<D2FIG> texture;
 
   public: 
     Circle ();
@@ -26,11 +26,11 @@ class Circle: public Physical {
     Circle & operator= (const Circle &);
     Circle & operator= (Circle &&);
 
-    void set_radio (uint32_t);
-    uint32_t get_radio ();
-
     void set_texture (Visualizer<D2FIG>);
+    void set_radio (uint32_t);
+
     Visualizer<D2FIG> get_texture ();
+    uint32_t get_radio ();
 
     void draw (SDL_Renderer *);
 

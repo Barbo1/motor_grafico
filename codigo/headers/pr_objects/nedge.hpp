@@ -5,8 +5,8 @@
 
 class NEdge: public Physical {
   private:
-    Visualizer<D2FIG> texture;
     std::vector<Dir2> points;
+    Visualizer<D2FIG> texture;
 
   public: 
     NEdge ();

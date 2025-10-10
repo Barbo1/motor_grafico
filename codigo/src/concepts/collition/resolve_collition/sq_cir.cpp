@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/concepts/operations.hpp"
+#include "../../../../headers/primitives/operations.hpp"
 
 void resolve_collition (Square& sq, Circle& cir) {
   float mass_1 = sq.get_mass(), mass_2 = cir.get_mass();

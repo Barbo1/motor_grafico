@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/concepts/operations.hpp"
+#include "../../../../headers/primitives/operations.hpp"
 
 void resolve_collition (Square& sq1, Square& sq2) {
   Dir2 diff = sq1.position - sq2.position;

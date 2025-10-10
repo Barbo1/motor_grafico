@@ -8,7 +8,8 @@
 #include <vector>
 #include <variant>
 #include <string>
-#include "./primitives.hpp"
+
+#include "../primitives/vectors.hpp"
 
 /* Shows in the render the points in the array. */
 void print_points (

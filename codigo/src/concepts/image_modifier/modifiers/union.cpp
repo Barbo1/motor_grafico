@@ -1,9 +1,4 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_stdinc.h>
-#include <algorithm>
-#include <cstdlib>
-#include <cstdint>
 
 ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
   SDL_Surface* sur = SDL_CreateRGBSurface(

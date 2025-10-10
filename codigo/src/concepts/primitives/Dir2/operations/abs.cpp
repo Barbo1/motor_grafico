@@ -1,9 +1,0 @@
-#include "../../../../../headers/concepts/primitives.hpp"
-#include "../../../../../headers/concepts/operations.hpp"
-
-Dir2 Dir2::abs () {
-  return Dir2 (
-    absv (this->x),
-    absv (this->y)
-  );
-}

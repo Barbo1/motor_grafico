@@ -4,10 +4,6 @@
 ImageModifier& ImageModifier::operator= (const ImageModifier & texture) {
   if (this->texture != nullptr)
     SDL_FreeSurface(this->texture);
-
-  SDL_PixelFormat * fmt = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
-  this->texture = SDL_ConvertSurface(texture.texture, fmt, 0);
-  SDL_FreeFormat(fmt);
-
+  this->texture = SDL_ConvertSurface(texture.texture, texture.texture->format, 0);
   return *this;
 }

@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/concepts/operations.hpp"
+#include "../../../../headers/primitives/operations.hpp"
 
 bool test_collition (Square& sq, Circle & cir) {
   Dir2 diff = (cir.position - sq.position).abs();

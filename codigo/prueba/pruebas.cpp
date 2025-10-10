@@ -7,11 +7,14 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cmath>
+#include <vector>
 
 #include "../headers/pr_objects/square.hpp"
 #include "../headers/pr_objects/circle.hpp"
 #include "../headers/pr_objects/line.hpp"
+#include "../headers/concepts/collition.hpp"
 #include "../headers/concepts/image_modifier.hpp"
+#include "../headers/concepts/visualizer.hpp"
 
 const char window_name[] = "Ventana";
 const uint32_t height = 600;
@@ -68,14 +71,13 @@ int main () {
 
   SDL_Color color = SDL_Color {255,255,255,255};
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
-  ImageModifier img_mod_1 = ImageModifier::circle(15, color);
-  Circle c1 = Circle(
-    render, 15, AngDir2 {120, 120, 0}, 
-    2.1, 0, 0, true, true 
+  ImageModifier img_mod_1 = ImageModifier::square(30, 30, color);
+  Square c1 = Square(
+    render, 15, 15, AngDir2 {120, 120, 0}, 
+    2.1, 0, 0, true, true
   );
   c1.set_texture((img_mod_1 & img_mod_2).cast(render));
-  c1.set_force(AngDir2 {0, 3, 0});
-  c1.set_velocity(AngDir2 {23, 0, 0});
+  c1.set_velocity(AngDir2 {34, 34, 0});
 
   /*
   Square c2 = Square(
@@ -92,13 +94,21 @@ int main () {
    * */
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
-  img_mod_1 = ImageModifier::square(60, 200, color);
+  img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
   Square c2 = Square(
     render, 30, 100, AngDir2 {200, 200, 0}, 
     4.6, 0, 0, true, true, &color
   );
-  c2.set_texture((img_mod_1 & img_mod_2).cast(render));
-  Line l1 = Line (Dir2 {(float)width, 1.8*height/2}, Dir2 {0.f, height});
+  c2.set_texture(img_mod_1.resize(200, 60).cast(render));
+
+
+  std::vector<Line> lines = std::vector<Line>();
+  lines.push_back(Line (Dir2 {width, 0.f}, Dir2 {0.0f, 0.0f}));
+  lines.push_back(Line (Dir2 {(float)width, height}, Dir2 {width, 0.f}));
+  /*
+  lines.push_back(Line (Dir2 {0.f, height}, Dir2 {0.0f, 0.0f}));
+  lines.push_back(Line (Dir2 {(float)width, height}, Dir2 {0.f, width}));
+  */
 
   const std::vector<AngDir2 *> external_forces;
 
@@ -109,12 +119,12 @@ int main () {
 
     c1.calculate_movement(external_forces);
 
-    if (test_collition(c1, c2)) {
+    if (test_collition(c1, c2))
       resolve_collition(c1, c2);
-    }
-    
-    if (test_collition(c1, l1)) {
-      resolve_collition(c1, l1);
+    for (Line& line: lines) {
+      if (test_collition(c1, line)) {
+        resolve_collition(c1, line);
+      }
     }
 
     c1.draw(render);

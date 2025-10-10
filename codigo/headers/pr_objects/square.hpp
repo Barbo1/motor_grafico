@@ -13,9 +13,8 @@ class Square: public Physical {
     int32_t width;
     Visualizer<D2FIG> texture;
 
-    Square ();
-
   public: 
+    Square ();
     Square (
       SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
       float density = 0, float f_s = 0, float f_k = 0, bool movible = true, 
@@ -28,12 +27,12 @@ class Square: public Physical {
     Square & operator= (Square &&);
 
     void set_texture (Visualizer<D2FIG>);
-    Visualizer<D2FIG> get_texture ();
-
     void set_height (float);
     void set_width (float);
+
     float get_height ();
     float get_width ();
+    Visualizer<D2FIG> get_texture ();
 
     void draw (SDL_Renderer *);
 

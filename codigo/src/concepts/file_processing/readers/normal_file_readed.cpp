@@ -5,7 +5,7 @@
  * by characters(hence the Normal part of the name) and sequentialy. The NFR_BUFFER_LIMIT is the 
  * length of the internal buffer size used to read the data. The errors returned could be:
  *  ->  0: no error,
- *  -> -1: an EOF error: the folder is seted in finished state,
+ *  -> -1: an EOF error: the folder is setted in finished state,
  *  -> -2: an reading error: inconsistent information between readed and expected.
  * */
 

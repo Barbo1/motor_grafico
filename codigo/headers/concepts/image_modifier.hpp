@@ -7,7 +7,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include "./primitives.hpp"
+
+#include "../primitives/vectors.hpp"
 #include "./visualizer.hpp"
 
 class ImageModifier {
@@ -32,9 +33,8 @@ class ImageModifier {
     ImageModifier& resize (uint32_t hieght, uint32_t width);
     ImageModifier& shift (const Dir2& offset);
     ImageModifier& xshear (float angle);
-    ImageModifier& yshear (float angle);
-    ImageModifier& mirrorx ();
-    ImageModifier& mirrory ();
+    ImageModifier& xmirror ();
+    ImageModifier& ymirror ();
     ImageModifier& rotate90 ();
     ImageModifier& rotate180 ();
     ImageModifier& rotate270 ();

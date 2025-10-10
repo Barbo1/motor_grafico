@@ -12,7 +12,7 @@
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
 
-#include "./primitives.hpp"
+#include "../primitives/vectors.hpp"
 #include "./physical.hpp"
 
 /* ---------------- */

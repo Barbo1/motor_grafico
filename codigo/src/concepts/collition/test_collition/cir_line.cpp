@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/line.hpp"
-#include "../../../../headers/concepts/operations.hpp"
+#include "../../../../headers/primitives/operations.hpp"
 
 bool test_collition (Circle & cir, Line& line) {
   float p1 = absv (cir.position.y - line.slope * cir.position.x - line.deviation);
