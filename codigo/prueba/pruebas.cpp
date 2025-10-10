@@ -1,11 +1,12 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_hidapi.h>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_stdinc.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
 #include <vector>
 
@@ -56,42 +57,41 @@ int main () {
   bool cont = true;
   SDL_Event event;
 
-  /*
-  Square c1 = Square(
-    render, 15, 15, AngDir2 {120, 120, 0}, 
-    SDL_Color {255,255,255,255}, 2.1, 
-    0, 0, true, true
-  );
-  Circle c1 = Circle(
-    render, 15, AngDir2 {120, 120, 0}, 
-    SDL_Color {255,255,255,255}, 2.1, 
-    0, 0, true, true 
-  );
-  */
-
+  /* Creacion de objetos movibles. */
+  srand(102);
   SDL_Color color = SDL_Color {255,255,255,255};
+
+  std::vector<Circle> circles = std::vector<Circle>();
+  Circle cir;
+  circles.push_back(Circle(
+    render, 19, AngDir2 {400, 400, 0}, 2.1, 0, 0, true, true, &color
+  ));
+  circles.push_back(Circle(
+    render, 15, AngDir2 {470, 400, 0}, 2.1, 0, 0, true, true, &color
+  ));
+  circles.push_back(Circle(
+    render, 25, AngDir2 {400, 470, 0}, 2.1, 0, 0, true, true, &color
+  ));
+  circles.push_back(Circle(
+    render, 17, AngDir2 {490, 480, 0}, 2.1, 0, 0, true, true, &color
+  ));
+
+  for (auto& cir: circles) {
+    cir.set_velocity(AngDir2 {(float)(rand() % 40), (float)(rand() % 40), 0});
+  }
+
+
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::square(30, 30, color);
   Square c1 = Square(
-    render, 15, 15, AngDir2 {120, 120, 0}, 
-    2.1, 0, 0, true, true
+    render, 15, 15, AngDir2 {120, 120, 0}, 2.1, 0, 0, true, true
   );
   c1.set_texture((img_mod_1 & img_mod_2).cast(render));
   c1.set_velocity(AngDir2 {34, 34, 0});
 
-  /*
-  Square c2 = Square(
-    render, 50, 30, AngDir2 {200, 120, 0}, 
-    SDL_Color {255,255,255,255}, 4.6, 
-    0, 0, true, true
-  );
 
-  Circle c2 = Circle(
-    render, 30, AngDir2 {200, 120, 0}, 
-    SDL_Color {255,255,255,255}, 4.6, 
-    0, 0, true, true 
-  );
-   * */
+  /* Creacion de estructura estatica. */
+
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
@@ -102,31 +102,56 @@ int main () {
   c2.set_texture(img_mod_1.resize(200, 60).cast(render));
 
 
+  /* Creacion de lineas de colision. */
+
   std::vector<Line> lines = std::vector<Line>();
   lines.push_back(Line (Dir2 {width, 0.f}, Dir2 {0.0f, 0.0f}));
-  lines.push_back(Line (Dir2 {(float)width, height}, Dir2 {width, 0.f}));
-  /*
-  lines.push_back(Line (Dir2 {0.f, height}, Dir2 {0.0f, 0.0f}));
-  lines.push_back(Line (Dir2 {(float)width, height}, Dir2 {0.f, width}));
-  */
+  lines.push_back(Line (Dir2 {(float)width, height}, Dir2 {0.f, height}));
 
-  const std::vector<AngDir2 *> external_forces;
+  lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, 0.0f}));
+  lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, height}));
+
+  lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, 0.0f}));
+  lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, height}));
+
+  AngDir2 g = AngDir2 {0, 4, 0};
 
   while (cont) {
     SDL_Delay(10);
     SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
     SDL_RenderClear(render);
 
-    c1.calculate_movement(external_forces);
+    for (auto& cir: circles)
+      cir.calculate_movement(g);
+    c1.calculate_movement(g);
 
-    if (test_collition(c1, c2))
-      resolve_collition(c1, c2);
-    for (Line& line: lines) {
-      if (test_collition(c1, line)) {
-        resolve_collition(c1, line);
+    for (auto& cir: circles) {
+      if (test_collition(c2, cir)) 
+        resolve_collition(cir, c2);
+      if (test_collition(c1, cir)) 
+        resolve_collition(cir, c1);
+      for (Line& line: lines)
+        if (test_collition(cir, line))
+          resolve_collition(cir, line);
+    }
+
+    for (int i = 0; i < circles.size(); i++) {
+      for (int j = i + 1; j < circles.size(); j++) {
+        if (test_collition(circles[i], circles[j])) {
+          resolve_collition(circles[i], circles[j]);
+        }
       }
     }
 
+    if (test_collition(c1, c2)) 
+      resolve_collition(c1, c2);
+    for (Line& line: lines) {
+      if (test_collition(c1, line))
+        resolve_collition(c1, line);
+    }
+
+    for (auto& cir: circles)
+      cir.draw(render);
     c1.draw(render);
     c2.draw(render);
     

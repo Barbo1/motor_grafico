@@ -4,11 +4,9 @@
 
 void resolve_collition (Square& sq1, Square& sq2) {
   Dir2 diff = sq1.position - sq2.position;
-  Dir2 diffa = diff.abs();
-  float ws = sq1.width + sq2.width;
-  float hs = sq2.height + sq1.height;
+  Dir2 size = Dir2 {(float)sq1.width + sq2.width, (float)sq2.height + sq1.height};
 
-  int pos = diffa.x + hs < diffa.y + ws;
+  int pos = gti (absv(diff.y) + size.x, absv(diff.x) + size.y);
   float * vel_elem1 = &sq1._velocity.x + pos;
   float * vel_elem2 = &sq2._velocity.x + pos;
 
@@ -21,5 +19,5 @@ void resolve_collition (Square& sq1, Square& sq2) {
   *vel_elem1 = new_elem * sq1._movible;
 
   float res = *(&diff.x + pos);
-  *(&sq1.position.x + pos) += ((pos ? hs : ws) - *(&diffa.x + pos)) * sgn (res);
+  *(&sq1.position.x + pos) += *(&size.x + pos) * sgn (res) - res;
 }

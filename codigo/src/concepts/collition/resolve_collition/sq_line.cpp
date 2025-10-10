@@ -3,12 +3,13 @@
 #include "../../../../headers/primitives/operations.hpp"
 
 void resolve_collition (Square& sq, Line& line) {
-  float w = static_cast<float>(sq.width), 
-        h = static_cast<float>(sq.height) * sgn(line.slope),
-        a = (line.slope * sq.position.x - sq.position.y + line.deviation) / 
+  float h = static_cast<float>(sq.height) * sgn(line.slope), 
+        w = static_cast<float>(sq.width),
+        a = (line.slope * sq.position.x + line.deviation - sq.position.y) / 
             (line.slope * w + h);
-  AngDir2 u = AngDir2 {w, -h, 0} * (sgn(a) - a);
-  AngDir2 t = AngDir2 {line.slope, -1.f, 0};
-  sq.position += t * (t * u);
-  sq._velocity -= t * (2.f * (line.slope * sq._velocity.x - sq._velocity.y));
+  AngDir2 t = AngDir2 {line.slope, -1.f, 0}.normalize();
+  t = t * (t * (AngDir2 {w, -h, 0} * (sgn(a) - a)));
+  sq.position += t;
+  t = t.normalize();
+  sq._velocity += t * ((-2.f) * (t * sq._velocity));
 }

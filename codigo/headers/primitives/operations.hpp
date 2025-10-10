@@ -21,3 +21,7 @@ void absv (float* num);
 
 /* Fast inverse square root. */
 float fisqrt (float num);
+
+/* Comparison functions. */
+int gti (const float& x, const float& y);
+int gei (const float& x, const float& y);

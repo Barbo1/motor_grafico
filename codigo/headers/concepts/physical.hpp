@@ -5,6 +5,7 @@
 #include "../primitives/vectors.hpp"
 
 #define DRAW_RATE 0.036666
+#define MOVEMENT_COEFITIENT 100.f
 #define MOVEMENT_BOUND 0.0001
 
 class Physical {
@@ -42,7 +43,7 @@ class Physical {
     virtual void add_velocity (const AngDir2 &);
     virtual AngDir2 get_velocity () const;
 
-    virtual void calculate_movement (const std::vector<AngDir2*> & external_forces);
+    virtual void calculate_movement (const AngDir2 & extrenal_forces);
 
     friend bool test_collition (Physical &, Physical &);
     friend void resolve_collition (Physical &, Physical &);
