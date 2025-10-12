@@ -5,40 +5,26 @@
 void resolve_collition (Square& sq, Circle& cir) {
   float mass_1 = sq.get_mass(), mass_2 = cir.get_mass();
   AngDir2 diff = sq.position - cir.position;
-  Dir2 diffa = diff.abs();
+  AngDir2 b = AngDir2 {
+    sgn(diff.x) * min(sq.width, max0(absv(diff.x))) - diff.x,
+    sgn(diff.y) * min(sq.height, max0(absv(diff.y))) - diff.y,
+    0
+  };
+  AngDir2 n = b.normalize(); 
+  float p = n * (sq._velocity - cir._velocity) * 2.f / (mass_1 + mass_2);
 
-  bool pos = diffa.x < sq.width;
-  if (pos || diffa.y < sq.height) {
-    float * vel_elem1 = &sq._velocity.x + pos;
-    float * vel_elem2 = &cir._velocity.x + pos;
+  sq._velocity -= n * (p * mass_2 * sq._movible);
+  cir._velocity += n * (p * mass_1 * cir._movible);
 
-    float denom = 1.f / (mass_1 + mass_2);
-    float coef_3 = (mass_1 - mass_2);
+  sq.position += b;
+  sq.position -= n * cir.radio;
 
-    float new_elem = (coef_3 * *vel_elem1 + 2.f * mass_2 * *vel_elem2) * denom;
-    *vel_elem2 = (2.f * mass_1 * *vel_elem1 - coef_3 * *vel_elem2) * denom * cir._movible;
-    *vel_elem1 = new_elem * sq._movible;
+  sq._acc_f_k = sq._f_k * cir._f_k;
+  cir._acc_f_k = sq._acc_f_k;
 
-    *(&sq.position.x + pos) -= 
-      (*(&diffa.x + pos) - (cir.radio + (pos ? sq.height : sq.width))) * sgn (*(&diff.x + pos));
+  cir._collition_normal = n;
+  sq._collition_normal = -n;
 
-    return;
-
-  } else {
-    AngDir2 b = AngDir2 {
-      diff.x - static_cast<float>(sq.width) * sgn(diff.x),
-      diff.y - static_cast<float>(sq.height) * sgn(diff.y),
-      0
-    };
-    AngDir2 n = b.normalize();
-    float p = ((cir._velocity - sq._velocity) * n) * 2.f / (mass_1 + mass_2);
-
-    sq._velocity += n * (p * mass_2 * sq._movible);
-    cir._velocity -= n * (p * mass_1 * cir._movible);
-
-    b -= n * cir.radio;
-    sq.position -= b;
-
-    return;
-  }
+  sq._normal_presence = true;
+  cir._normal_presence = true;
 }

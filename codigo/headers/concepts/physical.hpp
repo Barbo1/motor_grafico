@@ -1,33 +1,31 @@
 #pragma once 
 
-#include <vector>
-
 #include "../primitives/vectors.hpp"
 
 #define DRAW_RATE 0.036666
 #define MOVEMENT_COEFITIENT 100.f
-#define MOVEMENT_BOUND 0.0001
+#define MOVEMENT_BOUND 0.01
 
 class Physical {
   protected:
-    /* forces and velocity. */
+    AngDir2 position;
     AngDir2 _velocity;
     AngDir2 _force;
-
-    bool _movible; /* The external forces adn velocities don't affect it.  */
-    bool _colidalble; /* The cilition with objects don't have effect. */
+    AngDir2 _collition_normal;
 
     float _area; /* px^2 */
     float _density; /* kg/px^2 */
-    float _f_s; /* static fritction. */
     float _f_k; /* kinetic fritction. */
+    float _acc_f_k;
 
-    AngDir2 position;
+    bool _movible; /* The external forces adn velocities don't affect it. */
+    bool _colidalble; /* The colition with objects don't have effect. */
+    bool _normal_presence; /* Denote if the collition was made, so the force 
+                            * can be corrected and the friction applied */
 
   public:
     Physical (
-      AngDir2 position, float density, float area, float f_s, 
-      float f_k, bool movible, bool colidable
+      AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
     );
     Physical ();
 

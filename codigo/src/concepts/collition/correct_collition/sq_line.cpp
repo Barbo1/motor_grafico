@@ -2,13 +2,10 @@
 #include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/primitives/operations.hpp"
 
-void resolve_collition (Square& sq, Line& line) {
+void correct_collition (Square& sq, Line& line) {
   float h = sq.height * sgn(line.slope), 
         a = (line.slope * sq.position.x + line.deviation - sq.position.y) / 
             (line.slope * sq.width + h);
   AngDir2 t = AngDir2 {line.slope, -1.f, 0}.normalize();
-  t = t * (t * (AngDir2 {sq.width, -h, 0} * (sgn(a) - a)));
-  sq.position += t;
-  t = t.normalize();
-  sq._velocity += t * (t * sq._velocity * -2.f);
+  sq.position += t * (t * (AngDir2 {sq.width, -h, 0} * (sgn(a) - a)));
 }

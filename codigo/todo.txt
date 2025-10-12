@@ -1,6 +1,8 @@
  |V| - correccion de colisiones.
+ |V| - rozamiento de colisiones(todas las necesarias).
+ |V| - normales a colisiones(todas las necesarias).
+ | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
- | | - rozamiento de colisiones(todas las necesarias).
  | | - falta la funcion project de image_modifier, y la function de print polygon.
  | | - clase para manejo de sequencias de imagenes(Visualizer<D2SEQ>).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.

@@ -80,14 +80,13 @@ int main () {
     cir.set_velocity(AngDir2 {(float)(rand() % 40), (float)(rand() % 40), 0});
   }
 
-
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
-  ImageModifier img_mod_1 = ImageModifier::square(30, 30, color);
-  Square c1 = Square(
-    render, 15, 15, AngDir2 {120, 120, 0}, 2.1, 0, 0, true, true
+  ImageModifier img_mod_1 = ImageModifier::circle(15, color);
+  Circle c1 = Circle(
+    render, 15, AngDir2 {120, 120, 0}, 2.1, 0.4, 0.5, true, true
   );
   c1.set_texture((img_mod_1 & img_mod_2).cast(render));
-  c1.set_velocity(AngDir2 {34, 34, 0});
+  c1.set_velocity(AngDir2 {6, 34, 0});
 
 
   /* Creacion de estructura estatica. */
@@ -97,7 +96,7 @@ int main () {
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
   Square c2 = Square(
     render, 30, 100, AngDir2 {200, 200, 0}, 
-    4.6, 0, 0, true, true, &color
+    4.6, 0.5, 0.5, false, true, &color
   );
   c2.set_texture(img_mod_1.resize(200, 60).cast(render));
 
@@ -114,7 +113,7 @@ int main () {
   lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, 0.0f}));
   lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, height}));
 
-  AngDir2 g = AngDir2 {0, 4, 0};
+  AngDir2 g = AngDir2 {0, 16, 0};
 
   while (cont) {
     SDL_Delay(10);
@@ -124,6 +123,7 @@ int main () {
     for (auto& cir: circles)
       cir.calculate_movement(g);
     c1.calculate_movement(g);
+    c2.calculate_movement(g);
 
     for (auto& cir: circles) {
       if (test_collition(c2, cir)) 

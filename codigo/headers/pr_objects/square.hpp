@@ -9,8 +9,8 @@ class Line;
 
 class Square: public Physical {
   private:
-    int32_t height;
-    int32_t width;
+    float width;
+    float height;
     Visualizer<D2FIG> texture;
 
   public: 
@@ -20,7 +20,6 @@ class Square: public Physical {
       float density = 0, float f_s = 0, float f_k = 0, bool movible = true, 
       bool colidable = true, SDL_Color* color = nullptr
     );
-    Square (uint32_t, uint32_t, Dir2, SDL_Color);
     Square (const Square &);
     Square (Square &&);
     Square & operator= (const Square &);
@@ -50,6 +49,11 @@ class Square: public Physical {
     friend void resolve_collition (Circle&, Square&);
     friend void resolve_collition (Square&, Line&);
 
-    friend void correct_collition (Physical &, Physical &);
+    friend void correct_collition (Physical&, Physical&);
+    friend void correct_collition (Square&, Square&);
+    friend void correct_collition (Square&, Circle&);
+    friend void correct_collition (Circle&, Square&);
+    friend void correct_collition (Square&, Line&);
+
     friend Dir2 collition_point (Physical &, Physical &);
 };

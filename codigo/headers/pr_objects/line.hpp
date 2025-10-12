@@ -34,4 +34,8 @@ class Line {
     friend void resolve_collition (Physical &, Line &);
     friend void resolve_collition (Circle&, Line&);
     friend void resolve_collition (Square&, Line&);
+
+    friend void correct_collition (Physical&, Line&);
+    friend void correct_collition (Circle&, Line&);
+    friend void correct_collition (Square&, Line&);
 };
