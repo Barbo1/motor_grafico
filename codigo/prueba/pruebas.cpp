@@ -64,16 +64,16 @@ int main () {
   std::vector<Circle> circles = std::vector<Circle>();
   Circle cir;
   circles.push_back(Circle(
-    render, 19, AngDir2 {400, 400, 0}, 2.1, 0, 0, true, true, &color
+    render, 19, AngDir2 {400, 400, 0}, 2.1, 0, true, true, &color
   ));
   circles.push_back(Circle(
-    render, 15, AngDir2 {470, 400, 0}, 2.1, 0, 0, true, true, &color
+    render, 15, AngDir2 {470, 400, 0}, 2.1, 0, true, true, &color
   ));
   circles.push_back(Circle(
-    render, 25, AngDir2 {400, 470, 0}, 2.1, 0, 0, true, true, &color
+    render, 25, AngDir2 {400, 470, 0}, 2.1, 0, true, true, &color
   ));
   circles.push_back(Circle(
-    render, 17, AngDir2 {490, 480, 0}, 2.1, 0, 0, true, true, &color
+    render, 17, AngDir2 {490, 480, 0}, 2.1, 0, true, true, &color
   ));
 
   for (auto& cir: circles) {
@@ -83,10 +83,10 @@ int main () {
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::circle(15, color);
   Circle c1 = Circle(
-    render, 15, AngDir2 {120, 120, 0}, 2.1, 0.4, 0.5, true, true
+    render, 15, AngDir2 {120, 120, 0}, 2.1, 0.5, true, true
   );
   c1.set_texture((img_mod_1 & img_mod_2).cast(render));
-  c1.set_velocity(AngDir2 {6, 34, 0});
+  c1.set_velocity(AngDir2 {22, 34, 0});
 
 
   /* Creacion de estructura estatica. */
@@ -96,7 +96,7 @@ int main () {
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
   Square c2 = Square(
     render, 30, 100, AngDir2 {200, 200, 0}, 
-    4.6, 0.5, 0.5, false, true, &color
+    4.6, 0.5, false, true, &color
   );
   c2.set_texture(img_mod_1.resize(200, 60).cast(render));
 
@@ -114,6 +114,12 @@ int main () {
   lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, height}));
 
   AngDir2 g = AngDir2 {0, 16, 0};
+
+
+  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(render, 40, 40, 40);
+  cube.set_texture("../images/rubik.png");
+  Dir3 cube_pos = Dir3 {500, 200, 100};
+  Dir3 cube_rot = Dir3 {0.0124, 0.0033, 0.003251};
 
   while (cont) {
     SDL_Delay(10);
@@ -154,6 +160,8 @@ int main () {
       cir.draw(render);
     c1.draw(render);
     c2.draw(render);
+    cube.draw(render, cube_pos);
+    cube.rotate(cube_rot);
     
     if (SDL_PollEvent(&event)) {
       switch (event.type) {

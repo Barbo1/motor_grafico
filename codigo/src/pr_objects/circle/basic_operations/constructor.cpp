@@ -3,10 +3,9 @@
 
 Circle::Circle (
   SDL_Renderer* render, uint32_t radio, AngDir2 center, float density, 
-  float f_s, float f_k, bool movible, bool colidable, 
-  SDL_Color* color
+  float f_k, bool movible, bool colidable, SDL_Color* color
 ) : 
-  Physical (center, density, M_PI * radio * radio, f_s, f_k, movible, colidable), 
+  Physical (center, density, M_PI * radio * radio, f_k, movible, colidable), 
   radio (radio)
 {
   if (color != nullptr) {

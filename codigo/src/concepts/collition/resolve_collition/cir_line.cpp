@@ -10,4 +10,8 @@ void resolve_collition (Circle& cir, Line& line) {
   cir._velocity -= n * (2.f * (n * cir._velocity));
   cir.position += u;
   cir.position -= n * cir.radio;
+
+  cir._collition_normal = n;
+  cir._acc_f_k = 1.f;
+  cir._normal_presence = true;
 }

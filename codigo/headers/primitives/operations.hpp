@@ -25,3 +25,8 @@ float fisqrt (float num);
 /* Comparison functions. */
 int gti (const float& x, const float& y);
 int gei (const float& x, const float& y);
+
+/* Bound absolute operation: for float f and a bound b, returns f if |f| < b, 
+ * else sgn(f)*b. Precondition: b > 0.
+ * */
+float bound (const float& f, const float& b);

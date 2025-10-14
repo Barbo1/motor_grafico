@@ -30,7 +30,6 @@ concept DirFin = std::is_same_v<T, AngDir2> || std::is_same_v<T, Dir2>;
 
 class Dir2 {
   public:
-    /* Don't change order. */
     float x;
     float y;
 
@@ -62,7 +61,6 @@ class Dir2 {
 
 class Dir3 {
   public:
-    /* Don't change order. */
     float x;
     float y;
     float z;

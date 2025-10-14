@@ -1,6 +1,7 @@
  |V| - correccion de colisiones.
  |V| - rozamiento de colisiones(todas las necesarias).
  |V| - normales a colisiones(todas las necesarias).
+ | | - cambiar punteros por shared_ptr y unique_ptr.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
  | | - falta la funcion project de image_modifier, y la function de print polygon.

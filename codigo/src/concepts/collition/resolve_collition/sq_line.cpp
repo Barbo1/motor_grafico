@@ -7,8 +7,12 @@ void resolve_collition (Square& sq, Line& line) {
         a = (line.slope * sq.position.x + line.deviation - sq.position.y) / 
             (line.slope * sq.width + h);
   AngDir2 t = AngDir2 {line.slope, -1.f, 0}.normalize();
-  t = t * (t * (AngDir2 {sq.width, -h, 0} * (sgn(a) - a)));
+  t *= (t * (AngDir2 {sq.width, -h, 0} * (sgn(a) - a)));
   sq.position += t;
   t = t.normalize();
   sq._velocity += t * (t * sq._velocity * -2.f);
+
+  sq._collition_normal = t;
+  sq._acc_f_k = 1.f;
+  sq._normal_presence = true;
 }

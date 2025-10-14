@@ -13,13 +13,7 @@
  * object could be defined.
  * */
 Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding) {
-  this->info = new Info {
-    .vectors = std::vector<Dir3>(), 
-    .normals = std::vector<Dir3>(),
-    .mapping = std::vector<Dir2>(),
-    .indeces = std::vector<Face>()
-  };
-  this->use_count = new int(1);
+  this->info = std::make_shared<Info> ();
 
   int error;
   NormalFileReader file = NormalFileReader(path, &error);

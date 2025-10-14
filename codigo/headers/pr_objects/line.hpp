@@ -38,4 +38,8 @@ class Line {
     friend void correct_collition (Physical&, Line&);
     friend void correct_collition (Circle&, Line&);
     friend void correct_collition (Square&, Line&);
+
+    friend Dir2 collition_point (Physical&, Line&);
+    friend Dir2 collition_point (Circle&, Line&);
+    friend Dir2 collition_point (Square&, Line&);
 };

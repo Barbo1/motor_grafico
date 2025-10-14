@@ -3,9 +3,9 @@
 
 Square::Square (
   SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
-  float density, float f_s, float f_k, bool movible, bool colidable, SDL_Color* color
+  float density, float f_k, bool movible, bool colidable, SDL_Color* color
 ) : 
-  Physical (center, density, height * width, f_s, f_k, movible, colidable),
+  Physical (center, density, height * width, f_k, movible, colidable),
   height(height),
   width(width)
 {

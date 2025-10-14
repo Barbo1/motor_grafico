@@ -9,14 +9,8 @@ Visualizer<D3FIG>::Visualizer (std::vector<std::vector<Dir3>> points, std::vecto
     std::exit (-1);
   }
 
-  this->info = new Info {
-    .vectors = std::vector<Dir3>(), 
-    .normals = std::vector<Dir3>(),
-    .mapping = std::vector<Dir2>({Dir2{0,0}}),
-    .indeces = std::vector<Face>()
-  };
-  this->use_count = new int(1);
-    
+  this->info = std::make_shared<Info> ();
+  this->info->mapping.push_back(Dir2 {0.f, 0.f});
   this->info->indeces.reserve (20);
   this->info->vectors.reserve (20);
   int j, k;

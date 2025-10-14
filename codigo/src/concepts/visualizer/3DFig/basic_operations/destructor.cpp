@@ -3,12 +3,8 @@
 #include <variant>
 
 Visualizer<D3FIG>::~Visualizer () {
-  (*this->use_count)--;
-  if (*this->use_count <= 0) {
-    delete this->info;
-    delete this->use_count;
+  if (this->info.use_count() == 1)
     if (std::holds_alternative<SDL_Surface*>(this->texture))
       SDL_FreeSurface(std::get<SDL_Surface*>(this->texture));
-  }
 }
 

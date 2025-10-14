@@ -17,8 +17,8 @@ class Square: public Physical {
     Square ();
     Square (
       SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
-      float density = 0, float f_s = 0, float f_k = 0, bool movible = true, 
-      bool colidable = true, SDL_Color* color = nullptr
+      float density = 0, float f_k = 0, bool movible = true, bool colidable = true, 
+      SDL_Color* color = nullptr
     );
     Square (const Square &);
     Square (Square &&);
@@ -55,5 +55,9 @@ class Square: public Physical {
     friend void correct_collition (Circle&, Square&);
     friend void correct_collition (Square&, Line&);
 
-    friend Dir2 collition_point (Physical &, Physical &);
+    friend Dir2 collition_point (Physical&, Physical&);
+    friend Dir2 collition_point (Square&, Square&);
+    friend Dir2 collition_point (Square&, Circle&);
+    friend Dir2 collition_point (Circle&, Square&);
+    friend Dir2 collition_point (Square&, Line&);
 };

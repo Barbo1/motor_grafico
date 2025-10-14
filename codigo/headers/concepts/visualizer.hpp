@@ -5,6 +5,7 @@
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include <variant>
 #include <string>
@@ -37,8 +38,8 @@ class ImageModifier;
 template <VisualType T>
 class Visualizer {
   private: 
-    int* use_count;
     SDL_Texture* texture;
+    int* use_count;
     int height;
     int width;
 
@@ -97,8 +98,7 @@ class Visualizer<D3FIG> {
     };
 
     std::variant<SDL_Surface*, SDL_Color> texture;
-    Info* info;
-    int* use_count;
+    std::shared_ptr<Info> info;
 
   public:
     Visualizer ();
