@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 /* Sign function. */
 float sgn (float num);
 
@@ -30,3 +32,11 @@ int gei (const float& x, const float& y);
  * else sgn(f)*b. Precondition: b > 0.
  * */
 float bound (const float& f, const float& b);
+float bound0 (const float& f, const float& b);
+
+uint64_t bytou64 (
+  const uint8_t& p1, const uint8_t& p2, const uint8_t& p3, const uint8_t& p4,
+  const uint8_t& p5, const uint8_t& p6, const uint8_t& p7, const uint8_t& p8
+);
+uint32_t bytou32 (const uint8_t& p1, const uint8_t& p2, const uint8_t& p3, const uint8_t& p4);
+uint16_t bytou16 (const uint8_t& p1, const uint8_t& p2);

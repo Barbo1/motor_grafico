@@ -1,13 +1,10 @@
 #include "../../../../headers/concepts/visualizer.hpp"
+#include "../../../../headers/primitives/file_processing.hpp"
 #include "../zlib_inflate/inflate.cpp"
-#include "../zlib_inflate/read_bytes.cpp"
 
 #include <SDL2/SDL_stdinc.h>
-#include <fstream>
+#include <cstdint>
 #include <iostream>
-
-const std::size_t SHIFTING_BUFFER_SIZE = 12;
-const std::size_t BUFFER_SIZE = 1 << SHIFTING_BUFFER_SIZE;
 
 static int starting_col[7] = { 0, 4, 0, 2, 0, 1, 0 };
 static int starting_row[7] = { 0, 0, 4, 0, 2, 0, 1 };
@@ -31,56 +28,34 @@ uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
 }
 
 Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & height) {
-  std::fstream fil(path, std::ios::binary);
-  fil.open (path);
-  if (!fil.is_open ()) {
+  int error;
+  SequentialFileReader fil = SequentialFileReader(path, &error);
+  if (error != 0) {
     std::cout << "The file was not found." << std::endl;
     return nullptr;
   }
-
-  fil.seekg (0, std::ios::end);
-  std::size_t count = fil.tellg();
-  if (count < 0) {
-    fil.close ();
-    std::cout << "Final position not found." << std::endl;
-    return nullptr;
-  }
-  fil.seekg (0, std::ios::beg);
-
-  std::vector<uint8_t> buff;
-  buff.resize (count);
-  if (!fil.read ((char* )buff.data (), count)) {
-    std::cout << "Error while reading data." << std::endl;
-    return nullptr;
-  }
-  fil.close ();
-
-  uint64_t pos = 0;
   
   /* Verify signature. */
-  if (buff[pos] != 0x89 || buff[pos + 1] != 0x50 || buff[pos + 2] != 0x4E || buff[pos + 3] != 0x47 || 
-      buff[pos + 4] != 0x0D || buff[pos + 5] != 0x0A || buff[pos + 6] != 0x1A || buff[pos + 7] != 0x0A) {
+  if (fil.read64() == 0x0A1A0A0D474E5089) {
     std::cout << "Failure in signature recognition." << std::endl;
     return nullptr;
   }
-  pos += 8;
 
   /* Handling of IHDR chunk. */
-  if (read_bytes (&buff[0], pos, 4) != 13 ||
-      static_cast<uint32_t> (read_bytes (&buff[0], pos, 4)) != 0x49484452) { 
+  if (fil.read32() != 13 || fil.read32() != 0x49484452) { 
     std::cout << "IHDR chunk not founded." << std::endl;
     return nullptr;
   }
 
   /* Reading image parameters. */
-  width = read_bytes(&buff[0], pos, 4);
-  height = read_bytes(&buff[0], pos, 4);
-  int bitdepth = read_bytes(&buff[0], pos, 1);
-  int colortype  = read_bytes(&buff[0], pos, 1);
-  int compmethod = read_bytes(&buff[0], pos, 1);
-  int filtmethod = read_bytes(&buff[0], pos, 1);
-  int intemethod = read_bytes(&buff[0], pos, 1);
-  pos += 4;
+  width = fil.read32();
+  height = fil.read32();
+  int bitdepth = fil.read8();
+  int colortype  = fil.read8();
+  int compmethod = fil.read8();
+  int filtmethod = fil.read8();
+  int intemethod = fil.read8();
+  fil.skip_until((std::size_t) 4);
 
   if (width == 0 || height == 0) {
     std::cout 
@@ -177,23 +152,23 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
   };  
 
   /* IDAT information. */
+  std::vector<uint8_t> idat_new;
   std::vector<uint8_t> idat_data;
   idat_data.reserve (height * width);
 
   /* Reading the rest of the file. */
   bool looping = true;
   uint32_t info_lenght;
-  uint64_t aux;
-  while (pos < buff.size() && looping) {
-    info_lenght = read_bytes(&buff[0], pos, 4);
-    if (pos + info_lenght > buff.size ()) {
+  while (!fil.finished() && looping) {
+    info_lenght = fil.read32();
+    if (!fil.spare(info_lenght)) {
       std::cout 
         << "PNG reading error: size of block greater than known information."
         << std::endl;
       return nullptr;
     }
 
-    switch (read_bytes(&buff[0], pos, 4)) {
+    switch (fil.read32()) {
 
       /* PLET */
       case 0x504C5445:
@@ -217,9 +192,9 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
         palette.resize (palette_count);
         for (int i = 0; i < palette_count; i++) {
           palette[i] = {
-            .r = buff[pos++],
-            .g = buff[pos++],
-            .b = buff[pos++],
+            .r = fil.read8(),
+            .g = fil.read8(),
+            .b = fil.read8(),
             .a = 255,
           };
         }
@@ -227,12 +202,8 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
   
       /* IDAT */
       case 0x49444154:
-        idat_data.insert (
-          idat_data.end (), 
-          buff.begin() + pos, 
-          buff.begin() + (pos + info_lenght)
-        );
-        pos += info_lenght;
+        idat_new = fil.get_vector(info_lenght);
+        idat_data.insert(idat_data.end(), idat_new.begin(), idat_new.end());
         break;
 
       /* tRNS */
@@ -240,14 +211,14 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
         has_trns = true;
         switch (colortype) {
           case 0:
-            color = read_bytes(&buff[0], pos, 2);
+            color = fil.read16();
             bkgc = { .r = color, .g = color, .b = color, .a = 255 };
             break;
           case 2:
             bkgc = { 
-              .r = (Uint8)read_bytes(&buff[0], pos, 2), 
-              .g = (Uint8)read_bytes(&buff[0], pos, 2),
-              .b = (Uint8)read_bytes(&buff[0], pos, 2),
+              .r = (Uint8)fil.read16(), 
+              .g = (Uint8)fil.read16(),
+              .b = (Uint8)fil.read16(),
               .a = 255
             };
             break;
@@ -260,7 +231,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
             }
 
             for (int i = 0; i < info_lenght; i++)
-              palette[i].a = buff[pos++];
+              palette[i].a = fil.read8();
             break;
           default:
             std::cout 
@@ -279,11 +250,11 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
 
       /* The unused chunks are disregarded. */
       default:
-        pos += info_lenght;
+        fil.skip_until((std::size_t) info_lenght);
         break;
     }
-    /* CRC no usado actualmente(lo desprecio). */
-    pos += 4;
+    /* CRC not supported. */
+    fil.skip_until((std::size_t) 4);
   }
 
   /* Descompression of IDAT field. */
@@ -293,7 +264,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
     return nullptr;
 
   /* Interlace changing. */
-  uint64_t many, scanline, bpp, pixels_pos;
+  uint64_t many, scanline, bpp, pixels_pos, aux, pos;
   double sample_scale = 255.f / ((1 << sampledepth) - 1);
 
   /* Pixels allocation. */
@@ -455,7 +426,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
     /* Adam7 de-interlace. */
     case 1: {
 
-      int itr, itc, h, w, total;
+      int itr, itc, w, total;
       auto current = output.begin ();
       bpp = 1 + ((bitdepth * channels - 1) >> 3);
 
@@ -465,10 +436,9 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
         many = 0;
 
         w = 1 + ((width - starting_col[pass_index] - 1) >> col_increment_sh[pass_index]);
-        h = 1 + ((height - starting_row[pass_index] - 1) >> row_increment_sh[pass_index]);
         scanline = 1 + ((bitdepth * channels * w - 1) >> 3);
+        total = (1 + ((height - starting_row[pass_index] - 1) >> row_increment_sh[pass_index])) * (1 + scanline);
 
-        total = h * (1 + scanline);
         pass.clear ();
         pass.insert (pass.begin (), current, current + total);
         current += total;

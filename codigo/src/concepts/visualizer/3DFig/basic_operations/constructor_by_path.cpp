@@ -1,5 +1,5 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
-#include "../../../file_processing/readers/normal_file_readed.cpp"
+#include "../../../../../headers/primitives/file_processing.hpp"
 #include <cstdint>
 #include <iostream>
 #include <ranges>
@@ -16,7 +16,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
   this->info = std::make_shared<Info> ();
 
   int error;
-  NormalFileReader file = NormalFileReader(path, &error);
+  SequentialFileReader file = SequentialFileReader(path, &error);
   if (error != 0) {
     std::cout << "Error: cannot import 3D figure in the path " << path << std::endl;
     return;

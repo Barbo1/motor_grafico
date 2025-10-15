@@ -7,8 +7,8 @@
 struct huffnode {
   uint64_t elem;
   bool final;
-  huffnode* izq; // 1.
-  huffnode* der; // 0.
+  huffnode* izq; // 0.
+  huffnode* der; // 1.
 };
 
 /* Huffman trees that follows the RFC-1951 specification. It use statical ONLY memory. 

@@ -10,7 +10,8 @@ SDL_Color deduce_pixel_color (
   const Dir2& v0, const Dir2& v1, const float& d00, const float& d01, 
   const float& d11, const float& denom
 ) {
-  Dir2 v2 = Dir2 {x, y} - point1;
+  Dir2 v2 = Dir2 {x, y};
+  v2 -= point1;
   float d20 = v2 * v0;
   float d21 = v2 * v1;
 
@@ -19,9 +20,8 @@ SDL_Color deduce_pixel_color (
   Dir2 coefs = uv1 + uv2 * lam2 + uv3 * lam3;
   
   int offset = 
-    static_cast<int>(std::min(max0(coefs.x), 1.0f) * tex_w) + 
-    static_cast<int>(std::min(max0(coefs.y), 1.0f) * tex_h) * texture->w;
-
+    static_cast<int>(bound0 (coefs.x, 1.f) * tex_w) + 
+    static_cast<int>(bound0 (coefs.y, 1.f) * tex_h) * texture->w;
   Uint32 pos = *((Uint32*)texture->pixels + offset);
 
   SDL_Color color;
@@ -68,7 +68,8 @@ void print_triangle_t (
   const float d23 = point2.y - point3.y;
   const float m3 = v1.x / v1.y;
     
-  float start, end, ms, me;
+  int n, i;
+  float start, end, ms, me, n_f, i_f;
   SDL_Color color;
 
   const float top = point2.x;
@@ -81,10 +82,10 @@ void print_triangle_t (
     ms = min (m3, m1);
     me = max (m3, m1);
     end = start = point1.x;
-    for (int n = floor (point1.y); n < floor (point2.y); n++) {
-      for (int i = floor (start); i <= ceil (end); i++) {
+    for (n_f = floor (point1.y), n = n_f; n_f < floor (point2.y); n_f += 1, n++) {
+      for (i_f = floor (start), i = i_f; i_f <= ceil (end); i_f += 1, i++) {
         color = deduce_pixel_color (
-          i, n, point1, point2, point3, uv1, uv2, uv3, 
+          i_f, n_f, point1, point2, point3, uv1, uv2, uv3, 
           texture, tex_w, tex_h, v0, v1, d00, d01, d11,
           denom
         );
@@ -101,10 +102,10 @@ void print_triangle_t (
     ms = max (m3, m2);
     me = min (m3, m2);
     max_min (m2, m3, top, bot, &start, &end);
-    for (int n = floor (point2.y); n < floor (point3.y); n++) {
-      for (int i = floor (start); i <= ceil (end); i++) {
+    for (n_f = floor (point2.y), n = n_f; n_f < floor (point3.y); n_f += 1, n++) {
+      for (i_f = floor (start), i = i_f; i_f <= ceil (end); i_f += 1, i++) {
         color = deduce_pixel_color (
-          i, n, point1, point2, point3, uv1, uv2, uv3, 
+          i_f, n_f, point1, point2, point3, uv1, uv2, uv3, 
           texture, tex_w, tex_h, v0, v1, d00, d01, d11,
           denom
         );
