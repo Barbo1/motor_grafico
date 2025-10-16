@@ -1,21 +1,15 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_hidapi.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_rect.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_stdinc.h>
-#include <iostream>
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-
 #include "../headers/pr_objects/square.hpp"
 #include "../headers/pr_objects/circle.hpp"
 #include "../headers/pr_objects/line.hpp"
 #include "../headers/concepts/collition.hpp"
 #include "../headers/concepts/image_modifier.hpp"
 #include "../headers/concepts/visualizer.hpp"
+
+#include <SDL2/SDL.h>
+#include <iostream>
+#include <cstdlib>
+#include <vector>
+#include <cmath>
 
 const char window_name[] = "Ventana";
 const uint32_t height = 600;
@@ -53,6 +47,10 @@ int main () {
     SDL_Quit ();
     return -1;
   }
+
+  SDL_Texture* global_render_texture = SDL_CreateTexture(
+    render, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height
+  );
 
   bool cont = true;
   SDL_Event event;
@@ -115,16 +113,23 @@ int main () {
 
   AngDir2 g = AngDir2 {0, 16, 0};
 
-
-  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(render, 40, 40, 40);
+  float b = 15;
+  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(render, b, b, b);
   cube.set_texture("../images/rubik.png");
   Dir3 cube_pos = Dir3 {500, 200, 100};
-  Dir3 cube_rot = Dir3 {0.0124, 0.0033, 0.003251};
+  Dir3 cube_rot = Dir3 {0.01, 0.02, 0};
+
+  std::vector<Dir2> polygon_points = std::vector<Dir2>({
+    Dir2 {556.f, 464.f},
+    Dir2 {664.f, 439.f},
+    Dir2 {704.f, 364.f},
+    Dir2 {552.f, 300.f},
+    Dir2 {578.f, 369.f},
+    Dir2 {438.f, 388.f}
+  });
 
   while (cont) {
     SDL_Delay(10);
-    SDL_SetRenderDrawColor(render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
-    SDL_RenderClear(render);
 
     for (auto& cir: circles)
       cir.calculate_movement(g);
@@ -155,12 +160,7 @@ int main () {
       if (test_collition(c1, line))
         resolve_collition(c1, line);
     }
-
-    for (auto& cir: circles)
-      cir.draw(render);
-    c1.draw(render);
-    c2.draw(render);
-    cube.draw(render, cube_pos);
+    
     cube.rotate(cube_rot);
     
     if (SDL_PollEvent(&event)) {
@@ -179,6 +179,20 @@ int main () {
       }
     }
 
+    SDL_SetRenderTarget (render, global_render_texture);
+    SDL_SetRenderDrawColor (render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
+    SDL_RenderClear (render);
+
+    for (auto& cir: circles)
+      cir.draw (render);
+    c1.draw (render);
+    c2.draw (render);
+    cube.draw (render, cube_pos);
+
+    print_polygon_c(render, polygon_points, color);
+
+    SDL_SetRenderTarget (render, nullptr);
+    SDL_RenderCopy (render, global_render_texture, nullptr, nullptr);
     SDL_RenderPresent (render);
   } 
   

@@ -9,11 +9,10 @@ void print_triangle_c (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 poin
   const float d12 = point1.y - point2.y;
   const float d23 = point2.y - point3.y;
   const float m3 = (point1.x - point3.x) / (point1.y - point3.y);
-    
-  float start, end, ms, me;
-
   const float top = point2.x;
   const float bot = point3.x + d23 * m3;
+    
+  float start, end, ms, me;
 
   SDL_SetRenderDrawColor (render, color.r, color.g, color.b, color.a);
   SDL_SetRenderDrawBlendMode (render, SDL_BLENDMODE_ADD);

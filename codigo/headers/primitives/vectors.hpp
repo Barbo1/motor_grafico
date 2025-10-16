@@ -46,6 +46,8 @@ class Dir2 {
     Dir2 operator- ();
     Dir2 operator* (float) const;
 
+    void rotate (float angle);
+
     template<DirFin R> Dir2 operator+ (const R &) const;
     template<DirFin R> Dir2 operator- (const R &) const;
     template<DirFin R> float operator* (const R &) const;

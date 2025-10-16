@@ -1,8 +1,25 @@
  |V| - correccion de colisiones.
  |V| - rozamiento de colisiones(todas las necesarias).
  |V| - normales a colisiones(todas las necesarias).
- | | - cambiar punteros por shared_ptr y unique_ptr.
+ | | - hacer una clase Global que contiene el inicializador general, que particularmente contiene:
+        + la window,
+        + el render,
+        + el global_render_texture,
+        + el contador de ticks globales,
+        + las configuraciones: window_name, height, width, bg_color
+      los metodos que debe tener son:
+        + constructor mediante las configuraciones,
+        + desctuctor que elimine y cierre todo,
+        + presentar lo dibujado en la pantalla,
+      El problema es que tengo que cambiar todos los lugares que utilizan el render para que 
+      utilize el Global. Cuando se crean los objetos fisicos, es necesario utilizar los el
+      contador de ticks global para realizar el movimiento basado en el diferencial de tiempo.
+ | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
+ | | - implementar impulse.
+ | | - implementar particle.
+ | | - implementar gear.
+ | | - cambiar punteros por shared_ptr y unique_ptr.
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
  | | - falta la funcion project de image_modifier, y la function de print polygon.
  | | - clase para manejo de sequencias de imagenes(Visualizer<D2SEQ>).

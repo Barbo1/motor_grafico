@@ -11,6 +11,7 @@ float min0 (float num);
 float min (const float& num1, const float& num2);
 float max (const float& num1, const float& num2);
 
+void max_min (const float& num1, const float& num2, float* max, float* min);
 void max_min (
   const float& num1, const float& num2, 
   const float& res1, const float& res2, 

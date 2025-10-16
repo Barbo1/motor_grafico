@@ -8,3 +8,11 @@ void max_min (const float& num1, const float& num2, const float& res1, const flo
   *max = std::bit_cast<float>((r1 & d) | (r2 & c));
   *min = std::bit_cast<float>((r1 & c) | (r2 & d));
 }
+
+void max_min (const float& num1, const float& num2, float* max, float* min) {
+  uint32_t num1i = std::bit_cast<uint32_t>(num1);
+  uint32_t num2i = std::bit_cast<uint32_t>(num2);
+  uint32_t c = (int32_t)((num1i - num2i) & 0x80000000) >> 31, d = ~c;
+  *max = std::bit_cast<float>((num1i & d) | (num2i & c));
+  *min = std::bit_cast<float>((num1i & c) | (num2i & d));
+}
