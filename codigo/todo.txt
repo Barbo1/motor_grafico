@@ -1,7 +1,7 @@
  |V| - correccion de colisiones.
  |V| - rozamiento de colisiones(todas las necesarias).
  |V| - normales a colisiones(todas las necesarias).
- | | - hacer una clase Global que contiene el inicializador general, que particularmente contiene:
+ |V| - hacer una clase Global que contiene el inicializador general, que particularmente contiene:
         + la window,
         + el render,
         + el global_render_texture,

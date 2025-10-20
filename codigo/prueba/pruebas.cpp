@@ -4,53 +4,19 @@
 #include "../headers/concepts/collition.hpp"
 #include "../headers/concepts/image_modifier.hpp"
 #include "../headers/concepts/visualizer.hpp"
+#include "../headers/primitives/global.hpp"
 
 #include <SDL2/SDL.h>
+#include <cstdint>
 #include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <cmath>
 
-const char window_name[] = "Ventana";
-const uint32_t height = 600;
-const uint32_t width = 800;
-const SDL_Color bg_color = {30, 30, 30, 0};
-
 int main () {
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    std::cerr << "Could not initialize SDL" << SDL_GetError() << std::endl;
-    return -1;
-  }
-  
-  SDL_Window * window = SDL_CreateWindow (
-    window_name, 
-    SDL_WINDOWPOS_UNDEFINED, 
-    SDL_WINDOWPOS_UNDEFINED, 
-    width, 
-    height, 
-    SDL_WINDOW_SHOWN
-  );
-  if (window == nullptr) {
-    std::cerr << "Could not initialize window" << SDL_GetError() << std::endl;
-    SDL_Quit ();
-    return -1;
-  }
-
-  SDL_Renderer * render = SDL_CreateRenderer (
-    window, 
-    -1, 
-    SDL_RENDERER_ACCELERATED
-  );
-  if (render == nullptr) {
-    std::cerr << "Could not initialize render" << SDL_GetError() << std::endl;
-    SDL_DestroyWindow (window);
-    SDL_Quit ();
-    return -1;
-  }
-
-  SDL_Texture* global_render_texture = SDL_CreateTexture(
-    render, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height
-  );
+  Global* glb = Global::create("Ventana", 600, 800, SDL_Color {30, 30, 30, 0});
+  uint32_t width = glb->get_width();
+  uint32_t height = glb->get_height();
 
   bool cont = true;
   SDL_Event event;
@@ -61,18 +27,10 @@ int main () {
 
   std::vector<Circle> circles = std::vector<Circle>();
   Circle cir;
-  circles.push_back(Circle(
-    render, 19, AngDir2 {400, 400, 0}, 2.1, 0, true, true, &color
-  ));
-  circles.push_back(Circle(
-    render, 15, AngDir2 {470, 400, 0}, 2.1, 0, true, true, &color
-  ));
-  circles.push_back(Circle(
-    render, 25, AngDir2 {400, 470, 0}, 2.1, 0, true, true, &color
-  ));
-  circles.push_back(Circle(
-    render, 17, AngDir2 {490, 480, 0}, 2.1, 0, true, true, &color
-  ));
+  circles.push_back(Circle(glb, 19, AngDir2 {400, 400, 0}, 2.1, 0, true, true, &color));
+  circles.push_back(Circle(glb, 15, AngDir2 {470, 400, 0}, 2.1, 0, true, true, &color));
+  circles.push_back(Circle(glb, 25, AngDir2 {400, 470, 0}, 2.1, 0, true, true, &color));
+  circles.push_back(Circle(glb, 17, AngDir2 {490, 480, 0}, 2.1, 0, true, true, &color));
 
   for (auto& cir: circles) {
     cir.set_velocity(AngDir2 {(float)(rand() % 40), (float)(rand() % 40), 0});
@@ -80,10 +38,8 @@ int main () {
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::circle(15, color);
-  Circle c1 = Circle(
-    render, 15, AngDir2 {120, 120, 0}, 2.1, 0.5, true, true
-  );
-  c1.set_texture((img_mod_1 & img_mod_2).cast(render));
+  Circle c1 = Circle (glb, 15, AngDir2 {120, 120, 0}, 2.1, 0.5, true, true);
+  c1.set_texture((img_mod_1 & img_mod_2).cast(glb->get_render()));
   c1.set_velocity(AngDir2 {22, 34, 0});
 
 
@@ -92,29 +48,26 @@ int main () {
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(
-    render, 30, 100, AngDir2 {200, 200, 0}, 
-    4.6, 0.5, false, true, &color
-  );
-  c2.set_texture(img_mod_1.resize(200, 60).cast(render));
+  Square c2 = Square(glb, 30, 100, AngDir2 {200, 200, 0}, 4.6, 0.5, false, true, &color);
+  c2.set_texture(img_mod_1.resize(200, 60).cast(glb->get_render()));
 
 
   /* Creacion de lineas de colision. */
 
   std::vector<Line> lines = std::vector<Line>();
-  lines.push_back(Line (Dir2 {width, 0.f}, Dir2 {0.0f, 0.0f}));
-  lines.push_back(Line (Dir2 {(float)width, height}, Dir2 {0.f, height}));
+  lines.push_back(Line (Dir2 {(float)width, 0.f}, Dir2 {0.0f, 0.0f}));
+  lines.push_back(Line (Dir2 {(float)width, (float)height}, Dir2 {0.f, (float)height}));
 
   lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, 0.0f}));
-  lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, height}));
+  lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, (float)height}));
 
-  lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, 0.0f}));
-  lines.push_back(Line (Dir2 {width, height/2.f}, Dir2 {width - 20, height}));
+  lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, 0.0f}));
+  lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, (float)height}));
 
   AngDir2 g = AngDir2 {0, 16, 0};
 
   float b = 15;
-  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(render, b, b, b);
+  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb->get_render(), b, b, b);
   cube.set_texture("../images/rubik.png");
   Dir3 cube_pos = Dir3 {500, 200, 100};
   Dir3 cube_rot = Dir3 {0.01, 0.02, 0};
@@ -179,24 +132,16 @@ int main () {
       }
     }
 
-    SDL_SetRenderTarget (render, global_render_texture);
-    SDL_SetRenderDrawColor (render, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
-    SDL_RenderClear (render);
+    glb->begin_render();
 
+    c1.draw ();
+    c2.draw ();
     for (auto& cir: circles)
-      cir.draw (render);
-    c1.draw (render);
-    c2.draw (render);
-    cube.draw (render, cube_pos);
+      cir.draw ();
+    cube.draw (glb->get_render(), cube_pos);
 
-    print_polygon_c(render, polygon_points, color);
+    print_polygon_c(glb->get_render(), polygon_points, color);
 
-    SDL_SetRenderTarget (render, nullptr);
-    SDL_RenderCopy (render, global_render_texture, nullptr, nullptr);
-    SDL_RenderPresent (render);
+    glb->end_render();
   } 
-  
-  SDL_DestroyRenderer (render);
-  SDL_DestroyWindow (window);
-  SDL_Quit ();
 }

@@ -2,6 +2,7 @@
 
 #include "../concepts/physical.hpp"
 #include "../concepts/visualizer.hpp"
+#include "../primitives/global.hpp"
 
 #include <SDL2/SDL.h>
 #include <cstdint>
@@ -13,11 +14,12 @@ class Circle: public Physical {
   private:
     uint32_t radio;
     Visualizer<D2FIG> texture;
+    Global* glb;
 
   public: 
     Circle ();
     Circle (
-      SDL_Renderer* render, uint32_t radio, AngDir2 center, float density = 0, 
+      Global* glb, uint32_t radio, AngDir2 center, float density = 0, 
       float f_k = 0, bool movible = true, bool colidable = true, SDL_Color* color = nullptr
     );
     Circle (const Circle &);
@@ -31,7 +33,7 @@ class Circle: public Physical {
     Visualizer<D2FIG> get_texture ();
     uint32_t get_radio ();
 
-    void draw (SDL_Renderer *);
+    void draw ();
 
     friend Physical;
 

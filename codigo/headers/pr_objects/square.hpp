@@ -2,6 +2,7 @@
 
 #include "../concepts/physical.hpp"
 #include "../concepts/visualizer.hpp"
+#include "../primitives/global.hpp"
 #include <cstdint>
 
 class Circle;
@@ -12,11 +13,12 @@ class Square: public Physical {
     float width;
     float height;
     Visualizer<D2FIG> texture;
+    Global* glb;
 
   public: 
     Square ();
     Square (
-      SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
+      Global* glb, uint32_t height, uint32_t width, AngDir2 center, 
       float density = 0, float f_k = 0, bool movible = true, bool colidable = true, 
       SDL_Color* color = nullptr
     );
@@ -33,7 +35,7 @@ class Square: public Physical {
     float get_width ();
     Visualizer<D2FIG> get_texture ();
 
-    void draw (SDL_Renderer *);
+    void draw ();
 
     friend Physical;
 

@@ -2,15 +2,17 @@
 
 #include "../concepts/physical.hpp"
 #include "../concepts/visualizer.hpp"
+#include "../primitives/global.hpp"
 
 class NEdge: public Physical {
   private:
     std::vector<Dir2> points;
     Visualizer<D2FIG> texture;
+    Global* glb;
 
   public: 
     NEdge ();
-    NEdge (SDL_Renderer* render, const std::vector<Dir2> & points, SDL_Color* color = nullptr);
+    NEdge (Global* glb, const std::vector<Dir2> & points, SDL_Color* color = nullptr);
     NEdge (const NEdge &);
     NEdge (NEdge &&);
     NEdge & operator= (const NEdge &);
@@ -19,7 +21,7 @@ class NEdge: public Physical {
     void set_texture (Visualizer<D2FIG>);
     Visualizer<D2FIG> get_texture ();
 
-    void draw (SDL_Renderer *);
+    void draw ();
 
     friend Physical;
     friend bool test_collition (Physical &, Physical &);

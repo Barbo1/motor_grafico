@@ -5,4 +5,5 @@ Square::Square () : Physical () {
   this->texture = Visualizer<D2FIG>();
   this->height = 0.f;
   this->width = 0.f;
+  this->glb = nullptr;
 }

@@ -6,5 +6,6 @@ Square & Square::operator= (const Square & square) {
   this->position = square.position;
   this->height = square.height;
   this->width = square.width;
+  this->glb = square.glb;
   return *this;
 }

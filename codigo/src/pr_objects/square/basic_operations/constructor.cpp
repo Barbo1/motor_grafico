@@ -2,14 +2,15 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
 
 Square::Square (
-  SDL_Renderer* render, uint32_t height, uint32_t width, AngDir2 center, 
+  Global* glb, uint32_t height, uint32_t width, AngDir2 center, 
   float density, float f_k, bool movible, bool colidable, SDL_Color* color
 ) : 
   Physical (center, density, height * width, f_k, movible, colidable),
   height(height),
   width(width)
 {
+  this->glb = glb;
   if (color != nullptr) {
-    this->texture = ImageModifier::square(2*height, 2*width, *color).cast(render);
+    this->texture = ImageModifier::square(2*height, 2*width, *color).cast(this->glb->get_render());
   }
 }

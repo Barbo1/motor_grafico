@@ -3,4 +3,5 @@
 Circle::Circle (const Circle & circle) : Physical (circle) {
   this->radio = circle.radio;
   this->texture = circle.texture;
+  this->glb = circle.glb;
 }

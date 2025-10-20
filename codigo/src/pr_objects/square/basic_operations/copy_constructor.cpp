@@ -5,4 +5,5 @@ Square::Square (const Square & square): Physical(square) {
   this->texture = square.texture;
   this->height = square.height;
   this->width = square.width;
+  this->glb = square.glb;
 }

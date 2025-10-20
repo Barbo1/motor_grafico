@@ -1,3 +1,5 @@
+#pragma once
+
 #include "./physical.hpp"
 #include "../pr_objects/square.hpp"
 #include "../pr_objects/circle.hpp"
