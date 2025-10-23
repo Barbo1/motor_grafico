@@ -3,7 +3,7 @@
 
 float min0 (float num) {
   uint32_t* c = (uint32_t *)&num;
-  *c &= ((int32_t)(*c & 0x80000000) >> 31);
+  *c &= (int32_t)(*c & 0x80000000) >> 31;
   return num;
 }
 

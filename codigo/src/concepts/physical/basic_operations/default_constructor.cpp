@@ -10,4 +10,5 @@ Physical::Physical () {
   this->_normal_presence = false;
   this->_force = {0, 0, 0};
   this->_velocity = {0, 0, 0};
+  this->glb = nullptr;
 }

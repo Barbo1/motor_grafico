@@ -38,7 +38,7 @@ int main () {
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::circle(15, color);
-  Circle c1 = Circle (glb, 15, AngDir2 {120, 120, 0}, 2.1, 0.5, true, true);
+  Circle c1 = Circle (glb, 15, AngDir2 {120, 60, 0}, 2.1, 0.5, true, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb->get_render()));
   c1.set_velocity(AngDir2 {22, 34, 0});
 
@@ -64,7 +64,7 @@ int main () {
   lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, 0.0f}));
   lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, (float)height}));
 
-  AngDir2 g = AngDir2 {0, 16, 0};
+  AngDir2 g = AngDir2 {0, 9.8f, 0};
 
   float b = 15;
   Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb->get_render(), b, b, b);
@@ -82,13 +82,26 @@ int main () {
   });
 
   while (cont) {
-    SDL_Delay(10);
+    glb->begin_render();
 
+    /* The delay must be inside. */
+    SDL_Delay(1);
+
+    /* Render of the objects. */
+    c1.draw ();
+    c2.draw ();
+    for (auto& cir: circles)
+      cir.draw ();
+    cube.draw (glb->get_render(), cube_pos);
+    print_polygon_c(glb->get_render(), polygon_points, color);
+
+    /* Calculation of the movement. */
     for (auto& cir: circles)
       cir.calculate_movement(g);
     c1.calculate_movement(g);
     c2.calculate_movement(g);
 
+    /* Testing of the collitions. */
     for (auto& cir: circles) {
       if (test_collition(c2, cir)) 
         resolve_collition(cir, c2);
@@ -99,13 +112,10 @@ int main () {
           resolve_collition(cir, line);
     }
 
-    for (int i = 0; i < circles.size(); i++) {
-      for (int j = i + 1; j < circles.size(); j++) {
-        if (test_collition(circles[i], circles[j])) {
+    for (int i = 0; i < circles.size(); i++)
+      for (int j = i + 1; j < circles.size(); j++)
+        if (test_collition(circles[i], circles[j]))
           resolve_collition(circles[i], circles[j]);
-        }
-      }
-    }
 
     if (test_collition(c1, c2)) 
       resolve_collition(c1, c2);
@@ -114,8 +124,7 @@ int main () {
         resolve_collition(c1, line);
     }
     
-    cube.rotate(cube_rot);
-    
+    /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_QUIT:
@@ -132,16 +141,7 @@ int main () {
       }
     }
 
-    glb->begin_render();
-
-    c1.draw ();
-    c2.draw ();
-    for (auto& cir: circles)
-      cir.draw ();
-    cube.draw (glb->get_render(), cube_pos);
-
-    print_polygon_c(glb->get_render(), polygon_points, color);
-
+    cube.rotate(cube_rot);
     glb->end_render();
   } 
 }

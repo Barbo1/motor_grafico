@@ -9,8 +9,8 @@ void Visualizer<T>::draw (SDL_Renderer* render, const AngDir2 & position) const 
   dst.y = static_cast<int>(position.y) - this->height / 2; 
   dst.w = this->width;
   dst.h = this->height;
-  SDL_SetTextureBlendMode (this->texture, SDL_BLENDMODE_BLEND);
-  SDL_RenderCopyEx (render, this->texture, nullptr, &dst, position.a, nullptr, SDL_FLIP_NONE);
+  SDL_SetTextureBlendMode (this->texture.get(), SDL_BLENDMODE_BLEND);
+  SDL_RenderCopyEx (render, this->texture.get(), nullptr, &dst, position.a, nullptr, SDL_FLIP_NONE);
 }
 
 template void Visualizer<D2FIG>::draw (SDL_Renderer* render, const AngDir2 & position) const;

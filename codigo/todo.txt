@@ -14,12 +14,15 @@
       El problema es que tengo que cambiar todos los lugares que utilizan el render para que 
       utilize el Global. Cuando se crean los objetos fisicos, es necesario utilizar los el
       contador de ticks global para realizar el movimiento basado en el diferencial de tiempo.
+ |V| - hacer el movimiento de los objetos basado en el tiempo.
+ |T| - cambiar los punteros a unique(SDL_Surface en image_modifier) y unique(SDL_Texture en visualizer).
+        Es necesario cambiar los destructores para que se libere la memoria correctamente.
+ | | - agregar soporte a fuentes de letras.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - implementar impulse.
  | | - implementar particle.
  | | - implementar gear.
- | | - cambiar punteros por shared_ptr y unique_ptr.
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
  | | - falta la funcion project de image_modifier, y la function de print polygon.
  | | - clase para manejo de sequencias de imagenes(Visualizer<D2SEQ>).

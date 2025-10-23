@@ -5,6 +5,9 @@ Visualizer<D2FIG> ImageModifier::cast (SDL_Renderer* render) {
   Visualizer<D2FIG> ret = Visualizer<D2FIG> ();
   ret.width = this->texture->w;
   ret.height = this->texture->h;
-  ret.texture = SDL_CreateTextureFromSurface(render, this->texture);
+  ret.texture = std::shared_ptr<SDL_Texture>(
+    SDL_CreateTextureFromSurface(render, this->texture), 
+    [] (SDL_Texture* texture) { SDL_DestroyTexture (texture); }
+  );
   return ret;
 }

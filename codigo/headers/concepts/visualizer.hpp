@@ -38,8 +38,7 @@ class ImageModifier;
 template <VisualType T>
 class Visualizer {
   private: 
-    SDL_Texture* texture;
-    int* use_count;
+    std::shared_ptr<SDL_Texture> texture;
     int height;
     int width;
 
@@ -51,7 +50,6 @@ class Visualizer {
     Visualizer (Visualizer && texture);
     Visualizer & operator= (const Visualizer & texture);
     Visualizer & operator= (Visualizer && texture);
-    ~Visualizer();
 
     void draw (SDL_Renderer* render, const AngDir2 & position) const;
 

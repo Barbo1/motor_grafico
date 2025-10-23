@@ -5,7 +5,7 @@ Square::Square (
   Global* glb, uint32_t height, uint32_t width, AngDir2 center, 
   float density, float f_k, bool movible, bool colidable, SDL_Color* color
 ) : 
-  Physical (center, density, height * width, f_k, movible, colidable),
+  Physical (glb, center, density, height * width, f_k, movible, colidable),
   height(height),
   width(width)
 {

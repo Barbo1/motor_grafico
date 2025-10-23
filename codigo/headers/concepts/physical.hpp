@@ -1,8 +1,9 @@
 #pragma once 
 
 #include "../primitives/vectors.hpp"
+#include "../primitives/global.hpp"
 
-#define DRAW_RATE 0.036666
+#define DRAW_RATE 3.0f
 #define MOVEMENT_COEFITIENT 100.f
 #define MOVEMENT_BOUND 0.01
 
@@ -23,9 +24,11 @@ class Physical {
     bool _normal_presence; /* Denote if the collition was made, so the force 
                             * can be corrected and the friction applied */
 
+    Global* glb;
+
   public:
     Physical (
-      AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
+      Global* glb, AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
     );
     Physical ();
 
