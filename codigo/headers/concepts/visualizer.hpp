@@ -10,22 +10,23 @@
 #include <variant>
 #include <string>
 
+#include "../primitives/global.hpp"
 #include "../primitives/vectors.hpp"
 
 /* Shows in the render the points in the array. */
 void print_points (
-  SDL_Renderer* render, std::vector<SDL_Point&> points, 
+  Global* glb, std::vector<SDL_Point&> points, 
   SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
 );
 
 /* Shows in the render the line between the two points. */
 void print_line (
-  SDL_Renderer* render, SDL_Point point1, SDL_Point point2, SDL_Color color
+  Global* glb, SDL_Point point1, SDL_Point point2, SDL_Color color
 );
 
 /* Functions meant to print plain bidimentional figures. */
-void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color);
-void print_triangle_c (SDL_Renderer* render, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
+void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color);
+void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
 
 enum VisualType {
   D2FIG,
@@ -42,7 +43,7 @@ class Visualizer {
     int height;
     int width;
 
-    Visualizer(SDL_Renderer* render, int height, int width, Uint32* pixels);
+    Visualizer(Global* glb, int height, int width, Uint32* pixels);
 
   public:
     Visualizer ();
@@ -51,28 +52,28 @@ class Visualizer {
     Visualizer & operator= (const Visualizer & texture);
     Visualizer & operator= (Visualizer && texture);
 
-    void draw (SDL_Renderer* render, const AngDir2 & position) const;
+    void draw (Global* glb, const AngDir2 & position) const;
 
     friend ImageModifier;
-    friend Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
+    friend Visualizer<D2FIG> chargePNG (Global* glb, const std::string& path);
 };
 
 template class Visualizer<D2FIG>;
 
 Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & height);
 
-Visualizer<D2FIG> chargePNG (SDL_Renderer* render, const std::string& path);
+Visualizer<D2FIG> chargePNG (Global* glb, const std::string& path);
 
 /* Function meant to print a bidimentional figures with a uv mapping. */
 void print_polygon_t (
-  SDL_Renderer* render, 
+  Global* glb, 
   std::vector<Dir2> points, 
   std::vector<Dir2> uvs, 
   const Visualizer<D2FIG>& texture
 );
 
 void print_triangle_t (
-  SDL_Renderer* render, 
+  Global* glb, 
   Dir2 point1, Dir2 point2, Dir2 point3, 
   Dir2 uv1, Dir2 uv2, Dir2 uv3, 
   SDL_Surface* texture
@@ -114,9 +115,9 @@ class Visualizer<D3FIG> {
     void rotate (const Dir3& rotation);
     void resize (float coef);
 
-    void draw (SDL_Renderer* render, const Dir3 & position) const;
+    void draw (Global*, const Dir3&) const;
     
     /* special constructors */
-    static Visualizer prism (SDL_Renderer* render, float base, float height, float depth);
-    static Visualizer pyramid (SDL_Renderer* render, float height, float base_rad, int base_vert);
+    static Visualizer prism (Global* glb, float base, float height, float depth);
+    static Visualizer pyramid (Global* glb, float height, float base_rad, int base_vert);
 };

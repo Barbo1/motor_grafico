@@ -4,7 +4,6 @@
 #include <iostream>
 #include <ranges>
 #include <vector>
-#include <cstdlib>
 
 /* Constructs a 3D figure due the information given a .obj file referenced by the 
  * variable path. If it will be assosiated with an image, it is referenced by the 

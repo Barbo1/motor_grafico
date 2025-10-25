@@ -1,7 +1,7 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
 #include <cstdlib>
 
-Visualizer<D3FIG> Visualizer<D3FIG>::prism (SDL_Renderer* render, float base, float height, float depth) {
+Visualizer<D3FIG> Visualizer<D3FIG>::prism (Global* glb, float base, float height, float depth) {
   Visualizer<D3FIG> fig = Visualizer<D3FIG>();
 
   fig.info->vectors.reserve(8);

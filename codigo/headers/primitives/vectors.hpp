@@ -58,7 +58,8 @@ class Dir2 {
     virtual Dir2 abs ();
     virtual float modulo () const;
     virtual float modulo2 () const;
-    Dir2 normalize ();
+    Dir2 normalize () const;
+    Dir2 percan() const;
 };
 
 class Dir3 {

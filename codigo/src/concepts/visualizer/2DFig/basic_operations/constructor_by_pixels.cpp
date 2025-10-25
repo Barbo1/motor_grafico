@@ -2,7 +2,7 @@
 #include <SDL2/SDL_render.h>
 
 template<>
-Visualizer<D2FIG>::Visualizer (SDL_Renderer* render, int height, int width, Uint32* pixels) {
+Visualizer<D2FIG>::Visualizer (Global* glb, int height, int width, Uint32* pixels) {
   this->width = width;
   this->height = height;
   SDL_Surface* sur = SDL_CreateRGBSurfaceFrom (
@@ -10,7 +10,7 @@ Visualizer<D2FIG>::Visualizer (SDL_Renderer* render, int height, int width, Uint
     0xFF000000,0x00FF0000,0x0000FF00,0x000000FF
   );
   this->texture = std::shared_ptr<SDL_Texture>(
-    SDL_CreateTextureFromSurface(render, sur), 
+    SDL_CreateTextureFromSurface(glb->render, sur), 
     [] (SDL_Texture* texture) { SDL_DestroyTexture (texture); }
   );
   SDL_FreeSurface(sur);

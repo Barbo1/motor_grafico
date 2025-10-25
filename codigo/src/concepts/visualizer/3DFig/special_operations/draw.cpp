@@ -1,7 +1,7 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
 #include <ranges>
 
-void Visualizer<D3FIG>::draw (SDL_Renderer* render, const Dir3 & position) const {
+void Visualizer<D3FIG>::draw (Global* glb, const Dir3 & position) const {
   auto transformed = this->info->vectors 
     | std::views::transform([&] (const Dir3& vec) { return Dir2(vec + position); });
   auto iterable = this->info->indeces 
@@ -9,7 +9,7 @@ void Visualizer<D3FIG>::draw (SDL_Renderer* render, const Dir3 & position) const
   if (std::holds_alternative<SDL_Color>(this->texture)) {
     for (auto& face: iterable) {
       print_triangle_c (
-        render,
+        glb,
         transformed[face.pos[0]],
         transformed[face.pos[1]],
         transformed[face.pos[2]],
@@ -19,7 +19,7 @@ void Visualizer<D3FIG>::draw (SDL_Renderer* render, const Dir3 & position) const
   } else {
     for (auto& face: iterable) {
       print_triangle_t (
-        render,
+        glb,
         transformed[face.pos[0]],
         transformed[face.pos[1]],
         transformed[face.pos[2]],

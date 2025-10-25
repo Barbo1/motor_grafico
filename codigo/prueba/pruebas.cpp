@@ -39,7 +39,7 @@ int main () {
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::circle(15, color);
   Circle c1 = Circle (glb, 15, AngDir2 {120, 60, 0}, 2.1, 0.5, true, true);
-  c1.set_texture((img_mod_1 & img_mod_2).cast(glb->get_render()));
+  c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
   c1.set_velocity(AngDir2 {22, 34, 0});
 
 
@@ -49,7 +49,7 @@ int main () {
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
   Square c2 = Square(glb, 30, 100, AngDir2 {200, 200, 0}, 4.6, 0.5, false, true, &color);
-  c2.set_texture(img_mod_1.resize(200, 60).cast(glb->get_render()));
+  c2.set_texture(img_mod_1.resize(200, 60).cast(glb));
 
 
   /* Creacion de lineas de colision. */
@@ -67,7 +67,7 @@ int main () {
   AngDir2 g = AngDir2 {0, 9.8f, 0};
 
   float b = 15;
-  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb->get_render(), b, b, b);
+  Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb, b, b, b);
   cube.set_texture("../images/rubik.png");
   Dir3 cube_pos = Dir3 {500, 200, 100};
   Dir3 cube_rot = Dir3 {0.01, 0.02, 0};
@@ -92,8 +92,8 @@ int main () {
     c2.draw ();
     for (auto& cir: circles)
       cir.draw ();
-    cube.draw (glb->get_render(), cube_pos);
-    print_polygon_c(glb->get_render(), polygon_points, color);
+    cube.draw (glb, cube_pos);
+    print_polygon_c(glb, polygon_points, color);
 
     /* Calculation of the movement. */
     for (auto& cir: circles)

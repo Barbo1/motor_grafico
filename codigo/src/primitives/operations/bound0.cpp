@@ -3,8 +3,21 @@
 #include <bit>
 
 float bound0 (const float& f, const float& b) {
-  uint32_t fi = std::bit_cast<uint32_t>(f), bi = std::bit_cast<uint32_t>(b);
-  uint32_t mask = (int32_t)(fi - bi) >> 31;
-  mask = ((fi & mask) | (bi & ~mask)) & (int32_t)~fi >> 31;
-  return std::bit_cast<float>(mask);
+  uint32_t fi = std::bit_cast<uint32_t>(f);
+  asm (
+    "MOV %%eax, %%edx\n\t"
+    "MOV %%eax, %%ecx\n\t"
+    "NOT %%eax\n\t"
+    "SAR $31, %%eax\n\t"
+    "SUB %%ebx, %%ecx\n\t"
+    "SAR $31, %%ecx\n\t"
+    "AND %%ecx, %%edx\n\t"
+    "ANDN %%ebx, %%ecx, %%ecx\n\t"
+    "OR %%edx, %%ecx\n\t"
+    "AND %%ecx, %%eax\n\t"
+    : "+a"(fi)
+    : "b"(b)
+    : "ecx", "edx"
+  );
+  return std::bit_cast<float>(fi);
 }

@@ -2,6 +2,6 @@
 
 void Circle::draw () {
   if (this->radio != 0 && this->glb) {
-    this->texture.draw(this->glb->get_render(), this->position);
+    this->texture.draw(this->glb, this->position);
   }
 }

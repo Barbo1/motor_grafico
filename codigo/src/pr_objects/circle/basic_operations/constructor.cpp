@@ -11,6 +11,6 @@ Circle::Circle (
 {
   this->glb = glb;
   if (color != nullptr) {
-    this->texture = ImageModifier::circle(radio, *color).cast(this->glb->get_render());
+    this->texture = ImageModifier::circle(radio, *color).cast(this->glb);
   }
 }

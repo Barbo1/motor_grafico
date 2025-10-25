@@ -9,6 +9,7 @@
 #include <string>
 
 #include "../primitives/vectors.hpp"
+#include "../primitives/global.hpp"
 #include "./visualizer.hpp"
 
 class ImageModifier {
@@ -26,7 +27,7 @@ class ImageModifier {
     ImageModifier & operator= (ImageModifier && texture);
     ~ImageModifier ();
 
-    Visualizer<D2FIG> cast (SDL_Renderer* render);
+    Visualizer<D2FIG> cast (Global*);
     SDL_Color operator() (uint32_t, uint32_t);
 
     /* Modifications. */

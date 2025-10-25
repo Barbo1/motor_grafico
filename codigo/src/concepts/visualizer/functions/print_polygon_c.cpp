@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cstdint>
 
-void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color color) {
+void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
   std::size_t many_points = points.size();
     
   /* Searching maximum and minimum coordenates. */
@@ -42,8 +42,8 @@ void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color 
   static std::vector<int>::iterator biter;
   static std::vector<int>::iterator piter;
 
-  SDL_SetRenderDrawColor(render, color.r, color.g, color.b, color.a);
-  SDL_SetRenderDrawBlendMode(render, SDL_BLENDMODE_ADD);
+  SDL_SetRenderDrawColor(glb->render, color.r, color.g, color.b, color.a);
+  SDL_SetRenderDrawBlendMode(glb->render, SDL_BLENDMODE_ADD);
 
   bounds.reserve (many_points);
   for (uint32_t level = std::roundl(min_h); level <= std::roundl(max_h); level++) {
@@ -65,7 +65,7 @@ void print_polygon_c (SDL_Renderer* render, std::vector<Dir2> points, SDL_Color 
           std::swap (*piter, *biter); 
     for (uint32_t i = 0; i < (bounds.size() & ~(uint64_t)1); i += 2)
       for (uint32_t offset = bounds[i]; offset <= bounds[i+1]; offset++)
-        SDL_RenderDrawPoint (render, offset, level);
+        SDL_RenderDrawPoint (glb->render, offset, level);
     bounds.clear();
   }
 }

@@ -17,6 +17,7 @@
  |V| - hacer el movimiento de los objetos basado en el tiempo.
  |T| - cambiar los punteros a unique(SDL_Surface en image_modifier) y unique(SDL_Texture en visualizer).
         Es necesario cambiar los destructores para que se libere la memoria correctamente.
+ |V| - re-implementar el uv mapping de los triangulos.
  | | - agregar soporte a fuentes de letras.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
