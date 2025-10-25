@@ -66,7 +66,7 @@ int main () {
 
   AngDir2 g = AngDir2 {0, 9.8f, 0};
 
-  float b = 15;
+  float b = 40;
   Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb, b, b, b);
   cube.set_texture("../images/rubik.png");
   Dir3 cube_pos = Dir3 {500, 200, 100};

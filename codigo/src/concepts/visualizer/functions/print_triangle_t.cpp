@@ -34,10 +34,11 @@ void print_triangle_t (
   
   const float tex_w = static_cast<float>(texture->w - 1);
   const float tex_h = static_cast<float>(texture->h - 1);
-  const Dir2 diff_coefs = (uv1 * v23.y + uv2 * v31.y) * denom;
+  const Dir2 diff_coefs_x = (uv1 * v23.y + uv2 * v31.y) * denom;
+  const Dir2 diff_coefs_y = (uv1 * v23.x + uv2 * v31.x) * denom;
 
-  int n, i;
-  float start, end, ms, me, n_f, i_f;
+  int n, i, offset;
+  float start, end, ms, me, n_f, i_f, q;
   SDL_Color color;
   Dir2 coefs, res;
         
@@ -52,28 +53,35 @@ void print_triangle_t (
     ms = min (m3, m1);
     me = max (m3, m1);
     end = start = point1.x;
-    for (n_f = floor (point1.y), n = n_f; n < floor (point2.y); n_f += 1, n++) {
-      i_f = floor (start);
-      
-      res = Dir2 {i_f, n_f};
-      res -= point3; 
-      coefs = uv3;
-      coefs += (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
 
-      for (i = i_f; i <= ceil (end); i++) {
-        int offset = 
+    i_f = floor (point1.x);
+    n_f = floor (point1.y);
+    res = Dir2 {i_f, n_f} - point3;
+    coefs = uv3;
+    coefs += (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
+
+    for (n = n_f; n < floor (point2.y); n_f += 1, n++) {
+      q = ceil (end);
+      for (i = i_f; i < q; i++) {
+        offset = 
           static_cast<int>(bound0 (coefs.x, 1.f) * tex_w) + 
           static_cast<int>(bound0 (coefs.y, 1.f) * tex_h) * texture->w;
-        Uint32 pos = *((Uint32*)texture->pixels + offset);
-        
-        SDL_GetRGBA(pos, texture->format, &color.r, &color.g, &color.b, &color.a);
+
+        SDL_GetRGBA (
+          *((Uint32*)texture->pixels + offset), texture->format, 
+          &color.r, &color.g, &color.b, &color.a
+        );
         SDL_SetRenderDrawColor (glb->render, color.r, color.g, color.b, color.a);
         SDL_RenderDrawPoint (glb->render, i, n);
 
-        coefs += diff_coefs;
+        coefs += diff_coefs_x;
       }
       start += ms;
       end += me;
+
+      i_f = floor (start);
+      coefs -= diff_coefs_y;
+      coefs -= diff_coefs_x * (q - i_f);
     }
   }
   
@@ -82,28 +90,35 @@ void print_triangle_t (
     ms = max (m3, m2);
     me = min (m3, m2);
     max_min (m2, m3, top, bot, &start, &end);
-    for (n_f = floor (point2.y), n = n_f; n_f < floor (point3.y); n_f += 1, n++) {
-      i_f = floor (start);
 
-      res = Dir2 {i_f, n_f};
-      res -= point3; 
-      coefs = uv3;
-      coefs += (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
+    i_f = floor (start);
+    n_f = floor (point2.y);
+    res = Dir2 {i_f, n_f} - point3;
+    coefs = uv3;
+    coefs += (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
 
-      for (i = i_f; i <= ceil (end); i++) {
-        int offset = 
+    for (n = n_f; n_f < floor (point3.y); n_f += 1, n++) {
+      q = ceil (end);
+      for (i = i_f; i < q; i++) {
+        offset = 
           static_cast<int>(bound0 (coefs.x, 1.f) * tex_w) + 
           static_cast<int>(bound0 (coefs.y, 1.f) * tex_h) * texture->w;
-        Uint32 pos = *((Uint32*)texture->pixels + offset);
-        
-        SDL_GetRGBA(pos, texture->format, &color.r, &color.g, &color.b, &color.a);
+
+        SDL_GetRGBA (
+          *((Uint32*)texture->pixels + offset), texture->format, 
+          &color.r, &color.g, &color.b, &color.a
+        );
         SDL_SetRenderDrawColor (glb->render, color.r, color.g, color.b, color.a);
         SDL_RenderDrawPoint (glb->render, i, n);
 
-        coefs += diff_coefs;
+        coefs += diff_coefs_x;
       }
       start += ms;
       end += me;
+
+      i_f = floor (start);
+      coefs -= diff_coefs_y;
+      coefs -= diff_coefs_x * (q - i_f);
     }
   }
 }
