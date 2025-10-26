@@ -14,8 +14,8 @@ void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_C
     
   float start, end, ms, me;
 
-  SDL_SetRenderDrawColor (glb->render, color.r, color.g, color.b, color.a);
   SDL_SetRenderDrawBlendMode (glb->render, SDL_BLENDMODE_ADD);
+  SDL_SetRenderDrawColor (glb->render, color.r, color.g, color.b, color.a);
 
   if (d12 != 0) {
     const float m1 = (point1.x - point2.x) / d12;
