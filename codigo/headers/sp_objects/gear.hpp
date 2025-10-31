@@ -1,6 +1,7 @@
 #pragma once 
 
 #include "../concepts/physical.hpp"
+#include <vector>
 
 class Gear: private Physical {
   private: 

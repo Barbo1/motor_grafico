@@ -31,8 +31,8 @@ class SequentialFileReader {
     void finish ();
 
     /* Discards elements until found the stop character, or n exact positions. */
-    void skip_until (std::size_t n);
-    void skip_until (char stop);
+    void skip_until_n (std::size_t n);
+    void skip_until_c (char stop);
 
     /* read the next char or word of data in the file. */
     char read_char ();

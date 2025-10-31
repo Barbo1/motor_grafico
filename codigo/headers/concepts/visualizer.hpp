@@ -110,7 +110,7 @@ class Visualizer<D3FIG> {
     ~Visualizer ();
 
     void set_color (const SDL_Color& color);
-    void set_texture (const std::string & img);
+    void set_texture (const ImageModifier& img);
 
     void rotate (const Dir3& rotation);
     void resize (float coef);

@@ -22,6 +22,9 @@
         + https://learn.microsoft.com/en-us/typography/opentype/spec/
         + https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html
         + https://developer.apple.com/fonts/TrueType-Reference-Manual/RM02/Chap2.html
+ | | - agregar soporte a gifs para importar imagenes movibles:
+        + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+        + https://en.wikipedia.org/wiki/GIF
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - implementar impulse.

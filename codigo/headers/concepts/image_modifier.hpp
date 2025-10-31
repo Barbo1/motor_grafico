@@ -59,4 +59,6 @@ class ImageModifier {
     static ImageModifier polygon (std::vector<Dir2> points, SDL_Color color);
 
     static ImageModifier chargePNG (const std::string& path);
+
+    friend Visualizer<D3FIG>;
 };

@@ -12,6 +12,7 @@ enum Function {
 };
 
 enum AngType {
+  AT_NONE,
   AT_TIME,
   AT_POSITION,
   AT_VELOCITY,
@@ -38,28 +39,64 @@ class Dir2 {
     Dir2 (float, float);
     Dir2 (const Dir2 &);
     Dir2 (Dir2 &&);
-    Dir2 & operator= (const Dir2 &);
-    Dir2 & operator= (Dir2 &&);
+    Dir2& operator= (const Dir2 &);
+    Dir2& operator= (Dir2 &&);
     bool operator== (const Dir2 &);
     bool operator!= (const Dir2 &);
 
-    Dir2 operator- ();
-    Dir2 operator* (float) const;
+    Dir2 operator- () const &;
+    Dir2 operator- () &&;
+    Dir2 operator* (float) const &;
+    Dir2 operator* (float) &&;
+    virtual void operator*= (float);
 
     void rotate (float angle);
 
-    template<DirFin R> Dir2 operator+ (const R &) const;
-    template<DirFin R> Dir2 operator- (const R &) const;
-    template<DirFin R> float operator* (const R &) const;
+    template<DirFin R> Dir2 operator+ (const R &) const&;
+    template<DirFin R> Dir2 operator+ (const R &) &&;
     template<DirFin R> void operator+= (const R &);
+
+    template<DirFin R> Dir2 operator- (const R &) const&;
+    template<DirFin R> Dir2 operator- (const R &) &&;
     template<DirFin R> void operator-= (const R &);
 
-    virtual void operator*= (float);
-    virtual Dir2 abs ();
+    template<DirFin R> float operator* (const R &) const&;
+    template<DirFin R> float operator* (const R &) &&;
+
+    virtual Dir2 abs () const&;
+    virtual Dir2 abs () &&;
+
+    Dir2 normalize () const&;
+    Dir2 normalize () &&;
+
     virtual float modulo () const;
     virtual float modulo2 () const;
-    Dir2 normalize () const;
+
     Dir2 percan() const;
+};
+
+class AngDir2: public Dir2 {
+  public:
+    float a;
+    
+    AngDir2 ();
+    AngDir2 (float, float, float);
+    AngDir2 (const AngDir2 &);
+    AngDir2 (AngDir2 &&);
+    AngDir2& operator= (const AngDir2 &);
+    AngDir2& operator= (AngDir2 &&);
+    bool operator== (const AngDir2 &);
+
+    AngDir2 operator- () const;
+    AngDir2 operator* (float f) const;
+    float angle () const;
+    AngDir2 normalize ();
+
+    template<DirFin R> AngDir2 operator+ (R) const;
+    template<DirFin R> AngDir2 operator- (R) const;
+    template<DirFin R> float operator* (R) const;
+    template<DirFin R> void operator+= (R);
+    template<DirFin R> void operator-= (R);
 };
 
 class Dir3 {
@@ -96,28 +133,4 @@ class Dir3 {
     void rotate_x (float angle);
     void rotate_y (float angle);
     void rotate_z (float angle);
-};
-
-class AngDir2: public Dir2 {
-  public:
-    float a;
-    
-    AngDir2 ();
-    AngDir2 (float, float, float);
-    AngDir2 (const AngDir2 &);
-    AngDir2 (AngDir2 &&);
-    AngDir2& operator= (const AngDir2 &);
-    AngDir2& operator= (AngDir2 &&);
-    bool operator== (const AngDir2 &);
-
-    AngDir2 operator- () const;
-    AngDir2 operator* (float f) const;
-    float angle () const;
-    AngDir2 normalize ();
-
-    template<DirFin R> AngDir2 operator+ (R) const;
-    template<DirFin R> AngDir2 operator- (R) const;
-    template<DirFin R> float operator* (R) const;
-    template<DirFin R> void operator+= (R);
-    template<DirFin R> void operator-= (R);
 };

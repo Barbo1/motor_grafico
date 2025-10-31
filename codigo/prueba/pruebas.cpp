@@ -5,16 +5,17 @@
 #include "../headers/concepts/image_modifier.hpp"
 #include "../headers/concepts/visualizer.hpp"
 #include "../headers/primitives/global.hpp"
+#include "../headers/sp_objects/impulse.hpp"
 
 #include <SDL2/SDL.h>
 #include <cstdint>
-#include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <cmath>
 
 int main () {
-  Global* glb = Global::create("Ventana", 600, 800, SDL_Color {30, 30, 30, 0});
+  std::string name = "Ventana";
+  Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
   uint32_t width = glb->get_width();
   uint32_t height = glb->get_height();
 
@@ -37,10 +38,10 @@ int main () {
   }
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
-  ImageModifier img_mod_1 = ImageModifier::circle(15, color);
-  Circle c1 = Circle (glb, 15, AngDir2 {120, 60, 0}, 2.1, 0.5, true, true);
+  ImageModifier img_mod_1 = ImageModifier::square(30, 30, color);
+  Square c1 = Square(glb, 15, 15, AngDir2 {120, 60, 0}, 2.1, 0.3, true, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
-  c1.set_velocity(AngDir2 {22, 34, 0});
+  c1.set_velocity(AngDir2 {0, 34, 0});
 
 
   /* Creacion de estructura estatica. */
@@ -48,7 +49,7 @@ int main () {
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(glb, 30, 100, AngDir2 {200, 200, 0}, 4.6, 0.5, false, true, &color);
+  Square c2 = Square(glb, 30, 100, AngDir2 {200, 200, 0}, 4.6, 0.3, false, true, &color);
   c2.set_texture(img_mod_1.resize(200, 60).cast(glb));
 
 
@@ -68,7 +69,7 @@ int main () {
 
   float b = 40;
   Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb, b, b, b);
-  cube.set_texture("../images/rubik.png");
+  cube.set_texture(ImageModifier::chargePNG("../images/rubik.png"));
   Dir3 cube_pos = Dir3 {500, 200, 100};
   Dir3 cube_rot = Dir3 {0.01, 0.02, 0};
 
@@ -80,6 +81,8 @@ int main () {
     Dir2 {578.f, 369.f},
     Dir2 {438.f, 388.f}
   });
+
+  Impulse<IT_HOLE, AT_POSITION, FT_LINEAR> impulse(glb, AngDir2 {(float)width, (float)height, 0}, 200, 10);
 
   while (cont) {
     glb->begin_render();
@@ -97,9 +100,8 @@ int main () {
 
     /* Calculation of the movement. */
     for (auto& cir: circles)
-      cir.calculate_movement(g);
-    c1.calculate_movement(g);
-    c2.calculate_movement(g);
+      cir.calculate_movement(g + impulse.apply(cir));
+    c1.calculate_movement(g + impulse.apply(c1));
 
     /* Testing of the collitions. */
     for (auto& cir: circles) {

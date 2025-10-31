@@ -4,7 +4,7 @@
 #include <array>
 #include <SDL2/SDL_pixels.h>
 
-#include "../concepts/primitives.hpp"
+#include "../primitives/vectors.hpp"
 #include "../concepts/visualizer.hpp"
 
 struct Particle {

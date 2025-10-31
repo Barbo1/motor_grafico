@@ -9,11 +9,11 @@ void Physical::calculate_movement(const AngDir2 & extrenal_forces) {
       float a = min0 (f * this->_collition_normal);
       float b = this->_velocity * this->_collition_normal;
       AngDir2 vel = this->_collition_normal * b - this->_velocity;
-      f += (vel.normalize() * this->_acc_f_k + this->_collition_normal) * a;
+      f += (-vel.normalize() * this->_acc_f_k + this->_collition_normal) * a;
     }
-    float time = this->glb->get_time();
+    float draw_coef = this->glb->get_time() * DRAW_RATE;
     f *= 20000 / (this->_density * this->_area);
-    this->_velocity += f * (time * DRAW_RATE);
-    this->position += this->_velocity * (time * DRAW_RATE);
+    this->_velocity += f * draw_coef;
+    this->position += this->_velocity * draw_coef;
   }
 }

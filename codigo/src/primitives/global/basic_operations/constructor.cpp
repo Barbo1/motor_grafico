@@ -3,14 +3,14 @@
 #include <iostream>
 #include <cstring>
 
-Global::Global (char* window_name, uint32_t height, uint32_t width, SDL_Color bg_color) {
+Global::Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "Could not initialize SDL" << SDL_GetError() << std::endl;
     std::exit(-1);
   }
   
   this->window = SDL_CreateWindow (
-    window_name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
+    window_name.data(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
     width, height, SDL_WINDOW_SHOWN
   );
   if (this->window == nullptr) {
