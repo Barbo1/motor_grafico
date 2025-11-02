@@ -11,11 +11,11 @@ enum Function {
   FT_SINUSOIDAL,
 };
 
-enum AngType {
-  AT_NONE,
-  AT_TIME,
-  AT_POSITION,
-  AT_VELOCITY,
+enum UnitType {
+  UT_NONE,
+  UT_TIME,
+  UT_POSITION,
+  UT_VELOCITY,
 };
 
 /* ------------------------------ */

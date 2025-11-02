@@ -38,8 +38,8 @@ int main () {
   }
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
-  ImageModifier img_mod_1 = ImageModifier::square(30, 30, color);
-  Square c1 = Square(glb, 15, 15, AngDir2 {120, 60, 0}, 2.1, 0.3, true, true);
+  ImageModifier img_mod_1 = ImageModifier::circle(20, color);
+  Circle c1 = Circle(glb, 20, AngDir2 {50, 60, 0}, 2.1, 0.3, true, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
   c1.set_velocity(AngDir2 {0, 34, 0});
 
@@ -49,8 +49,8 @@ int main () {
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(glb, 30, 100, AngDir2 {200, 200, 0}, 4.6, 0.3, false, true, &color);
-  c2.set_texture(img_mod_1.resize(200, 60).cast(glb));
+  Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6, 0.3, false, true, &color);
+  c2.set_texture(img_mod_1.resize(400, 60).cast(glb));
 
 
   /* Creacion de lineas de colision. */
@@ -82,7 +82,13 @@ int main () {
     Dir2 {438.f, 388.f}
   });
 
-  Impulse<IT_HOLE, AT_POSITION, FT_LINEAR> impulse(glb, AngDir2 {(float)width, (float)height, 0}, 200, 10);
+  /* Impulso. */
+  AngDir2 impulse_pos = AngDir2 {100.f, 100.f, 0};
+  float height_impulse = 100.f;
+  float width_impulse = 100.f;
+
+  Impulse<IT_FAN, UT_POSITION, FT_LINEAR> impulse(glb, impulse_pos, height_impulse, width_impulse, 0.1f, FanImpDir::FID_RIGHT);
+  Visualizer<D2FIG> behind = ImageModifier::square(2*height_impulse, 2*width_impulse, SDL_Color{255,0,255,255}).cast(glb);
 
   while (cont) {
     glb->begin_render();
@@ -91,12 +97,13 @@ int main () {
     SDL_Delay(1);
 
     /* Render of the objects. */
+    print_polygon_c(glb, polygon_points, SDL_Color {255, 255, 0, 255});
+    behind.draw(glb, impulse_pos);
     c1.draw ();
     c2.draw ();
     for (auto& cir: circles)
       cir.draw ();
     cube.draw (glb, cube_pos);
-    print_polygon_c(glb, polygon_points, color);
 
     /* Calculation of the movement. */
     for (auto& cir: circles)

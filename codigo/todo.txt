@@ -18,6 +18,7 @@
  |T| - cambiar los punteros a unique(SDL_Surface en image_modifier) y unique(SDL_Texture en visualizer).
         Es necesario cambiar los destructores para que se libere la memoria correctamente.
  |V| - re-implementar el uv mapping de los triangulos.
+ |V| - implementar impulse.
  | | - agregar soporte a fuentes de letras(lo puedo dejar para las vacaciones):
         + https://learn.microsoft.com/en-us/typography/opentype/spec/
         + https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html
@@ -27,12 +28,14 @@
         + https://en.wikipedia.org/wiki/GIF
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
- | | - implementar impulse.
  | | - implementar particle.
  | | - implementar gear.
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
  | | - falta la funcion project de image_modifier, y la function de print polygon.
- | | - clase para manejo de sequencias de imagenes(Visualizer<D2SEQ>).
+ | | - clase para manejo de:
+        + sequencias de imagenes(Visualizer<D2SEQ>),
+        + imagenes continuas(Visualizer<D2CON>) y,
+        + imagenes continuas con mapeo(Visualizer<D2MAP>).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.
  | | - leer modelo de iluminacion 2d.

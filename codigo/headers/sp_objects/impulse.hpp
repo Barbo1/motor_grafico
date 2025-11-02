@@ -10,32 +10,9 @@ enum ImpulseType {
   IT_FAN
 };
 
-/*
- ITHOLE ->
-  1 -> F = FT_CONSTANT, AT = Any, 
-      tiene posicion, radio y fuerza generada.
-  2 -> F = {FT_LINEAR, FT_QUADRATIC, FT_CUBIC, FT_SINUSOIDAL}, AT = AT_POSIITON,
-      tiene posicion, radio y coeficiente de fuerza generada.
-  3 -> F = {FT_LINEAR, FT_QUADRATIC, FT_CUBIC, FT_SINUSOIDAL}, AT = AT_TIME,
-      tiene posicion, radio, coeficiente de fuerza generada y cantidad de tiempo que paso.
-
- ITFAN ->
-  1 -> F = FT_CONSTANT, AT = Any, 
-      tiene posicion, alto, largo y fuerza generada.
-  2 -> F = {FT_LINEAR, FT_QUADRATIC, FT_CUBIC, FT_SINUSOIDAL}, AT = AT_POSIITON,
-      tiene posicion, alto, largo y coeficiente de fuerza generada.
-  3 -> F = {FT_LINEAR, FT_QUADRATIC, FT_CUBIC, FT_SINUSOIDAL}, AT = AT_TIME,
-      tiene posicion, alto, largo, coeficiente de fuerza generada y cantidad de tiempo que paso.
-  4 -> F = {FT_LINEAR, FT_QUADRATIC, FT_CUBIC}, AT = AT_VELOCITY,
-      tiene posicion, alto, largo y coeficiente de fuerza generada.
-
-  En todos los casos, la funcion apply retorna la fuerza que se le debe aplicar al objeto
-  evaluado. Si no se genera una colision, la fuerza retornada es (0,0).
- */
-
 /* Hole. */
 /* only posible to: IT_HOLE, AT_NONE, FT_CONSTANT. */
-template <ImpulseType IT, AngType AT, Function F>
+template <ImpulseType IT, UnitType UT, Function F>
 class Impulse {
   private:
     AngDir2 position;
@@ -55,19 +32,22 @@ class Impulse {
     AngDir2 get_position();
     void set_position(AngDir2);
   
+    float apply_coef (Square);
+    float apply_coef (Circle);
     AngDir2 apply(Square);
     AngDir2 apply(Circle);
 };
 
 /* 
-  only posible to: IT_HOLE, AT_POSIITON, FT_LINEAR 
-  only posible to: IT_HOLE, AT_POSIITON, FT_QUADRATIC 
-  only posible to: IT_HOLE, AT_POSIITON, FT_CUBIC 
-  only posible to: IT_HOLE, AT_POSIITON, FT_SINUSOIDAL 
-  only posible to: IT_HOLE, AT_POSIITON, FT_EXPONENTIAL
+  posible to: 
+    + IT_FAN, AT_VELOCITY, FT_LINEAR 
+    + IT_FAN, AT_VELOCITY, FT_QUADRATIC 
+    + IT_FAN, AT_VELOCITY, FT_CUBIC 
+    + IT_FAN, AT_VELOCITY, FT_SINUSOIDAL
+    + IT_FAN, AT_VELOCITY, FT_EXPONENTIAL
 */
 template <ImpulseType IT, Function F>
-class Impulse<IT, AT_POSITION, F> {
+class Impulse<IT, UT_POSITION, F> {
   private:
     AngDir2 position;
     float generated_force_coef;
@@ -85,7 +65,127 @@ class Impulse<IT, AT_POSITION, F> {
 
     AngDir2 get_position();
     void set_position(AngDir2);
+
+    AngDir2 get_direction();
   
+    float apply_coef (Square);
+    float apply_coef (Circle);
+    AngDir2 apply(Square);
+    AngDir2 apply(Circle);
+};
+
+
+/* Fan. */
+/* only posible to: IT_FAN, AT_NONE, FT_CONSTANT. */
+template <UnitType UT, Function F>
+class Impulse<IT_FAN, UT, F> {
+  private:
+    AngDir2 position;
+    AngDir2 force;
+    AngDir2 dimension;
+    Global* glb;
+
+  public:
+    Impulse (Global*, AngDir2, AngDir2, float, float);
+
+    float get_width();
+    void set_width(float);
+
+    float get_height();
+    void set_height(float);
+
+    AngDir2 get_position();
+    void set_position(AngDir2);
+
+    AngDir2 get_force();
+    void set_force(AngDir2);
+  
+    AngDir2 apply(Square);
+    AngDir2 apply(Circle);
+};
+
+
+enum FanImpDir {
+  FID_UP,
+  FID_DOWN,
+  FID_LEFT,
+  FID_RIGHT
+};
+
+/* 
+  posible to: 
+    + IT_FAN, AT_VELOCITY, FT_LINEAR 
+    + IT_FAN, AT_VELOCITY, FT_QUADRATIC 
+    + IT_FAN, AT_VELOCITY, FT_CUBIC 
+    + IT_FAN, AT_VELOCITY, FT_SINUSOIDAL
+    + IT_FAN, AT_VELOCITY, FT_EXPONENTIAL
+*/
+template <Function F>
+class Impulse<IT_FAN, UT_POSITION, F> {
+  private:
+    AngDir2 position;
+    AngDir2 dimension;
+    AngDir2 direction;
+    float generated_force_coef;
+    float sign;
+    Global* glb;
+
+  public:
+    Impulse (Global*, AngDir2, float, float, float, FanImpDir);
+
+    float get_width();
+    void set_width(float);
+
+    float get_height();
+    void set_height(float);
+
+    float get_gfcoef();
+    void set_gfcoef(float);
+
+    AngDir2 get_position();
+    void set_position(AngDir2);
+
+    AngDir2 get_direction();
+    void set_direction(FanImpDir);
+  
+    float apply_coef (Square);
+    float apply_coef (Circle);
+    AngDir2 apply(Square);
+    AngDir2 apply(Circle);
+};
+
+/* 
+  posible to: 
+    + IT_FAN, AT_VELOCITY, FT_LINEAR 
+    + IT_FAN, AT_VELOCITY, FT_QUADRATIC 
+    + IT_FAN, AT_VELOCITY, FT_CUBIC 
+    + IT_FAN, AT_VELOCITY, FT_EXPONENTIAL
+*/
+template <Function F>
+class Impulse<IT_FAN, UT_VELOCITY, F> {
+  private:
+    AngDir2 position;
+    AngDir2 dimension;
+    float generated_force_coef;
+    Global* glb;
+
+  public:
+    Impulse (Global*, AngDir2, float, float, float);
+
+    float get_width();
+    void set_width(float);
+
+    float get_height();
+    void set_height(float);
+
+    float get_gfcoef();
+    void set_gfcoef(float);
+
+    AngDir2 get_position();
+    void set_position(AngDir2);
+  
+    float apply_coef (Square);
+    float apply_coef (Circle);
     AngDir2 apply(Square);
     AngDir2 apply(Circle);
 };
