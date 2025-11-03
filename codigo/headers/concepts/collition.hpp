@@ -5,6 +5,7 @@
 #include "../pr_objects/circle.hpp"
 #include "../pr_objects/nedge.hpp"
 #include "../pr_objects/line.hpp"
+#include "../pr_objects/particle.hpp"
 
 
 /* take two objects and verifies if they have collide. */
@@ -24,6 +25,11 @@ bool test_collition (Square&, Line&);
 bool test_collition (Circle&, Line&);
 bool test_collition (NEdge&, Line&);
 
+bool test_collition (Particle&, Physical&);
+bool test_collition (Particle&, Square&);
+bool test_collition (Particle&, Circle&);
+bool test_collition (Particle&, NEdge&);
+
 
 /* take two objects and generate the collition. */
 void resolve_collition (Physical&, Physical&);
@@ -41,6 +47,11 @@ void resolve_collition (Physical&, Line&);
 void resolve_collition (Square&, Line&);
 void resolve_collition (Circle&, Line&);
 void resolve_collition (NEdge&, Line&);
+
+void resolve_collition (Particle&, Physical&);
+void resolve_collition (Particle&, Square&);
+void resolve_collition (Particle&, Circle&);
+void resolve_collition (Particle&, NEdge&);
 
 
 /* Given that a collition had ocurred, this function corrects the superposition of the
@@ -62,6 +73,11 @@ void correct_collition (Physical&, Line&);
 void correct_collition (Square&, Line&);
 void correct_collition (Circle&, Line&);
 void correct_collition (NEdge&, Line&);
+
+void correct_collition (Particle&, Physical&);
+void correct_collition (Particle&, Square&);
+void correct_collition (Particle&, Circle&);
+void correct_collition (Particle&, NEdge&);
 
 
 /* Returns the point of the collition between two objects. */

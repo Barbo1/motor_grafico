@@ -24,18 +24,17 @@ class Impulse {
     Impulse(Global*, AngDir2, float, float);
 
     float get_radio();
-    void set_radio(float);
-
     float get_gfcoef();
-    void set_gfcoef(float);
-
     AngDir2 get_position();
+
+    void set_radio(float);
+    void set_gfcoef(float);
     void set_position(AngDir2);
   
     float apply_coef (Square);
     float apply_coef (Circle);
-    AngDir2 apply(Square);
-    AngDir2 apply(Circle);
+    AngDir2 apply (Square);
+    AngDir2 apply (Circle);
 };
 
 /* 
@@ -58,20 +57,18 @@ class Impulse<IT, UT_POSITION, F> {
     Impulse(Global*, AngDir2, float, float);
 
     float get_radio();
-    void set_radio(float);
-
     float get_gfcoef();
-    void set_gfcoef(float);
-
     AngDir2 get_position();
-    void set_position(AngDir2);
-
     AngDir2 get_direction();
+
+    void set_radio(float);
+    void set_gfcoef(float);
+    void set_position(AngDir2);
   
     float apply_coef (Square);
     float apply_coef (Circle);
-    AngDir2 apply(Square);
-    AngDir2 apply(Circle);
+    AngDir2 apply (Square);
+    AngDir2 apply (Circle);
 };
 
 
@@ -89,19 +86,17 @@ class Impulse<IT_FAN, UT, F> {
     Impulse (Global*, AngDir2, AngDir2, float, float);
 
     float get_width();
-    void set_width(float);
-
     float get_height();
-    void set_height(float);
-
     AngDir2 get_position();
-    void set_position(AngDir2);
-
     AngDir2 get_force();
+
+    void set_width(float);
+    void set_height(float);
+    void set_position(AngDir2);
     void set_force(AngDir2);
   
-    AngDir2 apply(Square);
-    AngDir2 apply(Circle);
+    AngDir2 apply (Square);
+    AngDir2 apply (Circle);
 };
 
 
@@ -134,24 +129,21 @@ class Impulse<IT_FAN, UT_POSITION, F> {
     Impulse (Global*, AngDir2, float, float, float, FanImpDir);
 
     float get_width();
-    void set_width(float);
-
     float get_height();
-    void set_height(float);
-
     float get_gfcoef();
-    void set_gfcoef(float);
-
     AngDir2 get_position();
-    void set_position(AngDir2);
-
     AngDir2 get_direction();
+
+    void set_width(float);
+    void set_height(float);
+    void set_gfcoef(float);
+    void set_position(AngDir2);
     void set_direction(FanImpDir);
   
     float apply_coef (Square);
     float apply_coef (Circle);
-    AngDir2 apply(Square);
-    AngDir2 apply(Circle);
+    AngDir2 apply (Square);
+    AngDir2 apply (Circle);
 };
 
 /* 
@@ -173,19 +165,17 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
     Impulse (Global*, AngDir2, float, float, float);
 
     float get_width();
-    void set_width(float);
-
     float get_height();
-    void set_height(float);
-
     float get_gfcoef();
-    void set_gfcoef(float);
-
     AngDir2 get_position();
+
+    void set_width(float);
+    void set_height(float);
+    void set_gfcoef(float);
     void set_position(AngDir2);
   
     float apply_coef (Square);
     float apply_coef (Circle);
-    AngDir2 apply(Square);
-    AngDir2 apply(Circle);
+    AngDir2 apply (Square);
+    AngDir2 apply (Circle);
 };

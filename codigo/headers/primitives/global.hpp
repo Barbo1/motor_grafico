@@ -35,4 +35,5 @@ class Global {
     uint32_t get_width ();
 
     float get_time ();
+    uint32_t get_ticks ();
 };

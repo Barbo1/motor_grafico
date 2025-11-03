@@ -30,8 +30,8 @@ class Circle: public Physical {
     void set_texture (Visualizer<D2FIG>);
     void set_radio (uint32_t);
 
-    Visualizer<D2FIG> get_texture ();
-    uint32_t get_radio ();
+    Visualizer<D2FIG> get_texture () const;
+    uint32_t get_radio () const;
 
     void draw ();
 

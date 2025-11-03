@@ -32,9 +32,9 @@ class Square: public Physical {
     void set_height (float);
     void set_width (float);
 
-    float get_height ();
-    float get_width ();
-    Visualizer<D2FIG> get_texture ();
+    float get_height () const;
+    float get_width () const;
+    Visualizer<D2FIG> get_texture () const;
 
     void draw ();
 

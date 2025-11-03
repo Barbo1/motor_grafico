@@ -19,7 +19,7 @@ class NEdge: public Physical {
     NEdge & operator= (NEdge &&);
 
     void set_texture (Visualizer<D2FIG>);
-    Visualizer<D2FIG> get_texture ();
+    Visualizer<D2FIG> get_texture () const;
 
     void draw ();
 

@@ -21,8 +21,8 @@ class Line {
     Line & operator= (const Line &);
     Line & operator= (Line &&);
 
-    float get_slope ();
-    float get_deviation ();
+    float get_slope () const;
+    float get_deviation () const;
 
     void set_slope (float);
     void set_deviation (float);
