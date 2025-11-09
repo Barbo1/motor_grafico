@@ -21,10 +21,25 @@
  |V| - clase para manejo de camara.
  |V| - implementar impulse.
  | | - implementar particle.
+ | | - cambios necesarios: 
+        + cambiar funciones bytouN por std::byteswap,
+        + agregar noexcept a constructores de todo,
+        + eliminar los "friend" de los objetos pr y cambiar funciones de colisiones,
+        + cambiar metodos para que utilizen "Deducing this",
+        + generalizar read_bytes y access_bit de zlib_inflate,
+        + cambiar huffman_tree para que las ramas sean 'huffnode* branch[2]{nullptr};',
+ | | - re-implementar:
+        + operations y vectors para mayor eficiencia en las operaciones globales. 
+            Particularmente voy a utilizar SDL_HasAVX_n y SDL_HasSSE_n para diferenciar casos. También,
+            necesito agregar todas las variantes de &, && const&, const&& de las operaciones, utilizando
+            perfect forwarding para deducir el tipo de parametro.
+        + algoritmo de dibujo de un circulo.
+ | | - falta implementar: 
+        + la funcion project de image_modifier, y la function de print polygon,
+        + rounded_square dentro de los constructores de figuras,
+        + collition_point sq_sq,
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
- | | - falta la funcion project de image_modifier, y la function de print polygon.
- | | - re-implementar operations y vectors para mayor eficiencia en las operaciones globales.
  | | - agregar soporte a fuentes de letras(lo puedo dejar para las vacaciones):
         + https://learn.microsoft.com/en-us/typography/opentype/spec/
         + https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html
@@ -32,7 +47,6 @@
  | | - agregar soporte a gifs para importar imagenes movibles:
         + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
         + https://en.wikipedia.org/wiki/GIF
- | | - implementar gear.
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
  | | - clase para manejo de:
         + sequencias de imagenes(Visualizer<D2SEQ>),
@@ -40,6 +54,7 @@
         + imagenes continuas con mapeo(Visualizer<D2MAP>).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.
+ | | - implementar gear.
  | | - leer modelo de iluminacion 2d.
  | | - clases para manejo de luz.
  | | - agregar utilizacion de audios.

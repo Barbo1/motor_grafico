@@ -5,9 +5,6 @@
 
 #include <cstdint>
 
-template <std::size_t N>
-class ParticleSource;
-
 class Particle {
   private:
     AngDir2 _position;
@@ -18,11 +15,16 @@ class Particle {
     Global* glb;
 
   public: 
+    Particle ();
     Particle (Global* glb, uint32_t radio, AngDir2 center, float mass);
     Particle (const Particle &);
     Particle (Particle &&);
     Particle & operator= (const Particle &);
     Particle & operator= (Particle &&);
+    
+    void add_position (const AngDir2&);
+    void add_velocity (const AngDir2 &);
+    void add_force (const AngDir2 &);
 
     void set_radio (float);
     void set_position (const AngDir2&);
@@ -34,7 +36,4 @@ class Particle {
     AngDir2 get_position () const;
     AngDir2 get_velocity () const;
     AngDir2 get_force () const;
-
-    template <std::size_t N>
-    friend class ParticleSource;
 };

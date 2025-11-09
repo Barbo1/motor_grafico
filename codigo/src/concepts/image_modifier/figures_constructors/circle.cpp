@@ -1,5 +1,4 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
-#include "../utils/circle_bound_maker.cpp"
 
 ImageModifier ImageModifier::circle (int radio, SDL_Color color) {
   int* bounds = new int[4*radio - 4];

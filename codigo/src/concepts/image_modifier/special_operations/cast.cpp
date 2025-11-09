@@ -6,7 +6,7 @@ Visualizer<D2FIG> ImageModifier::cast (Global* glb) {
   ret.width = this->texture->w;
   ret.height = this->texture->h;
   ret.texture = std::shared_ptr<SDL_Texture>(
-    SDL_CreateTextureFromSurface(glb->render, this->texture), 
+    SDL_CreateTextureFromSurface(glb->get_render(), this->texture), 
     [] (SDL_Texture* texture) { SDL_DestroyTexture (texture); }
   );
   return ret;

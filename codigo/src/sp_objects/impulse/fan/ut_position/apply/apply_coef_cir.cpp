@@ -2,7 +2,7 @@
 #include "../../../../../../headers/primitives/operations.hpp"
 
 template <Function F>
-float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle cir) {
+float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle& cir) {
   Dir2 diff = cir.get_position() - this->position;
   Dir2 diffa = diff.abs() - this->dimension;
   diffa.x = max0 (diffa.x);
@@ -25,8 +25,8 @@ float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle cir) {
   } else return 0.f;
 }
 
-template float Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply_coef(Circle); 
-template float Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply_coef(Circle); 
-template float Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply_coef(Circle); 
-template float Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply_coef(Circle); 
-template float Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply_coef(Circle); 
+template float Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply_coef(Circle&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply_coef(Circle&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply_coef(Circle&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply_coef(Circle&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply_coef(Circle&); 

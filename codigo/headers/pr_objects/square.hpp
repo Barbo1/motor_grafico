@@ -3,7 +3,6 @@
 #include "../concepts/physical.hpp"
 #include "../concepts/visualizer.hpp"
 #include "../primitives/global.hpp"
-#include "../sp_objects/impulse.hpp"
 #include <cstdint>
 
 class Circle;

@@ -18,6 +18,7 @@ class ImageModifier {
     
     ImageModifier (int height, int width, Uint32* pixels);
     static ImageModifier bounder (int* bounds, int height, int width, SDL_Color color);
+    static void circle_bound_maker (int radio, int* bounds, int offset);
 
   public:
     ImageModifier ();

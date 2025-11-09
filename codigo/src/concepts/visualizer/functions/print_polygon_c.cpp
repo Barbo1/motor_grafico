@@ -42,8 +42,8 @@ void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
   static std::vector<int>::iterator biter;
   static std::vector<int>::iterator piter;
 
-  SDL_SetRenderDrawColor(glb->render, color.r, color.g, color.b, color.a);
-  SDL_SetRenderDrawBlendMode(glb->render, SDL_BLENDMODE_ADD);
+  SDL_SetRenderDrawColor(glb->get_render(), color.r, color.g, color.b, color.a);
+  SDL_SetRenderDrawBlendMode(glb->get_render(), SDL_BLENDMODE_ADD);
 
   bounds.reserve (many_points);
   for (uint32_t level = std::roundl(min_h); level <= std::roundl(max_h); level++) {
@@ -64,8 +64,8 @@ void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
         if (*biter < *piter)
           std::swap (*piter, *biter); 
     for (uint32_t i = 0; i < (bounds.size() & ~(uint64_t)1); i += 2)
-      for (uint32_t offset = bounds[i]; offset <= bounds[i+1]; offset++)
-        SDL_RenderDrawPoint (glb->render, offset, level);
+      for (int offset = bounds[i]; offset <= bounds[i+1]; offset++)
+        SDL_RenderDrawPoint (glb->get_render(), offset, level);
     bounds.clear();
   }
 }

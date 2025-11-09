@@ -1,7 +1,7 @@
 #include "../../../../../../headers/sp_objects/impulse.hpp"
 
 template <Function F>
-float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Square sq) {
+float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Square& sq) {
   Dir2 diff = (this->position - sq.get_position()).abs();
   AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0} + this->dimension;
   AngDir2 n = AngDir2 ();
@@ -21,8 +21,8 @@ float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Square sq) {
   } else return 0.f;
 }
 
-template float Impulse<IT_FAN, UT_VELOCITY, FT_LINEAR>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_VELOCITY, FT_QUADRATIC>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_VELOCITY, FT_CUBIC>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_VELOCITY, FT_SINUSOIDAL>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_VELOCITY, FT_EXPONENTIAL>::apply_coef(Square); 
+template float Impulse<IT_FAN, UT_VELOCITY, FT_LINEAR>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_VELOCITY, FT_QUADRATIC>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_VELOCITY, FT_CUBIC>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_VELOCITY, FT_SINUSOIDAL>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_VELOCITY, FT_EXPONENTIAL>::apply_coef(Square&); 

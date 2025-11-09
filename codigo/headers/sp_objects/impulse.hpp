@@ -4,49 +4,23 @@
 #include "../primitives/vectors.hpp"
 #include "../pr_objects/circle.hpp"
 #include "../pr_objects/square.hpp"
-
-enum ImpulseType {
-  IT_HOLE,
-  IT_FAN
-};
+#include "../pr_objects/particle.hpp"
+#include "../sp_objects/particle_source.hpp"
+#include <cstdint>
+#include <iostream>
 
 /* Hole. */
-/* only posible to: IT_HOLE, AT_NONE, FT_CONSTANT. */
-template <ImpulseType IT, UnitType UT, Function F>
-class Impulse {
-  private:
-    AngDir2 position;
-    float generated_force_coef;
-    float radio;
-    Global* glb;
-
-  public:
-    Impulse(Global*, AngDir2, float, float);
-
-    float get_radio();
-    float get_gfcoef();
-    AngDir2 get_position();
-
-    void set_radio(float);
-    void set_gfcoef(float);
-    void set_position(AngDir2);
-  
-    float apply_coef (Square);
-    float apply_coef (Circle);
-    AngDir2 apply (Square);
-    AngDir2 apply (Circle);
-};
-
 /* 
   posible to: 
-    + IT_FAN, AT_VELOCITY, FT_LINEAR 
-    + IT_FAN, AT_VELOCITY, FT_QUADRATIC 
-    + IT_FAN, AT_VELOCITY, FT_CUBIC 
-    + IT_FAN, AT_VELOCITY, FT_SINUSOIDAL
-    + IT_FAN, AT_VELOCITY, FT_EXPONENTIAL
+    + IT_HOLE, AT_VELOCITY, FT_CONSTANT
+    + IT_HOLE, AT_VELOCITY, FT_LINEAR 
+    + IT_HOLE, AT_VELOCITY, FT_QUADRATIC 
+    + IT_HOLE, AT_VELOCITY, FT_CUBIC 
+    + IT_HOLE, AT_VELOCITY, FT_SINUSOIDAL
+    + IT_HOLE, AT_VELOCITY, FT_EXPONENTIAL
 */
-template <ImpulseType IT, Function F>
-class Impulse<IT, UT_POSITION, F> {
+template <ImpulseType IT, UnitType UT, Function F>
+class Impulse {
   private:
     AngDir2 position;
     float generated_force_coef;
@@ -63,12 +37,22 @@ class Impulse<IT, UT_POSITION, F> {
 
     void set_radio(float);
     void set_gfcoef(float);
-    void set_position(AngDir2);
+    void set_position(AngDir2&);
   
-    float apply_coef (Square);
-    float apply_coef (Circle);
-    AngDir2 apply (Square);
-    AngDir2 apply (Circle);
+    float apply_coef (Square&);
+    float apply_coef (Circle&);
+    float apply_coef (Particle&);
+    AngDir2 apply (Square&);
+    AngDir2 apply (Circle&);
+    AngDir2 apply (Particle&);
+
+    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+      for (uint32_t i = 0; i < ps.many_particles; i++) {
+        auto& [particle, data] = ps.particles[i];
+        data.force += this->apply (particle);
+      }
+      return ps;
+    }
 };
 
 
@@ -92,20 +76,20 @@ class Impulse<IT_FAN, UT, F> {
 
     void set_width(float);
     void set_height(float);
-    void set_position(AngDir2);
-    void set_force(AngDir2);
+    void set_position(AngDir2&);
+    void set_force(AngDir2&);
   
-    AngDir2 apply (Square);
-    AngDir2 apply (Circle);
+    AngDir2 apply (Square&);
+    AngDir2 apply (Circle&);
+    AngDir2 apply (Particle&);
+
+    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+      for (auto& [particle, data]: ps.particles)
+        data.force += this->apply (particle);
+      return ps;
+    }
 };
 
-
-enum FanImpDir {
-  FID_UP,
-  FID_DOWN,
-  FID_LEFT,
-  FID_RIGHT
-};
 
 /* 
   posible to: 
@@ -137,13 +121,21 @@ class Impulse<IT_FAN, UT_POSITION, F> {
     void set_width(float);
     void set_height(float);
     void set_gfcoef(float);
-    void set_position(AngDir2);
+    void set_position(AngDir2&);
     void set_direction(FanImpDir);
   
-    float apply_coef (Square);
-    float apply_coef (Circle);
-    AngDir2 apply (Square);
-    AngDir2 apply (Circle);
+    float apply_coef (Square&);
+    float apply_coef (Circle&);
+    float apply_coef (Particle&);
+    AngDir2 apply (Square&);
+    AngDir2 apply (Circle&);
+    AngDir2 apply (Particle&);
+
+    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+      for (auto& [particle, data]: ps.particles)
+        data.force += this->apply (particle);
+      return ps;
+    }
 };
 
 /* 
@@ -172,10 +164,18 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
     void set_width(float);
     void set_height(float);
     void set_gfcoef(float);
-    void set_position(AngDir2);
+    void set_position(AngDir2&);
   
-    float apply_coef (Square);
-    float apply_coef (Circle);
-    AngDir2 apply (Square);
-    AngDir2 apply (Circle);
+    float apply_coef (Square&);
+    float apply_coef (Circle&);
+    float apply_coef (Particle&);
+    AngDir2 apply (Square&);
+    AngDir2 apply (Circle&);
+    AngDir2 apply (Particle&);
+
+    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+      for (auto& [particle, data]: ps.particles)
+        data.force += this->apply (particle);
+      return ps;
+    }
 };

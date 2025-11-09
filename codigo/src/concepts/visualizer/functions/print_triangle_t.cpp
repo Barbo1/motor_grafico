@@ -25,8 +25,8 @@ void print_triangle_t (
   const Dir2 v12 = point1 - point2;
   const Dir2 v23 = point2 - point3;
   const Dir2 v31 = point3 - point1;
-  const Dir2 v23L = v23.percan();
-  const Dir2 v31L = v31.percan();
+  const Dir2 v23L = -v23.percan();
+  const Dir2 v31L = -v31.percan();
   const float denom_control = v23 * v31L;
   if (denom_control == 0)
     return;
@@ -46,7 +46,7 @@ void print_triangle_t (
   const float top = point2.x;
   const float bot = point3.x + v23.y * m3;
 
-  SDL_SetRenderDrawBlendMode (glb->render, SDL_BLENDMODE_NONE);
+  SDL_SetRenderDrawBlendMode (glb->get_render(), SDL_BLENDMODE_NONE);
 
   if (v12.y != 0) {
     const float m1 = v12.x / v12.y;
@@ -72,8 +72,8 @@ void print_triangle_t (
           *((Uint32*)texture->pixels + offset), texture->format, 
           &color.r, &color.g, &color.b, &color.a
         );
-        SDL_SetRenderDrawColor (glb->render, color.r, color.g, color.b, color.a);
-        SDL_RenderDrawPoint (glb->render, i, n);
+        SDL_SetRenderDrawColor (glb->get_render(), color.r, color.g, color.b, color.a);
+        SDL_RenderDrawPoint (glb->get_render(), i, n);
 
         coefs += diff_coefs_x;
       }
@@ -109,8 +109,8 @@ void print_triangle_t (
           *((Uint32*)texture->pixels + offset), texture->format, 
           &color.r, &color.g, &color.b, &color.a
         );
-        SDL_SetRenderDrawColor (glb->render, color.r, color.g, color.b, color.a);
-        SDL_RenderDrawPoint (glb->render, i, n);
+        SDL_SetRenderDrawColor (glb->get_render(), color.r, color.g, color.b, color.a);
+        SDL_RenderDrawPoint (glb->get_render(), i, n);
 
         coefs += diff_coefs_x;
       }

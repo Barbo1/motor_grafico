@@ -6,8 +6,8 @@ Square::Square (
   float density, float f_k, bool movible, bool colidable, SDL_Color* color
 ) : 
   Physical (glb, center, density, height * width, f_k, movible, colidable),
-  height(height),
-  width(width)
+  width(width),
+  height(height)
 {
   this->glb = glb;
   if (color != nullptr) {

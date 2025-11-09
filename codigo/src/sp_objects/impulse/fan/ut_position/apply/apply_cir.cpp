@@ -2,7 +2,7 @@
 #include "../../../../../../headers/primitives/operations.hpp"
 
 template <Function F>
-AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Circle cir) {
+AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Circle& cir) {
   Dir2 diff = cir.get_position() - this->position;
   Dir2 diffa = diff.abs() - this->dimension;
   diffa.x = max0 (diffa.x);
@@ -27,8 +27,8 @@ AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Circle cir) {
   } else return AngDir2();
 }
 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply(Circle); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply(Circle); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply(Circle); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply(Circle); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply(Circle); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply(Circle&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply(Circle&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply(Circle&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply(Circle&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply(Circle&); 

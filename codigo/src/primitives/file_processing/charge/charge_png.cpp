@@ -138,8 +138,8 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
   /* Palette information. */
   std::vector<SDL_Color> palette;
   palette.reserve (15);
-  int palette_count = 0;
-  int plet_chnk_count = 0;
+  uint32_t palette_count = 0;
+  uint32_t plet_chnk_count = 0;
 
   /* background color. */
   Uint8 color;
@@ -180,7 +180,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
         }
 
         palette_count = info_lenght / 3;
-        if (plet_chnk_count > 0 || info_lenght % 3 != 0 || palette_count > 1 << sampledepth) {
+        if (plet_chnk_count > 0 || info_lenght % 3 != 0 || palette_count > static_cast<uint32_t>(1 << sampledepth)) {
           std::cout 
             << "PNG reading error: PLTE chunk has an unreadable format or gives contradictory"
             << " information due the currently obtained."
@@ -190,7 +190,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
         plet_chnk_count++;
 
         palette.resize (palette_count);
-        for (int i = 0; i < palette_count; i++) {
+        for (uint32_t i = 0; i < palette_count; i++) {
           palette[i] = {
             .r = fil.read8(),
             .g = fil.read8(),
@@ -230,7 +230,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
               return nullptr;
             }
 
-            for (int i = 0; i < info_lenght; i++)
+            for (uint32_t i = 0; i < info_lenght; i++)
               palette[i].a = fil.read8();
             break;
           default:
@@ -293,38 +293,38 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
           case 0: 
             break;
           case 1:
-            for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
+            for (uint32_t i = bpp + many, j = many; i < scanline + many; i++, j++)
               output[i] += output[j];
             break;
           case 2:
             if (many > scanline)
-              for (int i = many, j = many - scanline - 1; i < scanline + many; i++, j++)
+              for (uint32_t i = many, j = many - scanline - 1; i < scanline + many; i++, j++)
                 output[i] += output[j];
             break;
           case 3:
             if (many > scanline) {
-              int i = many, j = many - scanline - 1;
+              uint32_t i = many, j = many - scanline - 1;
               for (; i < many + bpp; i++, j++)
                 output[i] += output[j] / 2;
               for (int k = many; i < scanline + many; i++, j++, k++)
                 output[i] += (output[j] + output[k]) / 2;
             } else {
               /* mismo caso que en el 1 */
-              for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
+              for (uint32_t i = bpp + many, j = many; i < scanline + many; i++, j++)
                 output[i] += output[j] / 2;
             }
             break;
           case 4:
             /* evaluo si es la primera linea. */
             if (many > scanline) {
-              int i = many, j = many - scanline - 1;
+              uint32_t i = many, j = many - scanline - 1;
               for (; i < many + bpp; i++, j++)
                 output[i] += output[j];
               for (int k = many, l = many - scanline - 1; i < scanline + many; i++, j++, k++, l++)
                 output[i] += paeth_predictor (output[k], output[j], output[l]);
             } else {
               /* mismo caso que en el 1. */
-              for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
+              for (uint32_t i = bpp + many, j = many; i < scanline + many; i++, j++)
                 output[i] += output[j];
             }
 
@@ -426,7 +426,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
     /* Adam7 de-interlace. */
     case 1: {
 
-      int itr, itc, w, total;
+      int w, total;
       auto current = output.begin ();
       bpp = 1 + ((bitdepth * channels - 1) >> 3);
 
@@ -451,38 +451,38 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
             case 0: 
               break;
             case 1:
-              for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
+              for (uint32_t i = bpp + many, j = many; i < scanline + many; i++, j++)
                 pass[i] += pass[j];
               break;
             case 2:
               if (many > scanline)
-                for (int i = many, j = many - scanline - 1; i < scanline + many; i++, j++)
+                for (uint32_t i = many, j = many - scanline - 1; i < scanline + many; i++, j++)
                   pass[i] += pass[j];
               break;
             case 3:
               if (many > scanline) {
-                int i = many, j = many - scanline - 1;
+                uint32_t i = many, j = many - scanline - 1;
                 for (; i < many + bpp; i++, j++)
                   pass[i] += pass[j] / 2;
-                for (int k = many; i < scanline + many; i++, j++, k++)
+                for (uint32_t k = many; i < scanline + many; i++, j++, k++)
                   pass[i] += (pass[j] + pass[k]) / 2;
               } else {
                 /* mismo caso que en el 1 */
-                for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
+                for (uint32_t i = bpp + many, j = many; i < scanline + many; i++, j++)
                   pass[i] += pass[j] / 2;
               }
               break;
             case 4:
               /* evaluo si es la primera linea. */
               if (many > scanline) {
-                int i = many, j = many - scanline - 1;
+                uint32_t i = many, j = many - scanline - 1;
                 for (; i < many + bpp; i++, j++)
                   pass[i] += pass[j];
-                for (int k = many, l = many - scanline - 1; i < scanline + many; i++, j++, k++, l++)
+                for (uint32_t k = many, l = many - scanline - 1; i < scanline + many; i++, j++, k++, l++)
                   pass[i] += paeth_predictor (pass[k], pass[j], pass[l]);
               } else {
                 /* mismo caso que en el 1. */
-                for (int i = bpp + many, j = many; i < scanline + many; i++, j++)
+                for (uint32_t i = bpp + many, j = many; i < scanline + many; i++, j++)
                   pass[i] += pass[j];
               }
 

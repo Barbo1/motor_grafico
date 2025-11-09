@@ -141,7 +141,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
               return false;
             }
             dist = output.size() - dist;
-            for (int j = dist; j < len + dist; j++)
+            for (uint32_t j = dist; j < len + dist; j++)
               output.push_back (output[j]);
           }
         }
@@ -161,7 +161,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
 
         /* Construction of the length code huffman tree. 
          * */
-        int i = 0;
+        uint64_t i = 0;
         for (; i < hclen; i++)
           lenghts[symbol[i]] = access_bit (&datastream[0], pos, 3);
         for (; i < 19; i++)
@@ -281,7 +281,7 @@ bool inflate (const std::vector<uint8_t>& datastream, std::vector<uint8_t>& outp
                 return false;
               }
               dist = output.size() - dist;
-              for (int j = dist; j < len + dist; j++)
+              for (uint64_t j = dist; j < len + dist; j++)
                 output.push_back (output[j]);
             }
             it2.go_back();

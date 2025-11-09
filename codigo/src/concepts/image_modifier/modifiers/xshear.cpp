@@ -11,7 +11,7 @@ ImageModifier& ImageModifier::xshear (float angle) {
   Uint32* fin = (Uint32*)sur->pixels;
   Uint32* arr = (Uint32*)this->texture->pixels;
   uint32_t i = 0, rowf = 0, rowa = 0, j = 0;
-  for (; i < this->texture->h; i++, rowf += sur->w, rowa += this->texture->w) {
+  for (; i < static_cast<uint32_t>(this->texture->h); i++, rowf += sur->w, rowa += this->texture->w) {
     for (; j < rowf + i * m; j++)
       fin[j] = 0;
     for (uint32_t k = rowa; k < rowa + this->texture->w; k++, j++)

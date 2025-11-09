@@ -10,7 +10,7 @@ Visualizer<D2FIG>::Visualizer (Global* glb, int height, int width, Uint32* pixel
     0xFF000000,0x00FF0000,0x0000FF00,0x000000FF
   );
   this->texture = std::shared_ptr<SDL_Texture>(
-    SDL_CreateTextureFromSurface(glb->render, sur), 
+    SDL_CreateTextureFromSurface(glb->get_render(), sur), 
     [] (SDL_Texture* texture) { SDL_DestroyTexture (texture); }
   );
   SDL_FreeSurface(sur);

@@ -3,7 +3,7 @@
 #include <cmath>
 
 template <Function F>
-float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Square sq) {
+float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Square& sq) {
   Dir2 diff = sq.get_position() - this->position;
   AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0} + this->dimension;
   if (absv(diff.y) < size.y && absv(diff.x) < size.x) {
@@ -23,8 +23,8 @@ float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Square sq) {
   } else return 0.f;
 }
 
-template float Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply_coef(Square); 
-template float Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply_coef(Square); 
+template float Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply_coef(Square&); 
+template float Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply_coef(Square&); 

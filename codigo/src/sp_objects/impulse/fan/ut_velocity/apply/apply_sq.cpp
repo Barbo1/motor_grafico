@@ -1,7 +1,7 @@
 #include "../../../../../../headers/sp_objects/impulse.hpp"
 
 template <Function F>
-AngDir2 Impulse<IT_FAN, UT_VELOCITY, F>::apply(Square sq) {
+AngDir2 Impulse<IT_FAN, UT_VELOCITY, F>::apply(Square& sq) {
   Dir2 diff = (this->position - sq.get_position()).abs();
   AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0} + this->dimension;
   AngDir2 n = AngDir2 ();
@@ -21,8 +21,8 @@ AngDir2 Impulse<IT_FAN, UT_VELOCITY, F>::apply(Square sq) {
   } else return AngDir2();
 }
 
-template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_LINEAR>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_QUADRATIC>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_CUBIC>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_SINUSOIDAL>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_EXPONENTIAL>::apply(Square); 
+template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_LINEAR>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_QUADRATIC>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_CUBIC>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_SINUSOIDAL>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_VELOCITY, FT_EXPONENTIAL>::apply(Square&); 

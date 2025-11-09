@@ -1,5 +1,4 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
-#include "../utils/circle_bound_maker.cpp"
    
 ImageModifier ImageModifier::circunference (int radio, int width, SDL_Color color) {
   std::size_t r1 = radio - width;

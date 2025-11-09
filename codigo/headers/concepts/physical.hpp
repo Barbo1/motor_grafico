@@ -31,6 +31,7 @@ class Physical {
       Global* glb, AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
     );
     Physical ();
+    virtual ~Physical () = default;
 
     virtual float get_mass () const;
     virtual void set_position (AngDir2);

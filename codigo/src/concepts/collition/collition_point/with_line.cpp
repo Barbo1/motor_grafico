@@ -1,7 +1,6 @@
 #include "../../../../headers/concepts/physical.hpp"
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/pr_objects/nedge.hpp"
 #include "../../../../headers/concepts/collition.hpp"
 
 Dir2 collition_point (Physical & ob, Line& line) {

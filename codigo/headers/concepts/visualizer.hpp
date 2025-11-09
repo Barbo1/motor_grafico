@@ -52,6 +52,7 @@ class Visualizer {
     Visualizer & operator= (const Visualizer & texture);
     Visualizer & operator= (Visualizer && texture);
 
+    void set_alpha (Uint8 a);
     void draw (Global* glb, const AngDir2 & position) const;
 
     friend ImageModifier;

@@ -1,7 +1,6 @@
-#pragma once
-#include <cmath>
+#include "../../../../headers/concepts/image_modifier.hpp"
 
-static void circle_bound_maker (int radio, int* bounds, int offset) {
+void ImageModifier::circle_bound_maker (int radio, int* bounds, int offset) {
   int* biter = bounds;
   const float radio_2 = radio * radio;
 

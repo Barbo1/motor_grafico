@@ -15,8 +15,8 @@ ImageModifier ImageModifier::polygon (std::vector<Dir2> points, SDL_Color color)
   }
 
   /* Calculating texture parameter. */
-  int height = max.y - min.y;
-  int width = max.x - min.x;
+  uint32_t height = max.y - min.y;
+  uint32_t width = max.x - min.x;
   Dir2 center;
   for (auto& point: points) {
     point -= min;

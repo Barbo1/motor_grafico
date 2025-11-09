@@ -1,4 +1,5 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
+#include <cstdint>
 
 ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
   SDL_Surface* sur = SDL_CreateRGBSurface(
@@ -19,11 +20,11 @@ ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
       uint32_t j = 0;
       for (; j < w; j++)
         *(res++) = arr[i * w + j];
-      for (; j < sur->w; j++)
+      for (; j < static_cast<uint32_t>(sur->w); j++)
         *(res++) = 0;
     }
-    for (; i < sur->h; i++) {
-      for (uint32_t j = 0; j < sur->w; j++)
+    for (; i < static_cast<uint32_t>(sur->h); i++) {
+      for (uint32_t j = 0; j < static_cast<uint32_t>(sur->w); j++)
         *(res++) = 0;
     }
 
@@ -32,7 +33,7 @@ ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
 
     float coef_1, coef_2;
     SDL_Color color1, color2;
-    for (uint32_t i = 0; i < img.texture->h; i++) {
+    for (uint32_t i = 0; i < static_cast<uint32_t>(img.texture->h); i++) {
       Uint32* res = fin + (i * sur->w);
       for (uint32_t j = 0; j < w; j++) {
         SDL_GetRGBA (*res, this->texture->format, &color1.r, &color1.g, &color1.b, &color1.a);

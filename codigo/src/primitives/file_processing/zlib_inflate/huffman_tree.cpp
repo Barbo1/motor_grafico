@@ -9,6 +9,7 @@ struct huffnode {
   bool final;
   huffnode* izq; // 0.
   huffnode* der; // 1.
+  // change to 'huffnode* branch[2]{nullptr};'
 };
 
 /* Huffman trees that follows the RFC-1951 specification. It use statical ONLY memory. 
@@ -60,7 +61,7 @@ HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, int size, boo
     this->next_code[bits] = (this->next_code[bits-1] + this->bl_count[bits-1]) << 1;
 
   huffnode* node;
-  this->root = new huffnode { .final = false, .izq = nullptr, .der = nullptr };
+  this->root = new huffnode { .elem = 0, .final = false, .izq = nullptr, .der = nullptr };
 
   int len;
   for (int n = 0; n < size; n++) {
@@ -71,7 +72,7 @@ HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, int size, boo
       for (int8_t j = len - 1; j > -1; j--) {
         if ((1 << j) & aux) {
           if (node->der == nullptr)
-            node->der = new huffnode { .final = false, .izq = nullptr, .der = nullptr };
+            node->der = new huffnode { .elem = 0, .final = false, .izq = nullptr, .der = nullptr };
           else if (node->der->final) {
             *error = true;
             return;
@@ -79,7 +80,7 @@ HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, int size, boo
           node = node->der;
         } else {
           if (node->izq == nullptr)
-            node->izq = new huffnode { .final = false, .izq = nullptr, .der = nullptr };
+            node->izq = new huffnode { .elem = 0, .final = false, .izq = nullptr, .der = nullptr };
           else if (node->izq->final) {
             *error = true;
             return;

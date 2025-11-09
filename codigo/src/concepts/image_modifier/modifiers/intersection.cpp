@@ -10,20 +10,18 @@ ImageModifier& ImageModifier::operator& (const ImageModifier& img) {
     Uint32* fin = (Uint32*)sur->pixels;
     Uint32* arr = (Uint32*)img.texture->pixels;
 
-    uint32_t i = 0;
+    int i = 0;
     for (; i < std::min(img.texture->h, this->texture->h); i++) {
-      for (uint32_t j = 0; j < std::min(img.texture->w, this->texture->w); j++)
+      for (int j = 0; j < std::min(img.texture->w, this->texture->w); j++)
         fin[i * this->texture->w + j] = arr[i * img.texture->w + j];
     }
 
-    Uint32* res = fin;
     arr = (Uint32*)this->texture->pixels;
 
-    float coef_1, coef_2;
     SDL_Color color;
     Uint8 a1, a2;
-    for (uint32_t i = 0; i < this->texture->h; i++) {
-      for (uint32_t j = 0; j < this->texture->w; j++) {
+    for (int i = 0; i < this->texture->h; i++) {
+      for (int j = 0; j < this->texture->w; j++) {
         SDL_GetRGBA (*fin, this->texture->format, &color.r, &color.g, &color.b, &a1);
         SDL_GetRGBA (arr[i * this->texture->w + j], this->texture->format, &color.r, &color.g, &color.b, &a2);
         if (a1 == 0 || a2 == 0)

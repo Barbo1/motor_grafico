@@ -3,7 +3,7 @@
 #include <cmath>
 
 template <Function F>
-AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Square sq) {
+AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Square& sq) {
   Dir2 diff = sq.get_position() - this->position;
   AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0} + this->dimension;
   if (absv(diff.y) < size.y && absv(diff.x) < size.x) {
@@ -23,8 +23,8 @@ AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Square sq) {
   } else return AngDir2 ();
 }
 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply(Square); 
-template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply(Square); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::apply(Square&); 
+template AngDir2 Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::apply(Square&); 

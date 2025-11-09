@@ -3,7 +3,6 @@
 #include "../../../../headers/primitives/operations.hpp"
 
 void correct_collition (Particle& par, Square& sq) {
-  float mass_1 = sq.get_mass(), mass_2 = par.get_mass();
   AngDir2 diff = sq.get_position() - par.get_position();
   AngDir2 b = AngDir2 {
     bound (diff.x, sq.get_width()) - diff.x,

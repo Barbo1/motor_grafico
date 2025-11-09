@@ -18,6 +18,18 @@ enum UnitType {
   UT_VELOCITY,
 };
 
+enum ImpulseType {
+  IT_HOLE,
+  IT_FAN
+};
+
+enum FanImpDir {
+  FID_UP,
+  FID_DOWN,
+  FID_LEFT,
+  FID_RIGHT
+};
+
 /* ------------------------------ */
 /* Low level data representation. */
 /* ------------------------------ */
@@ -39,6 +51,8 @@ class Dir2 {
     Dir2 (float, float);
     Dir2 (const Dir2 &);
     Dir2 (Dir2 &&);
+    virtual ~Dir2() = default;
+
     Dir2& operator= (const Dir2 &);
     Dir2& operator= (Dir2 &&);
     bool operator== (const Dir2 &);
@@ -91,6 +105,7 @@ class AngDir2: public Dir2 {
     AngDir2 operator* (float f) const;
     float angle () const;
     AngDir2 normalize ();
+    AngDir2 percan () const;
 
     template<DirFin R> AngDir2 operator+ (R) const;
     template<DirFin R> AngDir2 operator- (R) const;

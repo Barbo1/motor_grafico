@@ -2,7 +2,7 @@
 #include "../../../../../../headers/primitives/operations.hpp"
 
 template <UnitType UT, Function F>
-AngDir2 Impulse<IT_FAN, UT, F>::apply(Circle cir) {
+AngDir2 Impulse<IT_FAN, UT, F>::apply(Circle& cir) {
   Dir2 diff = (cir.get_position() - this->position).abs() - this->dimension;
   diff.x = max0 (diff.x);
   diff.y = max0 (diff.y);
@@ -11,4 +11,4 @@ AngDir2 Impulse<IT_FAN, UT, F>::apply(Circle cir) {
   } else return AngDir2();
 }
 
-template AngDir2 Impulse<IT_FAN, UT_NONE, FT_CONSTANT>::apply(Circle); 
+template AngDir2 Impulse<IT_FAN, UT_NONE, FT_CONSTANT>::apply(Circle&); 

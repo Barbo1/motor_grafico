@@ -13,8 +13,8 @@ Visualizer<D3FIG>::Visualizer (std::vector<std::vector<Dir3>> points, std::vecto
   this->info->mapping.push_back(Dir2 {0.f, 0.f});
   this->info->indeces.reserve (20);
   this->info->vectors.reserve (20);
-  int j, k;
-  for (int i = 0; i < points.size(); i++) {
+  std::size_t k;
+  for (std::size_t i = 0; i < points.size(); i++) {
    
     this->info->indeces.emplace_back(
       Face {
@@ -25,9 +25,8 @@ Visualizer<D3FIG>::Visualizer (std::vector<std::vector<Dir3>> points, std::vecto
     );
     auto& face = this->info->indeces.back ();
 
-    j = 0;
     auto piter = points[i].begin();
-    for (; j < 3; piter++, j++) {
+    for (int j = 0; j < 3; piter++, j++) {
       k = 0;
       while (k < this->info->vectors.size() && this->info->vectors[k] != *piter) { k++; }
       if (k == this->info->vectors.size())
