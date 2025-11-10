@@ -20,7 +20,7 @@
  |V| - re-implementar el uv mapping de los triangulos.
  |V| - clase para manejo de camara.
  |V| - implementar impulse.
- | | - implementar particle.
+ |V| - implementar particle.
  | | - cambios necesarios: 
         + cambiar funciones bytouN por std::byteswap,
         + agregar noexcept a constructores de todo,
@@ -28,6 +28,10 @@
         + cambiar metodos para que utilizen "Deducing this",
         + generalizar read_bytes y access_bit de zlib_inflate,
         + cambiar huffman_tree para que las ramas sean 'huffnode* branch[2]{nullptr};',
+ | | - agregar capacidades a las particle source:
+        + especializacion que comprenda grupos de particulas que aparezcan de repente al mismo tiempo,
+        + agreagar destructor de particle source para el particle source actual(y la otra especializacion),
+        + capacidad de utilizar funcion para la fuerza,
  | | - re-implementar:
         + operations y vectors para mayor eficiencia en las operaciones globales. 
             Particularmente voy a utilizar SDL_HasAVX_n y SDL_HasSSE_n para diferenciar casos. También,

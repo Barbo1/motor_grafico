@@ -9,6 +9,7 @@
 #include "../headers/sp_objects/particle_source.hpp"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
@@ -92,25 +93,30 @@ int main () {
     glb, 
     impulse_pos, 
     height_impulse, 
-    width_impulse, 0.1f, 
+    width_impulse,
+    0.1f, 
     FanImpDir::FID_RIGHT
   );
-  Visualizer<D2FIG> behind = ImageModifier::square(2*height_impulse, 2*width_impulse, SDL_Color{255,0,255,255}).cast(glb);
+  Visualizer<D2FIG> behind = ImageModifier::square(
+    2*height_impulse, 
+    2*width_impulse, 
+    SDL_Color{255,0,255,255
+  }).cast(glb);
 
   /* Paricle source. */
   AngDir2 particles_position = AngDir2 {300.f, 100.f, 0};
-  ParticleSource<50, FT_QUADRATIC> parts(
+  AngDir2 particles_position_1 = AngDir2 {300.f, 220.f, 0};
+  ParticleSource<50, FT_QUADRATIC> parts (
     glb,
     particles_position,
     std::pair<float, float>{0.7853, M_PI - 0.7853},
     ImageModifier::square(5, 5, SDL_Color{255, 0, 0, 255}).cast(glb),
     5,
-    0.1f,
-    1.f,
-    1200
+    0.05f,
+    40.2f
   );
-  Impulse<IT_FAN, UT_NONE, FT_CONSTANT> impulse_1(glb, particles_position, AngDir2 {0.f, -1.f, 0.f}, 100.f, 100.f);
-  Visualizer<D2FIG> behind_1 = ImageModifier::square(200, 200, SDL_Color{255,255,0,255}).cast(glb);
+  Impulse<IT_FAN, UT_NONE, FT_CONSTANT> impulse_1 (glb, particles_position_1, AngDir2 {0.f, -0.2f, 0.f}, 100.f, 100.f);
+  Visualizer<D2FIG> behind_1 = ImageModifier::square (200, 200, SDL_Color {255, 255, 0, 255}).cast (glb);
 
   while (cont) {
     glb->begin_render();
@@ -121,7 +127,7 @@ int main () {
     /* Render of the objects. */
     print_polygon_c(glb, polygon_points, SDL_Color {255, 255, 0, 255});
     behind.draw(glb, impulse_pos);
-    behind_1.draw(glb, particles_position);
+    behind_1.draw(glb, particles_position_1);
     c1.draw ();
     c2.draw ();
     for (auto& cir: circles)
@@ -133,7 +139,7 @@ int main () {
     for (auto& cir: circles)
       cir.calculate_movement (g + impulse.apply(cir) + impulse_1.apply(cir));
     c1.calculate_movement (g + impulse.apply(c1) + impulse_1.apply(c1));
-    impulse_1.apply(impulse.apply(parts)).calculate_movement (AngDir2 {0.f, 0, 0.f});
+    impulse_1.apply(parts).calculate_movement (AngDir2 {0.f, 0.f, 0.f});
 
     /* Testing of the collitions. */
     for (auto& cir: circles) {

@@ -9,12 +9,9 @@
 #include "../pr_objects/nedge.hpp"
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_pixels.h>
-#include <cstdint>
 #include <array>
 #include <utility>
+#include <iostream>
 
 const float PARTICLE_MASS = 100.f;
 
@@ -84,13 +81,13 @@ class ParticleSource {
 
 template<std::size_t N, Function F>
 void ParticleSource<N, F>::particle_setter(Particle& particle) {
-  float coef = this->glb->get_random_f01();
+  float coef = this->glb->get_random_f01 ();
   coef = this->change_angle.first * (1 - coef) + this->change_angle.second * coef;
   AngDir2 new_dir = AngDir2 (std::sin(coef), std::cos(coef), 0);
 
-  particle.set_position(this->init_position);
-  particle.set_velocity(new_dir * this->velocity_coef);
-  particle.set_force(new_dir.percan() * this->force_coef);
+  particle.set_position (this->init_position);
+  particle.set_velocity (new_dir * this->velocity_coef);
+  particle.set_force (new_dir.percan() * this->force_coef);
 }
 
 template<std::size_t N, Function F>
@@ -103,23 +100,24 @@ ParticleSource<N, F>::ParticleSource(
     float force_coef, 
     float velocity_coef, 
     uint32_t ticks_to_live
-) : particles {{{Particle (glb, radio, init_position, PARTICLE_MASS), particle_data {0, AngDir2()}}}} {
-  this->glb = glb;
-
-  /* Particle infromation. */
-  this->init_position = position;
-  this->velocity_coef = velocity_coef;
-  this->force_coef = force_coef;
-  this->change_angle = change_angle;
-  this->texture = texture;
-  this->radio = radio;
-
-  /* Information about particles life. */
-  this->ticks_to_live = ticks_to_live;
-  this->ticks_init_need = 0;
-  this->many_particles = 1;
-
-  particle_setter(this->particles[0].first);
+) : 
+  glb(glb),
+  init_position(position),
+  velocity_coef(velocity_coef),
+  force_coef(force_coef),
+  change_angle(change_angle),
+  texture(texture),
+  radio(radio),
+  ticks_to_live(ticks_to_live),
+  ticks_init_need(0),
+  many_particles(1)
+{ 
+  for (uint32_t i = 0; i < N; i++) {
+    this->particles[i] = std::pair<Particle, particle_data> (
+      Particle (glb, radio, init_position, PARTICLE_MASS), particle_data {0, AngDir2()}
+    );
+  }
+  particle_setter(this->particles[0].first); 
 }
 
 template<std::size_t N, Function F>
@@ -139,42 +137,33 @@ void ParticleSource<N, F>::calculate_movement (const AngDir2 & external_force) {
     for (uint32_t i = 0; i < this->many_particles; i++) {
       auto& [particle, data] = this->particles[i];
       data.ticks += ticks;
-
+  
       particle.add_velocity (
-        (particle.get_force () + external_force + data.force) * 
-        draw_coef * (20000.f / PARTICLE_MASS)
+        (particle.get_force () + external_force + std::exchange(data.force, AngDir2 ())) * 
+        draw_coef * (20000.f / particle.get_mass())
       );
       particle.add_position (particle.get_velocity () * draw_coef);
-
-      data.force = AngDir2 ();
     }
 
     this->ticks_init_need += ticks;
     if (this->ticks_init_need * N >= this->ticks_to_live) {
-      this->particle_setter (this->particles[this->many_particles].first);
-
-      this->many_particles++;
       this->ticks_init_need = 0;
-      if (this->many_particles == N) {
-        this->particle_setter (this->particles[0].first);
-      }
+      this->particle_setter (this->particles[this->many_particles++].first);
     }
   } else [[likely]] {
     for (auto& [particle, data]: this->particles) {
       data.ticks += ticks;
 
-      if (data.ticks < this->ticks_to_live) [[likely]] {
+      if (data.ticks <= this->ticks_to_live) [[likely]] {
         particle.add_velocity (
-          (particle.get_force () + external_force + data.force) * 
-          draw_coef * (20000.f / PARTICLE_MASS)
+          (particle.get_force () + external_force + std::exchange(data.force, AngDir2 ())) * 
+          draw_coef * (20000.f / particle.get_mass())
         );
         particle.add_position (particle.get_velocity () * draw_coef);
       } else {
         data.ticks = 0;
         this->particle_setter (particle);
       }
-
-      data.force = AngDir2 ();
     }
   }
 }

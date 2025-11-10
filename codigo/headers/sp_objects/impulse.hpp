@@ -6,7 +6,7 @@
 #include "../pr_objects/square.hpp"
 #include "../pr_objects/particle.hpp"
 #include "../sp_objects/particle_source.hpp"
-#include <cstdint>
+
 #include <iostream>
 
 /* Hole. */
@@ -30,10 +30,10 @@ class Impulse {
   public:
     Impulse(Global*, AngDir2, float, float);
 
-    float get_radio();
-    float get_gfcoef();
-    AngDir2 get_position();
-    AngDir2 get_direction();
+    [[nodiscard]] float get_radio();
+    [[nodiscard]] float get_gfcoef();
+    [[nodiscard]] AngDir2 get_position();
+    [[nodiscard]] AngDir2 get_direction();
 
     void set_radio(float);
     void set_gfcoef(float);
@@ -47,10 +47,8 @@ class Impulse {
     AngDir2 apply (Particle&);
 
     template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
-      for (uint32_t i = 0; i < ps.many_particles; i++) {
-        auto& [particle, data] = ps.particles[i];
+      for (auto& [particle, data] : ps.particles)
         data.force += this->apply (particle);
-      }
       return ps;
     }
 };
@@ -69,23 +67,30 @@ class Impulse<IT_FAN, UT, F> {
   public:
     Impulse (Global*, AngDir2, AngDir2, float, float);
 
-    float get_width();
-    float get_height();
-    AngDir2 get_position();
-    AngDir2 get_force();
+    [[nodiscard]] float get_width();
+    [[nodiscard]] float get_height();
+    [[nodiscard]] AngDir2 get_position();
+    [[nodiscard]] AngDir2 get_force();
 
     void set_width(float);
     void set_height(float);
     void set_position(AngDir2&);
     void set_force(AngDir2&);
   
-    AngDir2 apply (Square&);
-    AngDir2 apply (Circle&);
-    AngDir2 apply (Particle&);
+    [[nodiscard]] AngDir2 apply (Square&);
+    [[nodiscard]] AngDir2 apply (Circle&);
+    [[nodiscard]] AngDir2 apply (Particle&);
 
     template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
-      for (auto& [particle, data]: ps.particles)
+      for (auto& [particle, data] : ps.particles) {
+        AngDir2 a = this->apply (particle);
+        std::cout << "(" << a.x << ", " << a.y << ")" << std::endl;
+        a = particle.get_position();
+        std::cout << "(" << a.x << ", " << a.y << ")" << std::endl;
+        a = particle.get_velocity();
+        std::cout << "(" << a.x << ", " << a.y << ")" << std::endl;
         data.force += this->apply (particle);
+      }
       return ps;
     }
 };
@@ -112,11 +117,11 @@ class Impulse<IT_FAN, UT_POSITION, F> {
   public:
     Impulse (Global*, AngDir2, float, float, float, FanImpDir);
 
-    float get_width();
-    float get_height();
-    float get_gfcoef();
-    AngDir2 get_position();
-    AngDir2 get_direction();
+    [[nodiscard]] float get_width();
+    [[nodiscard]] float get_height();
+    [[nodiscard]] float get_gfcoef();
+    [[nodiscard]] AngDir2 get_position();
+    [[nodiscard]] AngDir2 get_direction();
 
     void set_width(float);
     void set_height(float);
@@ -124,12 +129,12 @@ class Impulse<IT_FAN, UT_POSITION, F> {
     void set_position(AngDir2&);
     void set_direction(FanImpDir);
   
-    float apply_coef (Square&);
-    float apply_coef (Circle&);
-    float apply_coef (Particle&);
-    AngDir2 apply (Square&);
-    AngDir2 apply (Circle&);
-    AngDir2 apply (Particle&);
+    [[nodiscard]] float apply_coef (Square&);
+    [[nodiscard]] float apply_coef (Circle&);
+    [[nodiscard]] float apply_coef (Particle&);
+    [[nodiscard]] AngDir2 apply (Square&);
+    [[nodiscard]] AngDir2 apply (Circle&);
+    [[nodiscard]] AngDir2 apply (Particle&);
 
     template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
       for (auto& [particle, data]: ps.particles)
@@ -156,22 +161,22 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
   public:
     Impulse (Global*, AngDir2, float, float, float);
 
-    float get_width();
-    float get_height();
-    float get_gfcoef();
-    AngDir2 get_position();
+    [[nodiscard]] float get_width();
+    [[nodiscard]] float get_height();
+    [[nodiscard]] float get_gfcoef();
+    [[nodiscard]] AngDir2 get_position();
 
     void set_width(float);
     void set_height(float);
     void set_gfcoef(float);
     void set_position(AngDir2&);
   
-    float apply_coef (Square&);
-    float apply_coef (Circle&);
-    float apply_coef (Particle&);
-    AngDir2 apply (Square&);
-    AngDir2 apply (Circle&);
-    AngDir2 apply (Particle&);
+    [[nodiscard]] float apply_coef (Square&);
+    [[nodiscard]] float apply_coef (Circle&);
+    [[nodiscard]] float apply_coef (Particle&);
+    [[nodiscard]] AngDir2 apply (Square&);
+    [[nodiscard]] AngDir2 apply (Circle&);
+    [[nodiscard]] AngDir2 apply (Particle&);
 
     template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
       for (auto& [particle, data]: ps.particles)

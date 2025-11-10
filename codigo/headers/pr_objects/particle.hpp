@@ -16,7 +16,7 @@ class Particle {
 
   public: 
     Particle ();
-    Particle (Global* glb, uint32_t radio, AngDir2 center, float mass);
+    Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass);
     Particle (const Particle &);
     Particle (Particle &&);
     Particle & operator= (const Particle &);
