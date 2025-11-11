@@ -1,4 +1,5 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
+#include "../../../../../headers/primitives/vectors.hpp"
 #include <ranges>
 
 void Visualizer<D3FIG>::draw (Global* glb, const Dir3 & position) const {

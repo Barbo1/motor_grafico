@@ -16,16 +16,16 @@ class ImageModifier {
   private: 
     SDL_Surface* texture;
     
-    ImageModifier (int height, int width, Uint32* pixels);
+    ImageModifier (int height, int width, Uint32* pixels) noexcept;
     static ImageModifier bounder (int* bounds, int height, int width, SDL_Color color);
     static void circle_bound_maker (int radio, int* bounds, int offset);
 
   public:
-    ImageModifier ();
-    ImageModifier (const ImageModifier & texture);
-    ImageModifier (ImageModifier && texture);
-    ImageModifier & operator= (const ImageModifier & texture);
-    ImageModifier & operator= (ImageModifier && texture);
+    ImageModifier () noexcept;
+    ImageModifier (const ImageModifier & texture) noexcept;
+    ImageModifier (ImageModifier && texture) noexcept;
+    ImageModifier & operator= (const ImageModifier & texture) noexcept;
+    ImageModifier & operator= (ImageModifier && texture) noexcept;
     ~ImageModifier ();
 
     Visualizer<D2FIG> cast (Global*);

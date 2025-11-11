@@ -7,11 +7,11 @@
 #include "../pr_objects/circle.hpp"
 #include "../pr_objects/square.hpp"
 #include "../pr_objects/nedge.hpp"
+#include "../primitives/types_definition.hpp"
 
 #include <SDL2/SDL.h>
 #include <array>
 #include <utility>
-#include <iostream>
 
 const float PARTICLE_MASS = 100.f;
 
@@ -52,7 +52,7 @@ class ParticleSource {
       float force_coef = 0.1f, 
       float velocity_coef = 1.f, 
       uint32_t ticks_to_live = 1200
-    );
+    ) noexcept;
    
     void set_external_force (const AngDir2 &);
     void add_external_force (const AngDir2 &);
@@ -100,7 +100,7 @@ ParticleSource<N, F>::ParticleSource(
     float force_coef, 
     float velocity_coef, 
     uint32_t ticks_to_live
-) : 
+) noexcept : 
   glb(glb),
   init_position(position),
   velocity_coef(velocity_coef),

@@ -1,7 +1,7 @@
 #include "../../../../headers/pr_objects/particle.hpp"
 #include <utility>
 
-Particle::Particle(Particle && particle) {
+Particle::Particle(Particle && particle) noexcept {
   this->glb = particle.glb;
   this->_radio = std::exchange(particle._radio, 0);
   this->_position = std::exchange(particle._position, AngDir2());

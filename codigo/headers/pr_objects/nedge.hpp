@@ -11,12 +11,12 @@ class NEdge: public Physical {
     Global* glb;
 
   public: 
-    NEdge ();
-    NEdge (Global* glb, const std::vector<Dir2> & points, SDL_Color* color = nullptr);
-    NEdge (const NEdge &);
-    NEdge (NEdge &&);
-    NEdge & operator= (const NEdge &);
-    NEdge & operator= (NEdge &&);
+    NEdge () noexcept;
+    NEdge (Global* glb, const std::vector<Dir2> & points, SDL_Color* color = nullptr) noexcept;
+    NEdge (const NEdge &) noexcept;
+    NEdge (NEdge &&) noexcept;
+    NEdge & operator= (const NEdge &) noexcept;
+    NEdge & operator= (NEdge &&) noexcept;
 
     void set_texture (Visualizer<D2FIG>);
     Visualizer<D2FIG> get_texture () const;

@@ -13,13 +13,13 @@ class Line {
     float deviation;
 
   public: 
-    Line ();
-    Line (float slope, float deviation);
-    Line (Dir2 p1, Dir2 p2);
-    Line (const Line &);
-    Line (Line &&);
-    Line & operator= (const Line &);
-    Line & operator= (Line &&);
+    Line () noexcept;
+    Line (float slope, float deviation) noexcept;
+    Line (Dir2 p1, Dir2 p2) noexcept;
+    Line (const Line &) noexcept;
+    Line (Line &&) noexcept;
+    Line & operator= (const Line &) noexcept;
+    Line & operator= (Line &&) noexcept;
 
     float get_slope () const;
     float get_deviation () const;

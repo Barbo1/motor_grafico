@@ -1,7 +1,7 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
 #include <iostream>
 
-Visualizer<D3FIG>::Visualizer (std::vector<std::vector<Dir3>> points, std::vector<Dir3> norms) {
+Visualizer<D3FIG>::Visualizer (std::vector<std::vector<Dir3>> points, std::vector<Dir3> norms) noexcept {
   if (points.size() > norms.size()) {
     std::cout 
       << "Error: normals insuffitient for the point passed to create 3D figure." 

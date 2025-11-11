@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/particle.hpp"
 
-Particle::Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass) {
+Particle::Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass) noexcept {
   this->glb = glb;
   this->_radio = radio;
   this->_position = center;

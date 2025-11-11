@@ -6,8 +6,7 @@
 #include "../pr_objects/square.hpp"
 #include "../pr_objects/particle.hpp"
 #include "../sp_objects/particle_source.hpp"
-
-#include <iostream>
+#include "../primitives/types_definition.hpp"
 
 /* Hole. */
 /* 
@@ -28,7 +27,7 @@ class Impulse {
     Global* glb;
 
   public:
-    Impulse(Global*, AngDir2, float, float);
+    Impulse(Global*, AngDir2, float, float) noexcept;
 
     [[nodiscard]] float get_radio();
     [[nodiscard]] float get_gfcoef();
@@ -65,7 +64,7 @@ class Impulse<IT_FAN, UT, F> {
     Global* glb;
 
   public:
-    Impulse (Global*, AngDir2, AngDir2, float, float);
+    Impulse (Global*, AngDir2, AngDir2, float, float) noexcept;
 
     [[nodiscard]] float get_width();
     [[nodiscard]] float get_height();
@@ -82,15 +81,8 @@ class Impulse<IT_FAN, UT, F> {
     [[nodiscard]] AngDir2 apply (Particle&);
 
     template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
-      for (auto& [particle, data] : ps.particles) {
-        AngDir2 a = this->apply (particle);
-        std::cout << "(" << a.x << ", " << a.y << ")" << std::endl;
-        a = particle.get_position();
-        std::cout << "(" << a.x << ", " << a.y << ")" << std::endl;
-        a = particle.get_velocity();
-        std::cout << "(" << a.x << ", " << a.y << ")" << std::endl;
+      for (auto& [particle, data] : ps.particles)
         data.force += this->apply (particle);
-      }
       return ps;
     }
 };
@@ -115,7 +107,7 @@ class Impulse<IT_FAN, UT_POSITION, F> {
     Global* glb;
 
   public:
-    Impulse (Global*, AngDir2, float, float, float, FanImpDir);
+    Impulse (Global*, AngDir2, float, float, float, FanImpDir) noexcept;
 
     [[nodiscard]] float get_width();
     [[nodiscard]] float get_height();
@@ -159,7 +151,7 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
     Global* glb;
 
   public:
-    Impulse (Global*, AngDir2, float, float, float);
+    Impulse (Global*, AngDir2, float, float, float) noexcept;
 
     [[nodiscard]] float get_width();
     [[nodiscard]] float get_height();

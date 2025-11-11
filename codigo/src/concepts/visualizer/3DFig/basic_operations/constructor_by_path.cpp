@@ -11,7 +11,7 @@
  * tells the implementation to not read the uv mapping vectors, so that a plain 
  * object could be defined.
  * */
-Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding) {
+Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding) noexcept {
   this->info = std::make_shared<Info> ();
 
   int error;

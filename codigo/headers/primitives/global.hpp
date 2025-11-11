@@ -22,7 +22,7 @@ class Global {
 
     /* singleton. */
     static Global* single;
-    Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color);
+    Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept;
     
     /* random generator information. */
     static constexpr uint32_t relatives[32] {
@@ -33,7 +33,7 @@ class Global {
     uint32_t c, a, xN;
   public:
 
-    static Global* create (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color);
+    static Global* create (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept;
     ~Global ();
 
     void begin_render ();

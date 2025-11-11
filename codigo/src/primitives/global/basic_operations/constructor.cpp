@@ -4,7 +4,7 @@
 #include <cstring>
 #include <chrono>
 
-Global::Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) {
+Global::Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept {
   /* Initialization of SDL. */
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "Could not initialize SDL" << SDL_GetError() << std::endl;

@@ -3,7 +3,6 @@
 #include "../../../../headers/primitives/operations.hpp"
 
 Dir2 collition_point (Square& sq, Circle& cir) {
-  AngDir2 diff = sq.position - cir.position;
   return Dir2 {
     sq.position.x - bound (sq.position.x - cir.position.x, sq.width),
     sq.position.y - bound (sq.position.y - cir.position.y, sq.height)

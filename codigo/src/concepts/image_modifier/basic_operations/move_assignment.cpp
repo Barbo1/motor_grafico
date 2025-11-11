@@ -1,7 +1,7 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
 #include <utility>
 
-ImageModifier& ImageModifier::operator= (ImageModifier && texture) {
+ImageModifier& ImageModifier::operator= (ImageModifier && texture) noexcept {
   if (this->texture != nullptr)
     SDL_FreeSurface(this->texture);
 

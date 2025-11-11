@@ -36,7 +36,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
   }
   
   /* Verify signature. */
-  if (fil.read64() == 0x0A1A0A0D474E5089) {
+  if (fil.read64() != 0x89504E470D0A1A0A) {
     std::cout << "Failure in signature recognition." << std::endl;
     return nullptr;
   }

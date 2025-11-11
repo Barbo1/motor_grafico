@@ -15,12 +15,12 @@ class Particle {
     Global* glb;
 
   public: 
-    Particle ();
-    Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass);
-    Particle (const Particle &);
-    Particle (Particle &&);
-    Particle & operator= (const Particle &);
-    Particle & operator= (Particle &&);
+    Particle () noexcept;
+    Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass) noexcept;
+    Particle (const Particle &) noexcept;
+    Particle (Particle &&) noexcept;
+    Particle & operator= (const Particle &) noexcept;
+    Particle & operator= (Particle &&) noexcept;
     
     void add_position (const AngDir2&);
     void add_velocity (const AngDir2 &);

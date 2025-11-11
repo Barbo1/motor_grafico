@@ -1,6 +1,6 @@
 #include "../../../../../headers/primitives/file_processing.hpp"
 
-SequentialFileReader::SequentialFileReader (std::string path, int * error) {
+SequentialFileReader::SequentialFileReader (std::string path, int * error) noexcept {
   this->path = path;
   this->fil = std::ifstream (path, std::ios::in | std::ios::binary);
 

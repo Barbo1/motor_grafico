@@ -12,7 +12,7 @@
  *  -> -2: an reading error: inconsistent information between readed and expected.
  * */
 
-const int SQT_BUFF_LIMIT = 1024;
+const int SQT_BUFF_LIMIT = 4096;
 
 class SequentialFileReader {
   private:
@@ -23,7 +23,7 @@ class SequentialFileReader {
     bool is_lim;
 
   public:
-    SequentialFileReader (std::string path, int * error);
+    SequentialFileReader (std::string path, int * error) noexcept;
     ~SequentialFileReader ();
 
     /* Test or set the file in finished mode. */

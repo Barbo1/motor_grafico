@@ -17,15 +17,15 @@ class Circle: public Physical {
     Global* glb;
 
   public: 
-    Circle ();
+    Circle () noexcept;
     Circle (
       Global* glb, uint32_t radio, AngDir2 center, float density = 0, 
       float f_k = 0, bool movible = true, bool colidable = true, SDL_Color* color = nullptr
-    );
-    Circle (const Circle &);
-    Circle (Circle &&);
-    Circle & operator= (const Circle &);
-    Circle & operator= (Circle &&);
+    ) noexcept;
+    Circle (const Circle &) noexcept;
+    Circle (Circle &&) noexcept;
+    Circle & operator= (const Circle &) noexcept;
+    Circle & operator= (Circle &&) noexcept;
 
     void set_texture (Visualizer<D2FIG>);
     void set_radio (uint32_t);

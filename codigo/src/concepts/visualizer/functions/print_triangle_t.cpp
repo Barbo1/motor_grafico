@@ -1,5 +1,6 @@
 #include "../../../../headers/concepts/visualizer.hpp"
 #include "../../../../headers/primitives/operations.hpp"
+#include "../../../../headers/primitives/vectors.hpp"
 #include <SDL2/SDL_render.h>
 
 void print_triangle_t (
@@ -27,7 +28,7 @@ void print_triangle_t (
   const Dir2 v31 = point3 - point1;
   const Dir2 v23L = -v23.percan();
   const Dir2 v31L = -v31.percan();
-  const float denom_control = v23 * v31L;
+  const float denom_control = v23.pL(-v31);
   if (denom_control == 0)
     return;
   const float denom = 1 / denom_control;

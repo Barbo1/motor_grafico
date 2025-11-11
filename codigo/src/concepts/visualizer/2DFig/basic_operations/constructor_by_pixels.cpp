@@ -2,7 +2,7 @@
 #include <SDL2/SDL_render.h>
 
 template<>
-Visualizer<D2FIG>::Visualizer (Global* glb, int height, int width, Uint32* pixels) {
+Visualizer<D2FIG>::Visualizer (Global* glb, int height, int width, Uint32* pixels) noexcept {
   this->width = width;
   this->height = height;
   SDL_Surface* sur = SDL_CreateRGBSurfaceFrom (

@@ -11,12 +11,12 @@ class Gear: private Physical {
     AngDir2 force;
     
   public:
-    Gear ();
-    Gear (const Gear &);
-    Gear (Gear &&);
-    Gear & operator= (const Gear &);
-    Gear & operator= (Gear &&);
-    ~Gear ();
+    Gear () noexcept;
+    Gear (const Gear &) noexcept;
+    Gear (Gear &&) noexcept;
+    Gear & operator= (const Gear &) noexcept;
+    Gear & operator= (Gear &&) noexcept;
+    ~Gear () = default;
 
     void add_obj (Physical *);
 

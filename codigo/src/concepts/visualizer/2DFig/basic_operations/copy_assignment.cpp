@@ -1,7 +1,7 @@
 #include "../../../../../headers/concepts/visualizer.hpp"
 
 template <VisualType T>
-Visualizer<T> & Visualizer<T>::operator= (const Visualizer & texture) {
+Visualizer<T> & Visualizer<T>::operator= (const Visualizer & texture) noexcept {
   this->width = texture.width;
   this->height = texture.height;
   this->texture = texture.texture;

@@ -16,16 +16,16 @@ class Square: public Physical {
     Global* glb;
 
   public: 
-    Square ();
+    Square () noexcept;
     Square (
       Global* glb, uint32_t height, uint32_t width, AngDir2 center, 
       float density = 0, float f_k = 0, bool movible = true, bool colidable = true, 
       SDL_Color* color = nullptr
-    );
-    Square (const Square &);
-    Square (Square &&);
-    Square & operator= (const Square &);
-    Square & operator= (Square &&);
+    ) noexcept;
+    Square (const Square &) noexcept;
+    Square (Square &&) noexcept;
+    Square & operator= (const Square &) noexcept;
+    Square & operator= (Square &&) noexcept;
 
     void set_texture (Visualizer<D2FIG>);
     void set_height (float);

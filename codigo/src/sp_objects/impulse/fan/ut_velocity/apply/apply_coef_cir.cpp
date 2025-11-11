@@ -7,8 +7,7 @@ float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Circle& cir) {
   diffa.x = max0 (diffa.x);
   diffa.y = max0 (diffa.y);
   if (diffa.modulo2() < cir.get_radio() * cir.get_radio()) {
-    AngDir2 n = cir.get_velocity();
-    float coef = n.modulo() * this->generated_force_coef;
+    float coef = cir.get_velocity().modulo() * this->generated_force_coef;
     
     /* return depending on the function. */
     if constexpr (F == FT_QUADRATIC)

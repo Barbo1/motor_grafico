@@ -1,6 +1,6 @@
 #include "../../../../headers/concepts/physical.hpp"
 
-Physical::Physical () {
+Physical::Physical () noexcept {
   this->position = {0, 0, 0};
   this->_density = 0;
   this->_area = 0;

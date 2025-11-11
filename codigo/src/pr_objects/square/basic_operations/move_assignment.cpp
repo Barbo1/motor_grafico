@@ -1,7 +1,7 @@
 #include "../../../../headers/pr_objects/square.hpp"
 #include <utility>
 
-Square & Square::operator= (Square && square) {
+Square & Square::operator= (Square && square) noexcept {
   this->Physical::operator=(square);
   this->texture = std::exchange (square.texture, Visualizer<D2FIG>());
   this->position = std::exchange (square.position, AngDir2{0.f, 0.f, 0.f});

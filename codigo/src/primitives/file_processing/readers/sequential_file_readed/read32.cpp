@@ -1,6 +1,12 @@
 #include "../../../../../headers/primitives/file_processing.hpp"
-#include "../../../../../headers/primitives/operations.hpp"
 
 uint32_t SequentialFileReader::read32 () {
-  return bytou32(read8(), read8(), read8(), read8());
+  uint32_t res = this->read8() | 
+    (this->read8() << 8) | 
+    (this->read8() << 16) | 
+    (this->read8() << 24);
+  if constexpr (std::endian::native == std::endian::little)
+    return std::byteswap(res);
+  else
+    return res;
 }

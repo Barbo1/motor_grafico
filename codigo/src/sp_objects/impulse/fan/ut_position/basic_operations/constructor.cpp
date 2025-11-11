@@ -1,7 +1,7 @@
 #include "../../../../../../headers/sp_objects/impulse.hpp"
 
 template <Function F>
-Impulse<IT_FAN, UT_POSITION, F>::Impulse (Global* glb, AngDir2 position, float width, float height, float gfc, FanImpDir dir) {
+Impulse<IT_FAN, UT_POSITION, F>::Impulse (Global* glb, AngDir2 position, float width, float height, float gfc, FanImpDir dir) noexcept {
   this->glb = glb;
   this->position = position;
   this->dimension = AngDir2 {width, height, 0};

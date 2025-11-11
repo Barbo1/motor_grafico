@@ -2,7 +2,7 @@
 
 Physical::Physical (
     Global* glb, AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
-) {
+) noexcept {
   this->position = position;
   this->_density = density;
   this->_area = area;

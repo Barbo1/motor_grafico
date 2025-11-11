@@ -43,14 +43,14 @@ class Visualizer {
     int height;
     int width;
 
-    Visualizer(Global* glb, int height, int width, Uint32* pixels);
+    Visualizer(Global* glb, int height, int width, Uint32* pixels) noexcept;
 
   public:
-    Visualizer ();
-    Visualizer (const Visualizer & texture);
-    Visualizer (Visualizer && texture);
-    Visualizer & operator= (const Visualizer & texture);
-    Visualizer & operator= (Visualizer && texture);
+    Visualizer () noexcept;
+    Visualizer (const Visualizer & texture) noexcept;
+    Visualizer (Visualizer && texture) noexcept;
+    Visualizer & operator= (const Visualizer & texture) noexcept;
+    Visualizer & operator= (Visualizer && texture) noexcept;
 
     void set_alpha (Uint8 a);
     void draw (Global* glb, const AngDir2 & position) const;
@@ -101,13 +101,13 @@ class Visualizer<D3FIG> {
     std::shared_ptr<Info> info;
 
   public:
-    Visualizer ();
-    Visualizer (std::vector<std::vector<Dir3>> points, std::vector<Dir3> normals);
-    Visualizer (std::string path, std::string img = "", bool uv_hiding = false);
-    Visualizer (const Visualizer &);
-    Visualizer (Visualizer &&);
-    Visualizer & operator= (const Visualizer &);
-    Visualizer & operator= (Visualizer &&);
+    Visualizer () noexcept;
+    Visualizer (std::vector<std::vector<Dir3>> points, std::vector<Dir3> normals) noexcept;
+    Visualizer (std::string path, std::string img = "", bool uv_hiding = false) noexcept;
+    Visualizer (const Visualizer &) noexcept;
+    Visualizer (Visualizer &&) noexcept;
+    Visualizer & operator= (const Visualizer &) noexcept;
+    Visualizer & operator= (Visualizer &&) noexcept;
     ~Visualizer ();
 
     void set_color (const SDL_Color& color);

@@ -1,6 +1,6 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
 
-ImageModifier::ImageModifier () {
+ImageModifier::ImageModifier () noexcept {
   this->texture = nullptr;
 }
 

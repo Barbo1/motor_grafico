@@ -1,7 +1,7 @@
 #include "../../../../../headers/sp_objects/impulse.hpp"
 
 template <ImpulseType IT, UnitType UT, Function F>
-Impulse<IT, UT, F>::Impulse (Global* glb, AngDir2 position, float radio, float generated) {
+Impulse<IT, UT, F>::Impulse (Global* glb, AngDir2 position, float radio, float generated) noexcept {
   this->glb = glb;
   this->position = position;
   this->radio = radio;

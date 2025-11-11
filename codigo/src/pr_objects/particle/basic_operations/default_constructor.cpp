@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/particle.hpp"
 
-Particle::Particle () {
+Particle::Particle () noexcept {
   this->glb = nullptr;
   this->_radio = 0;
   this->_position = AngDir2();
