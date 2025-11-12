@@ -45,7 +45,8 @@ class Impulse {
     AngDir2 apply (Circle&);
     AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<std::size_t N, Function FT> 
+    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
       for (auto& [particle, data] : ps.particles)
         data.force += this->apply (particle);
       return ps;
@@ -80,7 +81,8 @@ class Impulse<IT_FAN, UT, F> {
     [[nodiscard]] AngDir2 apply (Circle&);
     [[nodiscard]] AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<std::size_t N, Function FT> 
+    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
       for (auto& [particle, data] : ps.particles)
         data.force += this->apply (particle);
       return ps;
@@ -128,7 +130,8 @@ class Impulse<IT_FAN, UT_POSITION, F> {
     [[nodiscard]] AngDir2 apply (Circle&);
     [[nodiscard]] AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<std::size_t N, Function FT> 
+    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
       for (auto& [particle, data]: ps.particles)
         data.force += this->apply (particle);
       return ps;
@@ -170,7 +173,8 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
     [[nodiscard]] AngDir2 apply (Circle&);
     [[nodiscard]] AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<std::size_t N, Function FT> 
+    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
       for (auto& [particle, data]: ps.particles)
         data.force += this->apply (particle);
       return ps;

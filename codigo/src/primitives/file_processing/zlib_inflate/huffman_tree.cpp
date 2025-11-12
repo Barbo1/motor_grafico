@@ -5,11 +5,8 @@
 #include <algorithm>
 
 struct huffnode {
-  uint64_t elem;
-  bool final;
-  huffnode* izq; // 0.
-  huffnode* der; // 1.
-  // change to 'huffnode* branch[2]{nullptr};'
+  int64_t elem;
+  huffnode* branch[2];
 };
 
 /* Huffman trees that follows the RFC-1951 specification. It use statical ONLY memory. 
@@ -24,7 +21,7 @@ class HuffmanTree {
     static std::array<uint64_t, 300> next_code;
   
   public:
-    HuffmanTree (const std::array<uint8_t, 317>& lenghts, int size, bool* error);
+    HuffmanTree (const std::array<uint8_t, 317>& lenghts, uint32_t size, bool* error);
     ~HuffmanTree ();
 
     class iterator {
@@ -49,11 +46,11 @@ class HuffmanTree {
 std::array<uint64_t, HuffmanTree::BL_SIZE> HuffmanTree::bl_count {};
 std::array<uint64_t, HuffmanTree::NEXT_SIZE> HuffmanTree::next_code {};
 
-HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, int size, bool* error) {
+HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, uint32_t size, bool* error) {
   *error = false;
   uint8_t greater = *std::max_element (lengths.begin(), lengths.begin() + size);
   std::fill_n (this->bl_count.begin(), greater+1, 0);
-  for (int i = 0; i < size; i++)
+  for (uint32_t i = 0; i < size; i++)
     this->bl_count[lengths[i]]++;
 
   this->bl_count[0] = 0;
@@ -61,34 +58,24 @@ HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, int size, boo
     this->next_code[bits] = (this->next_code[bits-1] + this->bl_count[bits-1]) << 1;
 
   huffnode* node;
-  this->root = new huffnode { .elem = 0, .final = false, .izq = nullptr, .der = nullptr };
+  this->root = new huffnode { .elem = -1, .branch = {nullptr, nullptr} };
 
   int len;
-  for (int n = 0; n < size; n++) {
+  for (uint32_t n = 0; n < size; n++) {
     len = lengths[n];
     if (len != 0) {
       node = this->root;
       uint64_t aux = this->next_code[len]++;
-      for (int8_t j = len - 1; j > -1; j--) {
-        if ((1 << j) & aux) {
-          if (node->der == nullptr)
-            node->der = new huffnode { .elem = 0, .final = false, .izq = nullptr, .der = nullptr };
-          else if (node->der->final) {
-            *error = true;
-            return;
-          }
-          node = node->der;
-        } else {
-          if (node->izq == nullptr)
-            node->izq = new huffnode { .elem = 0, .final = false, .izq = nullptr, .der = nullptr };
-          else if (node->izq->final) {
-            *error = true;
-            return;
-          }
-          node = node->izq;
+      for (int64_t j = len - 1; j > -1; j--) {
+        uint64_t cond = (aux >> j) & 1;
+        if (node->branch[cond] == nullptr)
+          node->branch[cond] = new huffnode { .elem = -1, .branch = {nullptr, nullptr} };
+        else if (node->branch[cond]->elem != -1) {
+          *error = true;
+          return;
         }
+        node = node->branch[cond];
       }
-      node->final = true;
       node->elem = n;
     }
   }
@@ -96,8 +83,8 @@ HuffmanTree::HuffmanTree (const std::array<uint8_t, 317>& lengths, int size, boo
 
 static void delete_nodes (huffnode* node) {
   if (node != nullptr) {
-    delete_nodes(node->izq);
-    delete_nodes(node->der);
+    delete_nodes(node->branch[0]);
+    delete_nodes(node->branch[1]);
     delete node;
   }
 }
@@ -116,12 +103,12 @@ HuffmanTree::iterator::iterator (const HuffmanTree& tree) {
 
 bool HuffmanTree::iterator::advance (bool bit) {
   huffnode * pointed = this->pointed[this->height];
-  if (bit && pointed->der != nullptr) {
+  if (bit && pointed->branch[1] != nullptr) {
     this->bits |= 1 << this->height++;
-    this->pointed[this->height] = pointed->der;
+    this->pointed[this->height] = pointed->branch[1];
     return true;
-  } else if (!bit && pointed->izq != nullptr) {
-    this->pointed[++this->height] = pointed->izq;
+  } else if (!bit && pointed->branch[1] != nullptr) {
+    this->pointed[++this->height] = pointed->branch[0];
     return true;
   } else return false;
 }
@@ -132,7 +119,7 @@ void HuffmanTree::iterator::go_back () {
 }
 
 bool HuffmanTree::iterator::finished () {
-  return this->pointed[this->height]->final;
+  return this->pointed[this->height]->elem != -1;
 }
 
 uint8_t HuffmanTree::iterator::hieght () {

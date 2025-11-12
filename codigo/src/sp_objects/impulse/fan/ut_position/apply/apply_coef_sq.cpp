@@ -3,7 +3,7 @@
 #include <cmath>
 
 template <Function F>
-float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Square& sq) {
+inline float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Square& sq) {
   Dir2 diff = sq.get_position() - this->position;
   AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0} + this->dimension;
   if (absv(diff.y) < size.y && absv(diff.x) < size.x) {

@@ -2,7 +2,7 @@
 #include "../../../../../../headers/primitives/operations.hpp"
 
 template <Function F>
-float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle& cir) {
+inline float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle& cir) {
   Dir2 diff = cir.get_position() - this->position;
   Dir2 diffa = diff.abs() - this->dimension;
   diffa.x = max0 (diffa.x);

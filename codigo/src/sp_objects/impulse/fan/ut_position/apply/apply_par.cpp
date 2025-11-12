@@ -2,7 +2,7 @@
 #include "../../../../../../headers/primitives/operations.hpp"
 
 template <Function F>
-AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Particle& par) {
+inline AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Particle& par) {
   Dir2 diff = par.get_position() - this->position;
   Dir2 diffa = diff.abs() - this->dimension;
   diffa.x = max0 (diffa.x);
