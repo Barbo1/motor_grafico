@@ -21,16 +21,19 @@
  |V| - clase para manejo de camara.
  |V| - implementar impulse.
  |V| - implementar particle.
- | | - cambios necesarios: 
+ |V| - cambios necesarios: 
        |V| + cambiar funciones bytouN por std::byteswap,
        |V| + agregar noexcept a constructores de todo,
-       | | + eliminar los "friend" de los objetos pr y cambiar funciones de colisiones,
-       | | + generalizar read_bytes y access_bit de zlib_inflate,
+       |T| + eliminar los "friend" de los objetos pr y cambiar funciones de colisiones,
+       |T| + generalizar read_bytes y access_bit de zlib_inflate,
        |V| + cambiar huffman_tree para que las ramas sean 'huffnode* branch[2]{nullptr};',
- | | - agregar capacidades a las particle source:
-       | | + especializacion que comprenda grupos de particulas que aparezcan de repente al mismo tiempo,
-       | | + agreagar destructor de particle source para el particle source actual(y la otra especializacion),
-       | | + capacidad de utilizar funcion para la fuerza,
+ |T| - agregar capacidades a las particle source:
+       |V| + agreagar destructor de particle source para el particle source actual(y la otra especializacion),
+       |T| + agregar parametros de funciones para:
+             |T| -> el calculo de la fuerza, 
+             |V| -> el cambio de tamaño, 
+       |V| + especializacion que comprenda grupos de particulas que aparezcan de repente al mismo tiempo. 
+              Esto dejaria ParticlesSource<BURST> y ParticlesSource<SMOOTH>
  | | - re-implementar operations y vectors para mayor eficiencia en las operaciones globales:
         |V| + También, necesito agregar todas las variantes de &, && const&, const&& de las operaciones, 
             utilizando perfect forwarding para deducir el tipo de parametro(Deducing this).

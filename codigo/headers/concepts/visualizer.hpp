@@ -53,7 +53,7 @@ class Visualizer {
     Visualizer & operator= (Visualizer && texture) noexcept;
 
     void set_alpha (Uint8 a);
-    void draw (Global* glb, const AngDir2 & position) const;
+    void draw (Global* glb, const AngDir2 & position, float scale = 1.0f) const;
 
     friend ImageModifier;
     friend Visualizer<D2FIG> chargePNG (Global* glb, const std::string& path);

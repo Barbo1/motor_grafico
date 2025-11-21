@@ -54,10 +54,4 @@ class Circle: public Physical {
     friend void correct_collition (Square&, Circle&);
     friend void correct_collition (Circle&, Square&);
     friend void correct_collition (Circle&, Line&);
-
-    friend Dir2 collition_point (Physical &, Physical &);
-    friend Dir2 collition_point (Circle&, Circle&);
-    friend Dir2 collition_point (Square&, Circle&);
-    friend Dir2 collition_point (Circle&, Square&);
-    friend Dir2 collition_point (Circle&, Line&);
 };

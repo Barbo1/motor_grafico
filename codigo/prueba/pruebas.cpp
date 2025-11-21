@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
+#include <iostream>
 #include <cmath>
 
 int main () {
@@ -68,6 +69,7 @@ int main () {
   lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, (float)height}));
 
   AngDir2 g = AngDir2 {0, 9.8f, 0};
+  AngDir2 g_p = AngDir2 {0, 0.2f, 0};
 
   float b = 40;
   Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb, b, b, b);
@@ -106,20 +108,42 @@ int main () {
   /* Paricle source. */
   AngDir2 particles_position = AngDir2 {300.f, 100.f, 0};
   AngDir2 particles_position_1 = AngDir2 {300.f, 220.f, 0};
-  ParticleSource<50, FT_QUADRATIC> parts (
+  ParticleSource<PS_SMOOTH, 50, FT_LINEAR_N, FT_LINEAR_N> parts (
     glb,
     particles_position,
     std::pair<float, float>{0.7853, M_PI - 0.7853},
     ImageModifier::square(5, 5, SDL_Color{255, 0, 0, 255}).cast(glb),
     5,
     0.05f,
-    40.2f
+    40.2f,
+    1200
   );
+  parts.up();
+  bool up_parts = true;
+
   Impulse<IT_FAN, UT_NONE, FT_CONSTANT> impulse_1 (glb, particles_position_1, AngDir2 {0.f, -0.2f, 0.f}, 100.f, 100.f);
   Visualizer<D2FIG> behind_1 = ImageModifier::square (200, 200, SDL_Color {255, 255, 0, 255}).cast (glb);
 
+  /* another particle soruce. */
+  ParticleSource<PS_EXPLOSION, 10, FT_LINEAR_N, FT_LINEAR_N> parts_1 (
+    glb,
+    AngDir2 {400.f, 400.f, 0},
+    std::pair<float, float>{0.7853, M_PI - 0.7853},
+    ImageModifier::square(5, 5, SDL_Color{0, 255, 0, 255}).cast(glb),
+    5,
+    80.2f,
+    1200
+  );
+  parts_1.burst();
+
   while (cont) {
     glb->begin_render();
+
+    if (up_parts && SDL_GetTicks() > 10000) {
+      std::cout << "apago" << std::endl;
+      up_parts = false;
+      parts.down();
+    }
 
     /* The delay must be inside. */
     SDL_Delay(1);
@@ -134,12 +158,14 @@ int main () {
       cir.draw ();
     cube.draw (glb, cube_pos);
     parts.draw();
+    parts_1.draw();
 
     /* Calculation of the movement. */
     for (auto& cir: circles)
       cir.calculate_movement (g + impulse.apply(cir) + impulse_1.apply(cir));
     c1.calculate_movement (g + impulse.apply(c1) + impulse_1.apply(c1));
     impulse_1.apply(parts).calculate_movement (AngDir2 {0.f, 0.f, 0.f});
+    parts_1.calculate_movement(g_p);
 
     /* Testing of the collitions. */
     for (auto& cir: circles) {

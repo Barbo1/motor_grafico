@@ -45,8 +45,8 @@ class Impulse {
     AngDir2 apply (Circle&);
     AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> 
-    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<ParSrcType P, std::size_t N, Function FT, Function T> 
+    inline ParticleSource<P, N, FT, T>& apply (ParticleSource<P, N, FT, T>& ps) {
       for (auto& [particle, data] : ps.particles)
         data.force += this->apply (particle);
       return ps;
@@ -81,8 +81,8 @@ class Impulse<IT_FAN, UT, F> {
     [[nodiscard]] AngDir2 apply (Circle&);
     [[nodiscard]] AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> 
-    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<ParSrcType P, std::size_t N, Function FT, Function T> 
+    inline ParticleSource<P, N, FT, T>& apply (ParticleSource<P, N, FT, T>& ps) {
       for (auto& [particle, data] : ps.particles)
         data.force += this->apply (particle);
       return ps;
@@ -130,8 +130,8 @@ class Impulse<IT_FAN, UT_POSITION, F> {
     [[nodiscard]] AngDir2 apply (Circle&);
     [[nodiscard]] AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> 
-    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<ParSrcType P, std::size_t N, Function FT, Function T> 
+    inline ParticleSource<P, N, FT, T>& apply (ParticleSource<P, N, FT, T>& ps) {
       for (auto& [particle, data]: ps.particles)
         data.force += this->apply (particle);
       return ps;
@@ -173,8 +173,8 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
     [[nodiscard]] AngDir2 apply (Circle&);
     [[nodiscard]] AngDir2 apply (Particle&);
 
-    template<std::size_t N, Function FT> 
-    inline ParticleSource<N, FT>& apply (ParticleSource<N, FT>& ps) {
+    template<ParSrcType P, std::size_t N, Function FT, Function T> 
+    inline ParticleSource<P, N, FT, T>& apply (ParticleSource<P, N, FT, T>& ps) {
       for (auto& [particle, data]: ps.particles)
         data.force += this->apply (particle);
       return ps;

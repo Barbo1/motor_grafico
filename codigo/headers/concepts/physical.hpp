@@ -3,7 +3,7 @@
 #include "../primitives/vectors.hpp"
 #include "../primitives/global.hpp"
 
-#define DRAW_RATE 3.0f
+#define DRAW_RATE 5.0f
 #define MOVEMENT_COEFITIENT 100.f
 #define MOVEMENT_BOUND 0.01
 

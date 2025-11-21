@@ -35,9 +35,7 @@ uint64_t access_bit (const uint8_t* vec, uint64_t& pos, uint16_t N) {
   uint64_t arr_pos = pos >> 3;
   pos += N;
 
-  uint64_t ret = vec[arr_pos] | 
-    vec[arr_pos + 1] << 8 | 
-    vec[arr_pos + 2] << 16;
+  uint64_t ret = vec[arr_pos] | vec[arr_pos + 1] << 8 | vec[arr_pos + 2] << 16;
   return (ret >> mod_pos) & ((1 << N) - 1);
 }
 
