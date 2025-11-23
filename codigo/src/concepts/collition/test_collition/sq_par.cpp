@@ -1,10 +1,9 @@
 #include "../../../../headers/pr_objects/particle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/primitives/operations.hpp"
 
 bool test_collition (Particle& par, Square& sq) {
-  Dir2 diff = (par.get_position() - sq.get_position()).abs();
-  diff.x = max0 (diff.x - sq.get_width());
-  diff.y = max0 (diff.y - sq.get_height());
+  AngDir2 diff = (
+    (par.get_position() - sq.get_position()).abs() - AngDir2 {sq.get_width(), sq.get_height(), 0.f}
+  ).max0();
   return diff.modulo2() < par.get_radio() * par.get_radio();
 }

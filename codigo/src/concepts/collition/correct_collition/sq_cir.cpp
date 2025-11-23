@@ -1,14 +1,9 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/primitives/operations.hpp"
 
 void correct_collition (Square& sq, Circle& cir) {
   AngDir2 diff = sq.position - cir.position;
-  AngDir2 b = AngDir2 {
-    bound (diff.x, sq.width) - diff.x,
-    bound (diff.y, sq.height) - diff.y,
-    0
-  };
+  AngDir2 b = diff.bound(AngDir2 {sq.width, sq.height, 0.f}) - diff;
   AngDir2 n = b.normalize();
 
   sq.position += b;

@@ -1,6 +1,9 @@
 #pragma once 
 
-#include "./operations.hpp"
+#include <SDL2/SDL_cpuinfo.h>
+#include <emmintrin.h>
+#include <xmmintrin.h>
+#include <pmmintrin.h>
 #include <type_traits>
 #include <utility>
 #include <cmath>
@@ -18,7 +21,7 @@ concept DirFin = std::is_same_v<std::remove_cvref_t<T>, AngDir2> || std::is_same
 template<class T>
 concept DirFin3 = std::is_same_v<std::remove_cvref_t<T>, Dir3>;
 
-class Dir2 {
+class alignas(8) Dir2 {
   public:
     float x;
     float y;
@@ -35,12 +38,6 @@ class Dir2 {
       return *this;
     }
 
-    inline Dir2 & operator= (Dir2 && dir) noexcept {
-      this->x = dir.x;
-      this->y = dir.y;
-      return *this;
-    }
-
     /* Casting. */
     inline Dir2 (const Dir3& dir3) noexcept;
     inline Dir2 (const AngDir2& dir) noexcept;
@@ -48,101 +45,137 @@ class Dir2 {
     /* Comparations. */
     template<DirFin R>
     inline bool operator== (R&& dir) const {
-      return this->x == dir.x && this->y == dir.y;
+      return _mm_movemask_ps(_mm_cmpeq_ps (
+        _mm_loadl_pi(_mm_setzero_ps (), (__m64*)this),
+        _mm_loadl_pi(_mm_setzero_ps (), (__m64*)&dir)
+      )) == 0x1111;
     }
 
     template<DirFin R>
     inline bool operator!= (R&& dir) const {
-      return this->x != dir.x || this->y != dir.y;
+      return _mm_movemask_ps(_mm_cmpeq_ps (
+        _mm_loadl_pi(_mm_setzero_ps (), (__m64*)this),
+        _mm_loadl_pi(_mm_setzero_ps (), (__m64*)&dir)
+      )) != 0x1111;
     }
 
     /* Operators by overloading. */
     template<typename Self>
     inline auto operator- (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x = -self.x;
-        self.y = -self.y;
+        _mm_storel_epi64((__m128i_u*)&self, _mm_xor_si128(_mm_loadu_si64((uint32_t*)&self), _mm_set1_epi32(0x80000000)));
         return std::forward<Self>(self);
-      } else return Dir2 {-self.x, -self.y};
+      } else {
+        Dir2 ret;
+        _mm_storel_epi64((__m128i_u*)&ret, _mm_xor_si128(_mm_loadu_si64((uint32_t*)&self), _mm_set1_epi32(0x80000000)));
+        return ret;
+      }
     }
 
     template<typename Self, DirFin R>
     inline auto operator- (this Self&& self, R&& dir) {
+      __m128 opr = _mm_sub_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&self), 
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x -= dir.x;
-        self.y -= dir.y;
+        _mm_storel_pi ((__m64*)&self, opr); 
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.x -= self.x;
-        dir.y -= self.y;
+        _mm_storel_pi ((__m64*)&dir, opr);
         return std::forward<R>(dir);
-      } else return Dir2 {
-        self.x - dir.x,
-        self.y - dir.y
-      };
+      } else {
+        Dir2 ret;
+        _mm_storel_pi ((__m64*)&ret, opr);
+        return ret;
+      }
     }
 
     template<DirFin R>
     inline Dir2& operator-= (R&& dir) {
-      this->x -= dir.x;
-      this->y -= dir.y;
+      _mm_storel_pi ((__m64*)this, _mm_sub_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)this), 
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      )); 
       return *this;
     }
     
     template<typename Self, DirFin R>
     inline auto operator+ (this Self&& self, R&& dir) {
+      __m128 opr = _mm_add_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&self), 
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x += dir.x;
-        self.y += dir.y;
+        _mm_storel_pi ((__m64*)&self, opr);
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.x += self.x;
-        dir.y += self.y;
+        _mm_storel_pi ((__m64*)&dir, opr);
         return std::forward<R>(dir);
-      } else return Dir2 {
-        self.x + dir.x,
-        self.y + dir.y
-      };
+      } else { 
+        Dir2 ret;
+        _mm_storel_pi ((__m64*)&ret, opr);
+        return ret;
+      }
     }
 
     template<DirFin R> 
     inline Dir2& operator+= (R&& d) {
-      this->x += d.x;
-      this->y += d.y;
+      _mm_storel_pi ((__m64*)this, _mm_add_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)this), 
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&d)
+      ));
       return *this;
     }
     
     template<DirFin R>
     inline float operator* (R&& dir) const {
-      return this->x * dir.x + this->y * dir.y; 
+      __m128 res = _mm_mul_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)this), 
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      );
+      return _mm_cvtss_f32(_mm_hadd_ps (res, res));
     }
 
     template<typename Self>
     inline auto operator* (this Self&& self, const float& number) {
+      __m128 opr = _mm_mul_ps(
+        _mm_loadl_pi (_mm_undefined_ps(), (__m64*)&self), 
+        _mm_set1_ps (number) 
+      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x *= number;
-        self.y *= number;
+        _mm_storel_pi ((__m64*)&self, opr);
         return std::forward<Self>(self);
-      } else return Dir2 {
-        self.x * number,
-        self.y * number
-      };
+      } else {
+        Dir2 ret;
+        _mm_storel_pi ((__m64*)&ret, opr);
+        return ret;
+      }
     }
 
     inline Dir2& operator*= (const float& number) {
-      this->x *= number;
-      this->y *= number;
+      _mm_storel_pi ((__m64*)this, _mm_mul_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)this), 
+        _mm_set1_ps(number)
+      ));
       return *this;
     }
 
     /* Operations by functions. */
     template<typename Self>
     inline auto percan (this Self&& self) {
+      __m128i opr = _mm_xor_si128(
+        _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
+        _mm_set_epi64x(0, 0x0000000080000000)
+      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
-        std::swap(self.x, self.y);
-        self.y = -self.y;
+        _mm_storel_epi64((__m128i_u*)&self, opr);
         return std::forward<Self>(self);
-      } else return Dir2 {-self.y, self.x};
+      } else {
+        Dir2 ret;
+        _mm_storel_epi64((__m128i_u*)&ret, opr);
+        return ret;
+      }
     }
 
     inline void rotate (const float& angle) {
@@ -155,70 +188,140 @@ class Dir2 {
 
     template<typename Self>
     inline auto normalize (this Self&& self) {
-      float inorm = fisqrt(self.x * self.x + self.y * self.y);
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)&self);
+      __m128 opr = _mm_mul_ps (charged, charged);
+      opr = _mm_mul_ps (_mm_set1_ps(_mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)))), charged);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x *= inorm;
-        self.y *= inorm;
+        _mm_storel_pi ((__m64*)&self, opr);
         return std::forward<Self>(self);
-      } else return Dir2 {
-        self.x * inorm,
-        self.y * inorm
-      };
+      } else {
+        Dir2 ret;
+        _mm_storel_pi ((__m64*)&ret, opr);
+        return ret;
+      }
     }
 
     template<typename Self>
     inline auto abs (this Self&& self) {
+      __m128i opr = _mm_and_si128(_mm_loadu_si64((uint32_t*)&self), _mm_set1_epi32(0x7FFFFFFF));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        absv(&self.x);
-        absv(&self.y);
+        _mm_storel_epi64((__m128i_u*)&self, opr);
         return std::forward<Self>(self);
-      } else return Dir2 {
-        absv (self.x),
-        absv (self.y)
-      };
+      } else {
+        Dir2 ret;
+        _mm_storel_epi64((__m128i_u*)&ret, opr);
+        return ret;
+      }
     }
 
     template<DirFin R>
     inline float pL (R&& dir) const {
-      return this->y * dir.x - this->x * dir.y; 
+      __m128 opr = _mm_mul_ps (
+        _mm_castsi128_ps (_mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)this), 0b00000001)),
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      );
+      return _mm_cvtss_f32 (_mm_hsub_ps(opr, opr));
     }
 
     inline float modulo () const {
-      return std::sqrt(this->x * this->x + this->y * this->y);
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)this);
+      __m128 opr = _mm_mul_ps(charged, charged);
+      return _mm_cvtss_f32(_mm_sqrt_ss(_mm_hadd_ps(opr, opr)));
     }
 
     inline float modulo2 () const {
-      return this->x * this->x + this->y * this->y;
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)this);
+      __m128 opr = _mm_mul_ps(charged, charged);
+      return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
     }
 
     inline float angle () const {
-      return (this->x + this->y) * fisqrt(this->x * this->x + this->y * this->y);
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)this);
+      __m128 opr = _mm_mul_ps(charged, charged);
+      return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr))) * _mm_cvtss_f32(_mm_hadd_ps(charged, charged));
+    }
+
+    template<typename Self>
+    inline auto max0 (this Self&& self) {
+      __m128 opr = _mm_max_ps (_mm_loadl_pi (_mm_undefined_ps(), (__m64*)&self), _mm_set1_ps(0.f));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto bound (this Self&& self, R&& dir) {
+      __m128 other = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)&dir);
+      __m128 opr = _mm_min_ps (_mm_loadl_pi (_mm_undefined_ps(), (__m64*)&self), other);
+      opr = _mm_max_ps (opr, _mm_or_ps(other, _mm_set1_ps(-0.0f)));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self>
+    inline auto bound01 (this Self&& self) {
+      __m128 opr = _mm_max_ps (
+        _mm_min_ps (
+          _mm_loadl_pi (_mm_undefined_ps(), (__m64*)&self), 
+          _mm_set1_ps(1.f)
+        ), 
+        _mm_set1_ps(0.f)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto dir_mul (this Self&& self, R&& dir) {
+      __m128 opr = _mm_mul_ps (
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x), 
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
     }
 };
 
-class AngDir2 {
+
+
+class alignas(16) AngDir2 {
   public:
     float x;
     float y;
     float a;
+    float pad;
     
     /* Basic operations. */
-    inline AngDir2 () noexcept: x(0.f), y(0.f), a(0.f) {}
-    inline AngDir2 (float x, float y, float a) noexcept : x(x), y(y), a(a) {}
-    inline AngDir2 (const AngDir2 & adir) noexcept: x(adir.x), y(adir.y), a(adir.a) {}
-    inline AngDir2 (AngDir2 && adir) noexcept: x(adir.x), y(adir.y), a(adir.a) {}
-
-    inline AngDir2 & operator= (AngDir2 && adir) noexcept {
-      this->x = adir.x;
-      this->y = adir.y;
-      this->a = adir.a;
-      return *this;
-    }
+    inline AngDir2 () noexcept: x(0.f), y(0.f), a(0.f), pad(0.f) {}
+    inline AngDir2 (float x, float y, float a) noexcept : x(x), y(y), a(a), pad(0.f) {}
+    inline AngDir2 (const AngDir2 & adir) noexcept: x(adir.x), y(adir.y), a(adir.a), pad(0.f) {}
+    inline AngDir2 (AngDir2 && adir) noexcept: x(adir.x), y(adir.y), a(adir.a), pad(0.f) {}
 
     inline AngDir2 & operator= (const AngDir2 & adir) noexcept {
-      this->x = adir.x;
-      this->y = adir.y;
-      this->a = adir.a;
+      _mm_store_ps ((float*)this, _mm_load_ps (&adir.x));
       return *this;
     }
 
@@ -230,122 +333,169 @@ class AngDir2 {
     template<DirFin R>
     inline bool operator== (R&& adir) const {
       if constexpr (std::is_same_v<R, AngDir2>) 
-        return this->x == adir.x && this->y == adir.y && this->a == adir.a;
+        return _mm_movemask_ps(_mm_cmpeq_ps (
+          _mm_load_ps((float*)this),
+          _mm_load_ps((float*)&adir)
+        )) == 0x1111;
       else 
-        return this->x == adir.x && this->y == adir.y;
+        return _mm_movemask_ps(_mm_cmpeq_ps (
+          _mm_loadl_pi(_mm_setzero_ps (), (__m64*)this),
+          _mm_loadl_pi(_mm_setzero_ps (), (__m64*)&adir)
+        )) == 0x1111;
     }
 
     template<DirFin R>
     inline bool operator!= (R&& adir) const {
-      if constexpr (std::is_same_v<R, AngDir2>)
-        return this->x != adir.x || this->y != adir.y || this->a != adir.a;
-      else
-        return this->x != adir.x || this->y != adir.y;
+      if constexpr (std::is_same_v<R, AngDir2>) 
+        return _mm_movemask_ps(_mm_cmpeq_ps (
+          _mm_load_ps((float*)this),
+          _mm_load_ps((float*)&adir)
+        )) != 0x1111;
+      else 
+        return _mm_movemask_ps(_mm_cmpeq_ps (
+          _mm_loadl_pi(_mm_setzero_ps (), (__m64*)this),
+          _mm_loadl_pi(_mm_setzero_ps (), (__m64*)&adir)
+        )) != 0x1111;
     }
 
     /* Operators by overloading. */
     template<typename Self, DirFin R>
     inline auto operator+ (this Self&& self, R&& dir) {
-      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x += dir.x;
-        self.y += dir.y;
-        if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>)
-          self.a += dir.a;
-        return std::forward<Self>(self);
-      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.x += self.x;
-        dir.y += self.y;
-        if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>)
-          dir.a += self.a;
-        return std::forward<R>(dir);
+      if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>) {
+        if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+          _mm_store_ps (&self.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+          return std::forward<Self>(self);
+        } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+          _mm_store_ps (&dir.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+          return std::forward<R>(dir);
+        } else {
+          AngDir2 ret;
+          _mm_store_ps (&ret.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+          return ret;
+        }
       } else {
-        if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>)
-          return AngDir2 {
-            self.x + dir.x,
-            self.y + dir.y,
-            self.a + dir.a
-          };
-        else return AngDir2 {
-          self.x + dir.x,
-          self.y + dir.y,
-          self.a
-        };
+        if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+          _mm_storel_pi ((__m64*)&self.x, _mm_add_ps (
+            _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x), 
+            _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+          ));
+          return std::forward<Self>(self);
+        } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+          _mm_storel_pi ((__m64*)&dir.x, _mm_add_ps (
+            _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x), 
+            _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+          ));
+          return std::forward<R>(dir);
+        } else {
+          Dir2 ret;
+          _mm_storel_pi ((__m64*)&ret.x, _mm_add_ps (
+            _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x), 
+            _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+          ));
+          return ret;
+        }
       }
     }
 
     template<DirFin R> 
-    inline AngDir2& operator+= (R&& d) {
-      this->x += d.x;
-      this->y += d.y;
+    inline AngDir2& operator+= (R&& dir) {
+      if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>) {
+        _mm_store_ps (&this->x, _mm_add_ps (_mm_load_ps (&this->x), _mm_load_ps (&dir.x)));
+      } else {
+        _mm_storel_pi ((__m64*)&this->x, _mm_add_ps (
+          _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&this->x), 
+          _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+        ));
+      }
       return *this;
     }
 
     template<DirFin R>
     inline float operator* (R&& dir) const {
-      return this->x * dir.x + this->y * dir.y; 
+      __m128 res = _mm_mul_ps(
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)this), 
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      );
+      return _mm_cvtss_f32(_mm_hadd_ps (res, res));
     }
 
     template<typename Self>
     inline auto operator* (this Self&& self, const float& number) {
+      __m128 opr = _mm_mul_ps(
+        _mm_load_ps (&self.x), 
+        _mm_set_ps (0.f, 1.f, number, number)
+      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x *= number;
-        self.y *= number;
+        _mm_store_ps (&self.x, opr);
         return std::forward<Self>(self);
-      } else return AngDir2 {
-        self.x * number,
-        self.y * number,
-        self.a
-      };
+      } else {
+        AngDir2 ret;
+        _mm_store_ps (&ret.x, opr);
+        return ret;
+      }
     }
 
     inline AngDir2& operator*= (const float& number) {
-      this->x *= number;
-      this->y *= number;
+      _mm_store_ps (&this->x, _mm_mul_ps(
+        _mm_load_ps (&this->x), 
+        _mm_set_ps (0.f, 1.f, number, number)
+      ));
       return *this;
     }
 
     template<typename Self>
     inline auto operator- (this Self&& self) {
+      __m128 opr = _mm_xor_ps(
+        _mm_load_ps((float*)&self.x), 
+        _mm_castsi128_ps(_mm_set1_epi32(0x80000000))
+      );
       if (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x = -self.x;
-        self.y = -self.y;
+        _mm_store_ps((float*)&self.x, opr);
         return std::forward<Self>(self);
-      } else return AngDir2 {-self.x, -self.y, -self.a};
+      } else {
+        AngDir2 ret;
+        _mm_store_ps((float*)&ret.x, opr);
+        return ret;
+      }
     }
 
     template<typename Self, DirFin R>
     inline auto operator- (this Self&& self, R&& dir) {
-      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x -= dir.x;
-        self.y -= dir.y;
-        if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>)
-          self.a -= dir.a;
-        return std::forward<Self>(self);
-      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.x -= self.x;
-        dir.y -= self.y;
-        if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>)
-          self.a -= dir.a;
-        return std::forward<R>(dir);
+      if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>) {
+        __m128 opr = _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x));
+        if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+          _mm_store_ps (&self.x, opr);
+          return std::forward<Self>(self);
+        } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+          _mm_store_ps (&dir.x, opr);
+          return std::forward<R>(dir);
+        } else {
+          AngDir2 ret;
+          _mm_store_ps (&ret.x, opr);
+          return ret;
+        }
       } else {
-        if constexpr (std::is_same_v<std::remove_cvref_t<R>, AngDir2>)
-          return AngDir2 {
-            self.x - dir.x,
-            self.y - dir.y,
-            self.a - dir.a
-          };
-        else return AngDir2 {
-          self.x - dir.x,
-          self.y - dir.y,
-          self.a
-        };
+        __m128 opr = _mm_sub_ps (
+          _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x), 
+          _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+        );
+        if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+          _mm_storel_pi ((__m64*)&self.x, opr);
+          return std::forward<Self>(self);
+        } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+          _mm_storel_pi ((__m64*)&dir.x, opr);
+          return std::forward<R>(dir);
+        } else {
+          Dir2 ret;
+          _mm_storel_pi ((__m64*)&ret.x, opr);
+          return ret;
+        }
       }
     }
 
     template<DirFin R>
     inline AngDir2& operator-= (R&& dir) {
-      this->x -= dir.x;
-      this->y -= dir.y;
+      _mm_store_ps (&this->x, _mm_sub_ps (_mm_load_ps (&this->x), _mm_load_ps (&dir.x)));
       return *this;
     }
 
@@ -353,10 +503,19 @@ class AngDir2 {
     template<typename Self>
     inline auto percan (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
-        std::swap(self.x, self.y);
-        self.y = -self.y;
+        _mm_storel_epi64((__m128i_u*)&self, _mm_xor_si128(
+          _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
+          _mm_set_epi64x(0, 0x80000000)
+        ));
         return std::forward<Self>(self);
-      } else return AngDir2 (-self.y, self.x, 0);
+      } else {
+        Dir2 ret;
+        _mm_storel_epi64((__m128i_u*)&ret,_mm_xor_si128(
+          _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
+          _mm_set_epi64x(0, 0x80000000)
+        ));
+        return ret;
+      }
     }
 
     inline void rotate (const float& angle) {
@@ -369,71 +528,139 @@ class AngDir2 {
 
     template<typename Self>
     inline auto normalize (this Self&& self) {
-      float inorm = fisqrt(self.x * self.x + self.y * self.y);
+      __m128 charged = _mm_load_ps (&self.x);
+      __m128 opr = _mm_mul_ps (charged, charged);
+      float b = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)));
+      opr = _mm_mul_ps(_mm_set_ps (0.f, 1.f, b, b), charged);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x *= inorm;
-        self.y *= inorm;
+        _mm_store_ps(&self.x, opr);
         return std::forward<AngDir2>(self);
-      } else return AngDir2 (
-        self.x * inorm,
-        self.y * inorm,
-        self.a
-      );
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
     }
 
     template<typename Self>
     inline auto abs (this Self&& self) {
-      if constexpr (std::is_rvalue_reference_v<Self&&> && ! std::is_const_v<Self&&>) {
-        absv(&self.x);
-        absv(&self.y);
+      __m128i opr = _mm_and_si128(
+        _mm_load_si128 ((__m128i*)&self), 
+        _mm_set1_epi32(0x7FFFFFFF)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_si128 ((__m128i*)&self, opr);
         return std::forward<Self&&>(self);
-      } else return AngDir2 {
-        absv (self.x),
-        absv (self.y),
-        self.a
-      };
+      } else {
+        AngDir2 ret;
+        _mm_store_si128 ((__m128i*)&ret, opr);
+        return ret;
+      }
     }
 
     template<DirFin R>
     inline float pL (R&& dir) const {
-      return this->y * dir.x - this->x * dir.y; 
-    }
-
-    inline float angle () const {
-      return (this->x + this->y) * fisqrt(this->x * this->x + this->y * this->y);
+      __m128 opr = _mm_mul_ps (
+        _mm_castsi128_ps (_mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)this), 0b00000001)),
+        _mm_loadl_pi(_mm_undefined_ps(), (__m64*)&dir)
+      );
+      return _mm_cvtss_f32 (_mm_hsub_ps(opr, opr));
     }
 
     inline float modulo () const {
-      return std::sqrt(this->x * this->x + this->y * this->y);
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)this);
+      __m128 opr = _mm_mul_ps(charged, charged);
+      return _mm_cvtss_f32(_mm_sqrt_ss(_mm_hadd_ps(opr, opr)));
     }
 
     inline float modulo2 () const {
-      return this->x * this->x + this->y * this->y;
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)this);
+      __m128 opr = _mm_mul_ps(charged, charged);
+      return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
+    }
+
+    inline float angle () const {
+      __m128 charged = _mm_loadl_pi (_mm_undefined_ps(), (__m64*)this);
+      __m128 opr = _mm_mul_ps(charged, charged);
+      return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr))) * _mm_cvtss_f32(_mm_hadd_ps(charged, charged));
+    }
+
+    template<typename Self>
+    inline auto max0 (this Self&& self) {
+      __m128 opr = _mm_max_ps (_mm_load_ps (&self.x), _mm_set1_ps(0.f));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto bound (this Self&& self, R&& dir) {
+      __m128 other = _mm_load_ps (&dir.x);
+      __m128 opr = _mm_min_ps (_mm_load_ps (&self.x), other);
+      opr = _mm_max_ps (opr, _mm_or_ps(other, _mm_set1_ps(-0.0f)));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self>
+    inline auto bound01 (this Self&& self) {
+      __m128 opr = _mm_max_ps (_mm_min_ps (_mm_load_ps (&self.x), _mm_set1_ps(1.f)), _mm_set1_ps(0.f));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto dir_mul (this Self&& self, R&& dir) {
+      __m128 opr = _mm_mul_ps (_mm_load_ps (&self.x), _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
     }
 };
 
-class Dir3 {
+
+
+class alignas(16) Dir3 {
   public:
     float x;
     float y;
     float z;
+    float pad;
 
-    inline Dir3 () noexcept: x(0.f), y(0.f), z(0.f) {}
-    inline Dir3 (float x, float y, float z) noexcept: x(x), y(y), z(z) {}
-    inline Dir3 (const Dir3 & dir) noexcept: x(dir.x), y(dir.y), z(dir.z) {}
-    inline Dir3 (Dir3 && dir) noexcept: x(dir.x), y(dir.y), z(dir.z) {}
+    inline Dir3 () noexcept: x(0.f), y(0.f), z(0.f), pad(0.f) {}
+    inline Dir3 (float x, float y, float z) noexcept: x(x), y(y), z(z), pad(0.f) {}
+    inline Dir3 (const Dir3 & dir) noexcept: x(dir.x), y(dir.y), z(dir.z), pad(0.f) {}
+    inline Dir3 (Dir3 && dir) noexcept: x(dir.x), y(dir.y), z(dir.z), pad(0.f) {}
 
     inline Dir3& operator= (const Dir3 & dir) noexcept {
-      this->x = dir.x;
-      this->y = dir.y;
-      this->z = dir.z;
+      _mm_store_ps ((float*)this, _mm_load_ps (&dir.x));
       return *this;
     }
 
     inline Dir3& operator= (Dir3 && dir) noexcept {
-      this->x = dir.x;
-      this->y = dir.y;
-      this->z = dir.z;
+      _mm_store_ps ((float*)this, _mm_load_ps (&dir.x));
       return *this;
     }
 
@@ -443,101 +670,95 @@ class Dir3 {
 
     /* Comparations. */
     inline bool operator== (const Dir3& dir) const {
-      return this->x == dir.x && this->y == dir.y && this->z == dir.z;
+      return _mm_movemask_ps(_mm_cmpeq_ps (
+        _mm_load_ps(&this->x),
+        _mm_load_ps(&dir.x)
+      )) == 0x1111;
     }
 
     inline bool operator!= (const Dir3& dir) const {
-      return this->x != dir.x || this->y != dir.y || this->z != dir.z;
+      return _mm_movemask_ps(_mm_cmpeq_ps (
+        _mm_load_ps(&this->x),
+        _mm_load_ps(&dir.x)
+      )) != 0x1111;
     }
 
     /* Operators by overloading. */
     template<typename Self, DirFin3 R>
     inline auto operator+ (this Self&& self, R&& dir) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x += dir.x;
-        self.y += dir.y;
-        self.z += dir.z;
+        _mm_store_ps (&self.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.x += self.x;
-        dir.y += self.y;
-        dir.z += self.z;
+        _mm_store_ps (&dir.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
         return std::forward<R>(dir);
-      } else return Dir3 {
-        self.x + dir.x,
-        self.y + dir.y,
-        self.z + dir.z
-      };
+      } else {
+        AngDir2 ret;
+        _mm_store_ps (&ret.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+        return ret;
+      }
     }
 
     template<DirFin3 R> 
-    inline Dir3& operator+= (R&& d) {
-      this->x += d.x;
-      this->y += d.y;
-      this->z += d.z;
+    inline Dir3& operator+= (R&& dir) {
+      _mm_store_ps (&this->x, _mm_add_ps (_mm_load_ps (&this->x), _mm_load_ps (&dir.x)));
       return *this;
     }
 
     template<DirFin3 R>
     inline float operator* (R&& dir) const {
-      return this->x * dir.x + this->y * dir.y + this->z * dir.z; 
+      __m128 opr = _mm_mul_ps(_mm_load_ps(&this->x), _mm_load_ps(&dir.x));
+      opr = _mm_hadd_ps(opr, opr);
+      return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
     }
 
     template<typename Self>
     inline auto operator* (this Self&& self, const float& number) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x *= number;
-        self.y *= number;
-        self.z *= number;
+        _mm_store_ps (&self.x, _mm_mul_ps (_mm_load_ps (&self.x), _mm_set1_ps(number)));
         return std::forward<Self>(self);
-      } else return Dir3 {
-        self.x * number,
-        self.y * number,
-        self.z * number
-      };
+      } else {
+        Dir3 ret;
+        _mm_store_ps (&ret.x, _mm_mul_ps (_mm_load_ps (&self.x), _mm_set1_ps(number)));
+        return ret;
+      }
     }
 
     inline Dir3& operator*= (const float& number) {
-      this->x *= number;
-      this->y *= number;
-      this->z *= number;
+      _mm_store_ps (&this->x, _mm_mul_ps (_mm_load_ps (&this->x), _mm_set1_ps(number)));
       return *this;
     }
 
     template<typename Self>
     inline auto operator- (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x = -self.x;
-        self.y = -self.y;
-        self.z = -self.z;
+        _mm_store_ps (&self.x, _mm_xor_ps (_mm_load_si128 (&self.x), _mm_set1_epi32(0x80000000)));
         return std::forward<Self>(self);
-      } else return Dir3 {-self.x, -self.y, -self.z};
+      } else {
+        Dir3 ret;
+        _mm_store_ps (&ret.x, _mm_xor_ps (_mm_load_si128 (&self.x), _mm_set1_epi32(0x80000000)));
+        return ret;
+      }
     }
 
     template<typename Self, DirFin3 R>
     inline auto operator- (this Self&& self, R&& dir) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x -= dir.x;
-        self.y -= dir.y;
-        self.z -= dir.z;
+        _mm_store_ps (&self.x, _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.x -= self.x;
-        dir.y -= self.y;
-        dir.z -= self.z;
+        _mm_store_ps (&dir.x, _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
         return std::forward<R>(dir);
-      } else return Dir3 {
-        self.x - dir.x,
-        self.y - dir.y,
-        self.z - dir.z
-      };
+      } else {
+        AngDir2 ret;
+        _mm_store_ps (&ret.x, _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+        return ret;
+      }
     }
 
     template<DirFin3 R>
     inline Dir3& operator-= (R&& dir) {
-      this->x -= dir.x;
-      this->y -= dir.y;
-      this->z -= dir.z;
+      _mm_store_ps (&this->x, _mm_sub_ps (_mm_load_ps (&this->x), _mm_load_ps (&dir.x)));
       return *this;
     }
 
@@ -546,15 +767,13 @@ class Dir3 {
     template<typename Self>
     inline auto abs (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && ! std::is_const_v<Self&&>) {
-        absv(&self.x);
-        absv(&self.y);
-        absv(&self.z);
+        _mm_store_si128((__m128i_u*)&self, _mm_and_si128(_mm_load_si128(&self), _mm_set1_epi32(0x7FFFFFFF)));
         return std::forward<Self>(self);
-      } else return Dir3 (
-        absv (self.x),
-        absv (self.y),
-        absv (self.z)
-      );
+      } else {
+        Dir3 ret;
+        _mm_store_si128((__m128i_u*)&ret, _mm_and_si128(_mm_load_si128(&self), _mm_set1_epi32(0x7FFFFFFF)));
+        return ret;
+      }
     }
 
     template<typename Self, DirFin3 R>
@@ -579,26 +798,34 @@ class Dir3 {
     }
 
     inline float modulo () const {
-      return std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+      __m128 opr = _mm_load_ps(&this->x);
+      opr = _mm_mul_ps(opr, opr);
+      opr = _mm_hadd_ps(opr, opr);
+      return _mm_cvtss_f32(_mm_sqrt_ss(_mm_hadd_ps(opr, opr)));
     }
 
     inline float modulo2 () const {
-      return this->x * this->x + this->y * this->y + this->z * this->z;
+      __m128 opr = _mm_load_ps(&this->x);
+      opr = _mm_mul_ps(opr, opr);
+      opr = _mm_hadd_ps(opr, opr);
+      return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
     }
 
     template<typename Self>
     inline auto normalize (this Self&& self) {
-      float inorm = fisqrt(self.x * self.x + self.y * self.y + self.z * self.z);
+      __m128 charged = _mm_load_ps (&self.x);
+      __m128 opr = _mm_mul_ps (charged, charged);
+      opr = _mm_hadd_ps(opr, opr);
+      float b = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)));
+      opr = _mm_mul_ps(_mm_set1_ps (b), charged);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.x *= inorm;
-        self.y *= inorm;
-        self.z *= inorm;
+        _mm_store_ps (&self.x, opr);
         return std::forward<Self> (self);
-      } else return Dir3 {
-        self.x * inorm,
-        self.y * inorm,
-        self.z * inorm
-      };
+      } else {
+        Dir3 ret;
+        _mm_store_ps (&ret.x, opr);
+        return ret;
+      }
     }
 
     inline void rotate_x (const float& angle) {
@@ -639,21 +866,27 @@ Dir2::Dir2 (const AngDir2& dir) noexcept {
 AngDir2::AngDir2 (const Dir2& dir) noexcept {
   this->x = dir.x;
   this->y = dir.y;
+  this->a = 0.f;
+  this->pad = 0.f;
 }
 
 AngDir2::AngDir2 (const Dir3& dir) noexcept {
   this->x = dir.x;
   this->y = dir.y;
+  this->a = 0.f;
+  this->pad = 0.f;
 }
 
 Dir3::Dir3 (const Dir2& dir) noexcept {
   this->x = dir.x;
   this->y = dir.y;
-  this->z = 0;
+  this->z = 0.f;
+  this->pad = 0.f;
 }
 
 Dir3::Dir3 (const AngDir2& dir) noexcept {
   this->x = dir.x;
   this->y = dir.y;
-  this->z = 0;
+  this->z = 0.f;
+  this->pad = 0.f;
 }

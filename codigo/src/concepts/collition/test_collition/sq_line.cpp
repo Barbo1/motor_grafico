@@ -1,9 +1,7 @@
 #include "../../../../headers/pr_objects/line.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/primitives/operations.hpp"
 
 bool test_collition (Square& sq, Line& line) {
-  float coef_n = line.slope * sq.position.x + line.deviation - sq.position.y;
-  absv (&coef_n);
-  return sq._colidalble && coef_n < absv(line.slope) * sq.width + sq.height;
+  Dir2 aux = Dir2 {line.slope * sq.position.x + line.deviation - sq.position.y, line.slope}.abs();
+  return sq._colidalble && aux.x < aux.y * sq.width + sq.height;
 }

@@ -37,8 +37,8 @@ class ParticleSource {
 
     /* Array of particles. */
     struct particle_data {
-      uint32_t ticks;
       AngDir2 force;
+      uint32_t ticks;
     };
     std::array<std::pair<Particle, particle_data>, N> particles;
 
@@ -189,7 +189,7 @@ ParticleSource<P, N, F, T>::ParticleSource(
 { 
   for (uint32_t i = 0; i < N; i++) {
     this->particles[i] = std::pair<Particle, particle_data> (
-      Particle (glb, radio, init_position, PARTICLE_MASS), particle_data {this->ticks_to_live + 1, AngDir2()}
+      Particle (glb, radio, init_position, PARTICLE_MASS), particle_data {AngDir2(), this->ticks_to_live + 1}
     );
   }
 }

@@ -1,11 +1,8 @@
 #include "../../../../../../headers/sp_objects/impulse.hpp"
-#include "../../../../../../headers/primitives/operations.hpp"
 
 template <Function F>
 AngDir2 Impulse<IT_FAN, UT_VELOCITY, F>::apply(Particle& cir) {
-  Dir2 diffa = (cir.get_position() - this->position).abs() - this->dimension;
-  diffa.x = max0 (diffa.x);
-  diffa.y = max0 (diffa.y);
+  AngDir2 diffa = ((cir.get_position() - this->position).abs() - this->dimension).max0();
   if (diffa.modulo2() < cir.get_radio() * cir.get_radio()) {
     AngDir2 n = cir.get_velocity();
     float coef = n.modulo() * this->generated_force_coef;

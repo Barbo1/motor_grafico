@@ -34,11 +34,13 @@
              |V| -> el cambio de tamaño, 
        |V| + especializacion que comprenda grupos de particulas que aparezcan de repente al mismo tiempo. 
               Esto dejaria ParticlesSource<BURST> y ParticlesSource<SMOOTH>
- | | - re-implementar operations y vectors para mayor eficiencia en las operaciones globales:
+ |T| - re-implementar operations y vectors para mayor eficiencia en las operaciones globales:
         |V| + También, necesito agregar todas las variantes de &, && const&, const&& de las operaciones, 
             utilizando perfect forwarding para deducir el tipo de parametro(Deducing this).
-        | | + Particularmente voy a utilizar SDL_HasAVX_n y SDL_HasSSE_n para diferenciar casos. 
-        | | + algoritmo de dibujo de un circulo.
+        |T| + Particularmente voy a utilizar SDL_HasAVX_n y SDL_HasSSE_n para diferenciar casos.
+        |V| + usar intrinsecos para aumentar al eficiencia.
+        |V| + agregar operaciones necesarias para disminuir computo de vectores, reduciendo la operations.
+ | | - algoritmo de dibujo de un circulo.
  | | - falta implementar: 
         + la funcion project de image_modifier, y la function de print polygon,
         + rounded_square dentro de los constructores de figuras,

@@ -1,18 +1,12 @@
 #include "../../../../../headers/sp_objects/impulse.hpp"
-#include "../../../../../headers/primitives/operations.hpp"
 
 template <ImpulseType IT, UnitType UT, Function F>
 AngDir2 Impulse<IT, UT, F>::apply(Square& sq) {
-  Dir2 diff = sq.get_position() - this->position;
-  Dir2 diffa = diff.abs();
-  diffa.x = max0 (diffa.x - sq.get_width());
-  diffa.y = max0 (diffa.y - sq.get_height());
+  AngDir2 diff = sq.get_position() - this->position;
+  AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0.f};
+  AngDir2 diffa = (diff.abs() - size).max0();
   if (diffa.modulo2() < this->radio * this->radio) {
-    AngDir2 n = AngDir2 {
-      diff.x - bound (diff.x, sq.get_width()),
-      diff.y - bound (diff.y, sq.get_height()),
-      0
-    };
+    AngDir2 n = diff - diff.bound(size);
     float coef = n.modulo() * this->generated_force_coef;
 
     if constexpr (F == FT_LINEAR)

@@ -1,12 +1,12 @@
 #include "../../../../../../headers/sp_objects/impulse.hpp"
-#include "../../../../../../headers/primitives/operations.hpp"
 #include <cmath>
 
 template <Function F>
 inline AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Square& sq) {
-  Dir2 diff = sq.get_position() - this->position;
+  AngDir2 diff = sq.get_position() - this->position;
+  AngDir2 diffa = diff.abs();
   AngDir2 size = AngDir2 {sq.get_width(), sq.get_height(), 0} + this->dimension;
-  if (absv(diff.y) < size.y && absv(diff.x) < size.x) {
+  if (diffa.y < size.y && diffa.x < size.x) {
     float coef = ((diff * this->sign + size) * this->direction) * this->generated_force_coef;
 
     /* return depending on the function. */

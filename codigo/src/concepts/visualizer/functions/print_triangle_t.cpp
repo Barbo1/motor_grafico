@@ -26,15 +26,14 @@ void print_triangle_t (
   const Dir2 v12 = point1 - point2;
   const Dir2 v23 = point2 - point3;
   const Dir2 v31 = point3 - point1;
-  const Dir2 v23L = -v23.percan();
-  const Dir2 v31L = -v31.percan();
+  const Dir2 v23L = v23.percan();
+  const Dir2 v31L = v31.percan();
   const float denom_control = v23.pL(-v31);
   if (denom_control == 0)
     return;
   const float denom = 1 / denom_control;
-  
-  const float tex_w = static_cast<float>(texture->w - 1);
-  const float tex_h = static_cast<float>(texture->h - 1);
+ 
+  const Dir2 dimsf = Dir2 {static_cast<float>(texture->w - 1), static_cast<float>(texture->h - 1)};
   const Dir2 diff_coefs_x = (uv1 * v23.y + uv2 * v31.y) * denom;
   const Dir2 diff_coefs_y = (uv1 * v23.x + uv2 * v31.x) * denom;
 
@@ -59,15 +58,13 @@ void print_triangle_t (
     s = floor (point1.x);
     float n_f = floor (point1.y);
     res = Dir2 {s, n_f} - point3;
-    coefs = uv3;
-    coefs += (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
+    coefs = uv3 - (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
 
     for (n = n_f; n < floor (point2.y); n++) {
       f = ceil (end);
       for (i = s; i < f; i++) {
-        offset = 
-          static_cast<int>(bound0 (coefs.x, 1.f) * tex_w) + 
-          static_cast<int>(bound0 (coefs.y, 1.f) * tex_h) * texture->w;
+        res = coefs.bound01().dir_mul(dimsf);
+        offset = static_cast<int>(res.x) + static_cast<int>(res.y) * texture->w;
 
         SDL_GetRGBA (
           *((Uint32*)texture->pixels + offset), texture->format, 
@@ -82,8 +79,7 @@ void print_triangle_t (
       end += me;
 
       s = floor (start);
-      coefs -= diff_coefs_y;
-      coefs -= diff_coefs_x * (f - s);
+      coefs -= diff_coefs_y + diff_coefs_x * (f - s);
     }
   }
   
@@ -96,15 +92,13 @@ void print_triangle_t (
     s = floor (start);
     float n_f = floor (point2.y);
     res = Dir2 {s, n_f} - point3;
-    coefs = uv3;
-    coefs += (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
+    coefs = uv3 - (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
 
     for (n = n_f; n < floor (point3.y); n++) {
       f = ceil (end);
       for (i = s; i < f; i++) {
-        offset = 
-          static_cast<int>(bound0 (coefs.x, 1.f) * tex_w) + 
-          static_cast<int>(bound0 (coefs.y, 1.f) * tex_h) * texture->w;
+        res = coefs.bound01().dir_mul(dimsf);
+        offset = static_cast<int>(res.x) + static_cast<int>(res.y) * texture->w;
 
         SDL_GetRGBA (
           *((Uint32*)texture->pixels + offset), texture->format, 
@@ -119,8 +113,7 @@ void print_triangle_t (
       end += me;
 
       s = floor (start);
-      coefs -= diff_coefs_y;
-      coefs -= diff_coefs_x * (f - s);
+      coefs -= diff_coefs_y + diff_coefs_x * (f - s);
     }
   }
 }
