@@ -1,7 +1,9 @@
 #include "../../../../headers/concepts/visualizer.hpp"
-#include "../../../../headers/primitives/operations.hpp"
 #include "../../../../headers/primitives/vectors.hpp"
+
 #include <SDL2/SDL_render.h>
+#include <cmath>
+#include <cstdint>
 
 void print_triangle_t (
   Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, 
@@ -37,8 +39,6 @@ void print_triangle_t (
   const Dir2 diff_coefs_x = (uv1 * v23.y + uv2 * v31.y) * denom;
   const Dir2 diff_coefs_y = (uv1 * v23.x + uv2 * v31.x) * denom;
 
-  int n, i, offset;
-  float start, end, ms, me, f, s;
   SDL_Color color;
   Dir2 coefs, res;
         
@@ -50,21 +50,22 @@ void print_triangle_t (
 
   if (v12.y != 0) {
     const float m1 = v12.x / v12.y;
-    ms = min (m3, m1);
-    me = max (m3, m1);
-    end = start = point1.x;
+    const float ms = std::fmin (m3, m1);
+    const float me = std::fmax (m3, m1);
+    float start = point1.x;
+    float end = start;
 
     /* first iteration of uv mapping coordenates. */
-    s = floor (point1.x);
+    float s = floor (point1.x);
     float n_f = floor (point1.y);
     res = Dir2 {s, n_f} - point3;
-    coefs = uv3 - (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
+    coefs = (uv1.madd((res * v23L), uv2 * (res * v31L))).nmadd(denom, uv3);
 
-    for (n = n_f; n < floor (point2.y); n++) {
-      f = ceil (end);
-      for (i = s; i < f; i++) {
+    for (uint32_t n = n_f; n < floor (point2.y); n++) {
+      float f = ceil (end);
+      for (uint32_t i = s; i < f; i++) {
         res = coefs.bound01().dir_mul(dimsf);
-        offset = static_cast<int>(res.x) + static_cast<int>(res.y) * texture->w;
+        uint32_t offset = static_cast<int>(res.x) + static_cast<int>(res.y) * texture->w;
 
         SDL_GetRGBA (
           *((Uint32*)texture->pixels + offset), texture->format, 
@@ -79,26 +80,27 @@ void print_triangle_t (
       end += me;
 
       s = floor (start);
-      coefs -= diff_coefs_y + diff_coefs_x * (f - s);
+      coefs -= diff_coefs_x.madd((f - s), diff_coefs_y);
     }
   }
   
   if (v23.y != 0) {
     const float m2 = v23.x / v23.y;
-    ms = max (m3, m2);
-    me = min (m3, m2);
-    max_min (m2, m3, top, bot, &start, &end);
+    const float ms = std::fmax (m3, m2);
+    const float me = std::fmin (m3, m2);
+    float start = (m2 > m3 ? top : bot);
+    float end = (m2 < m3 ? top : bot);
 
-    s = floor (start);
+    float s = floor (start);
     float n_f = floor (point2.y);
     res = Dir2 {s, n_f} - point3;
-    coefs = uv3 - (uv1 * (res * v23L) + uv2 * (res * v31L)) * denom;
+    coefs = (uv1.madd((res * v23L), uv2 * (res * v31L))).nmadd(denom, uv3);
 
-    for (n = n_f; n < floor (point3.y); n++) {
-      f = ceil (end);
-      for (i = s; i < f; i++) {
+    for (uint32_t n = n_f; n < floor (point3.y); n++) {
+      float f = ceil (end);
+      for (uint32_t i = s; i < f; i++) {
         res = coefs.bound01().dir_mul(dimsf);
-        offset = static_cast<int>(res.x) + static_cast<int>(res.y) * texture->w;
+        uint32_t offset = static_cast<int>(res.x) + static_cast<int>(res.y) * texture->w;
 
         SDL_GetRGBA (
           *((Uint32*)texture->pixels + offset), texture->format, 
@@ -113,7 +115,7 @@ void print_triangle_t (
       end += me;
 
       s = floor (start);
-      coefs -= diff_coefs_y + diff_coefs_x * (f - s);
+      coefs -= diff_coefs_x.madd(f - s, diff_coefs_y);
     }
   }
 }

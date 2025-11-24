@@ -6,8 +6,7 @@ void correct_collition (Square& sq, Circle& cir) {
   AngDir2 b = diff.bound(AngDir2 {sq.width, sq.height, 0.f}) - diff;
   AngDir2 n = b.normalize();
 
-  sq.position += b;
-  sq.position -= n * cir.radio;
+  sq.position += n.nmadd(cir.radio, b);
 
   sq._acc_f_k = sq._f_k * cir._f_k;
   cir._acc_f_k = sq._acc_f_k;

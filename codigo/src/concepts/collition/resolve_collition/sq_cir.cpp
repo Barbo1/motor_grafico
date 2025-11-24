@@ -11,8 +11,7 @@ void resolve_collition (Square& sq, Circle& cir) {
   sq._velocity -= n * (p * mass_2 * sq._movible);
   cir._velocity += n * (p * mass_1 * cir._movible);
 
-  sq.position += b;
-  sq.position -= n * cir.radio;
+  sq.position += n.nmadd(cir.radio, b);
 
   sq._acc_f_k = sq._f_k * cir._f_k;
   cir._acc_f_k = sq._acc_f_k;

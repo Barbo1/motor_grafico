@@ -1,12 +1,14 @@
 #include "../../../../headers/pr_objects/line.hpp"
 #include "../../../../headers/pr_objects/particle.hpp"
 
+#include <cmath>
+
 void resolve_collition (Particle& par, Line& line) {
   AngDir2 u = AngDir2 {line.get_slope(), -1.f, par.get_position().a};
-  u *= (par.get_position().y - (line.get_slope() * par.get_position().x + line.get_deviation())) / 
-    (line.get_slope() * line.get_slope() + 1.f);
+  u *= (par.get_position().y - std::fmaf(line.get_slope(), par.get_position().x, line.get_deviation())) / 
+    std::fmaf(line.get_slope(), line.get_slope(), 1.f);
   AngDir2 n = u.normalize();
 
-  par.set_velocity(par.get_velocity() - n * (2.f * (n * par.get_velocity())));
-  par.set_position(par.get_position() + u - n * par.get_radio());
+  par.add_velocity(n * (-2.f * (n * par.get_velocity())));
+  par.add_position(n.nmadd(par.get_radio(), u));
 }

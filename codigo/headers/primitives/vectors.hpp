@@ -1,12 +1,11 @@
 #pragma once 
 
 #include <SDL2/SDL_cpuinfo.h>
-#include <emmintrin.h>
-#include <xmmintrin.h>
-#include <pmmintrin.h>
+#include <immintrin.h>
 #include <type_traits>
 #include <utility>
 #include <cmath>
+#include <xmmintrin.h>
 
 /* This classes are used to represent vectors in the two and three dimentional space. 
  * */
@@ -303,6 +302,74 @@ class alignas(8) Dir2 {
         return ret;
       }
     }
+
+    template<typename Self, DirFin R>
+    inline auto madd (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fmadd_ps (
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x),
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto msub (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fmsub_ps (
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x),
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto nmadd (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fnmadd_ps (
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x),
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto nmsub (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fnmsub_ps (
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&self.x),
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi((__m64*)&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi((__m64*)&ret.x, opr);
+        return ret;
+      }
+    }
 };
 
 
@@ -315,10 +382,21 @@ class alignas(16) AngDir2 {
     float pad;
     
     /* Basic operations. */
-    inline AngDir2 () noexcept: x(0.f), y(0.f), a(0.f), pad(0.f) {}
-    inline AngDir2 (float x, float y, float a) noexcept : x(x), y(y), a(a), pad(0.f) {}
-    inline AngDir2 (const AngDir2 & adir) noexcept: x(adir.x), y(adir.y), a(adir.a), pad(0.f) {}
-    inline AngDir2 (AngDir2 && adir) noexcept: x(adir.x), y(adir.y), a(adir.a), pad(0.f) {}
+    inline AngDir2 () noexcept  {
+      _mm_store_ps(&this->x, _mm_set_ps(0.f, 0.f, 0.f, 0.f));
+    }
+
+    inline AngDir2 (float coef) noexcept {
+      _mm_store_ps(&this->x, _mm_set_ps(0.f, coef, coef, coef));
+    }
+
+    inline AngDir2 (float x, float y, float a) noexcept {
+      _mm_store_ps(&this->x, _mm_set_ps(0.f, a, y, x));
+    }
+
+    inline AngDir2 (const AngDir2 & adir) noexcept {
+      _mm_store_ps(&this->x, _mm_set_ps(0.f, adir.a, adir.y, adir.x));
+    }
 
     inline AngDir2 & operator= (const AngDir2 & adir) noexcept {
       _mm_store_ps ((float*)this, _mm_load_ps (&adir.x));
@@ -629,6 +707,74 @@ class alignas(16) AngDir2 {
     template<typename Self, DirFin R>
     inline auto dir_mul (this Self&& self, R&& dir) {
       __m128 opr = _mm_mul_ps (_mm_load_ps (&self.x), _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto madd (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fmadd_ps (
+        _mm_load_ps (&self.x), 
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto msub (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fmsub_ps (
+        _mm_load_ps (&self.x), 
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto nmadd (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fnmadd_ps (
+        _mm_load_ps (&self.x), 
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps(&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps(&ret.x, opr);
+        return ret;
+      }
+    }
+
+    template<typename Self, DirFin R>
+    inline auto nmsub (this Self&& self, const float& coef, R&& dir) {
+      __m128 opr = _mm_fnmsub_ps (
+        _mm_load_ps (&self.x), 
+        _mm_set1_ps (coef),
+        _mm_loadl_pi (_mm_setzero_ps(), (__m64*)&dir.x)
+      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         _mm_store_ps(&self.x, opr);
         return std::forward<Self>(self);

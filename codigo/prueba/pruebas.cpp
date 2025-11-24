@@ -41,8 +41,8 @@ int main () {
   }
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
-  ImageModifier img_mod_1 = ImageModifier::circle(20, color);
-  Circle c1 = Circle(glb, 20, AngDir2 {50, 60, 0}, 2.1, 0.3, true, true);
+  ImageModifier img_mod_1 = ImageModifier::square(40, 40, color);
+  Square c1 = Square(glb, 20, 20, AngDir2 {50, 60, 0}, 2.1, 0.3, true, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
   c1.set_velocity(AngDir2 {0, 34, 0});
 
@@ -96,7 +96,7 @@ int main () {
     impulse_pos, 
     height_impulse, 
     width_impulse,
-    0.1f, 
+    0.01f, 
     FanImpDir::FID_RIGHT
   );
   Visualizer<D2FIG> behind = ImageModifier::square(

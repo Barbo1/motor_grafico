@@ -1,5 +1,4 @@
 #include "../../../../headers/concepts/visualizer.hpp"
-#include "../../../../headers/primitives/operations.hpp"
 #include <cmath>
 #include <array>
 #include <algorithm>
@@ -11,8 +10,8 @@ void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
   /* Searching maximum and minimum coordenates. */
   float min_h = points[0].y, max_h = points[0].y;
   for (auto& point: points) {
-    max_h = max (max_h, point.y);
-    min_h = min (min_h, point.y);
+    max_h = std::fmax (max_h, point.y);
+    min_h = std::fmin (min_h, point.y);
   }
 
   /* Calculating coefitients. */

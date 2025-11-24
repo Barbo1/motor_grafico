@@ -1,5 +1,6 @@
 #include "../../../../headers/concepts/visualizer.hpp"
-#include "../../../../headers/primitives/operations.hpp"
+
+#include <cmath>
 
 void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
   if (point2.y < point1.y) std::swap (point2, point1);
@@ -11,18 +12,17 @@ void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_C
   const float m3 = (point1.x - point3.x) / (point1.y - point3.y);
   const float top = point2.x;
   const float bot = point3.x + d23 * m3;
-    
-  float start, end, ms, me;
 
   SDL_SetRenderDrawBlendMode (glb->get_render(), SDL_BLENDMODE_ADD);
   SDL_SetRenderDrawColor (glb->get_render(), color.r, color.g, color.b, color.a);
 
   if (d12 != 0) {
     const float m1 = (point1.x - point2.x) / d12;
-  
-    ms = min (m3, m1);
-    me = max (m3, m1);
-    end = start = point1.x;
+    const float ms = std::fmin (m3, m1);
+    const float me = std::fmax (m3, m1);
+    
+    float start = point1.x;
+    float end = start;
     for (int n = floor (point1.y); n < floor (point2.y); n++) {
       for (int i = floor (start); i <= ceil (end); i++)
         SDL_RenderDrawPoint (glb->get_render(), i, n);
@@ -33,10 +33,11 @@ void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_C
   
   if (d23 != 0) {
     const float m2 = (point2.x - point3.x) / d23;
+    const float ms = std::fmax (m3, m2);
+    const float me = std::fmin (m3, m2);
+    float start = (m2 > m3 ? top : bot);
+    float end = (m2 < m3 ? top : bot);
 
-    ms = max (m3, m2);
-    me = min (m3, m2);
-    max_min (m2, m3, top, bot, &start, &end);
     for (int n = floor (point2.y); n < floor (point3.y); n++) {
       for (int i = floor (start); i <= ceil (end); i++)
         SDL_RenderDrawPoint (glb->get_render(), i, n);

@@ -3,6 +3,8 @@
 #include "../zlib_inflate/inflate.cpp"
 
 #include <SDL2/SDL_stdinc.h>
+#include <emmintrin.h>
+#include <immintrin.h>
 #include <cstdint>
 #include <iostream>
 
@@ -297,15 +299,29 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
               output[i] += output[j];
             break;
           case 2:
-            if (many > scanline)
-              for (uint32_t i = many, j = many - scanline - 1; i < scanline + many; i++, j++)
+            if (many > scanline) {
+              uint32_t i = many, j = many - scanline - 1;
+              for (uint32_t count = 0; count < (scanline >> 4); count++, j+=16, i+=16) {
+                __m128i op1 = _mm_loadu_si128 ((__m128i*)(&output[i]));
+                __m128i op2 = _mm_loadu_si128 ((__m128i*)(&output[j]));
+                _mm_storeu_si128((__m128i*)(&output[i]), _mm_add_epi8(op1, op2));
+              }
+              for (uint32_t count = 0; count < (scanline & 0b1111); count++, i++, j++) {
                 output[i] += output[j];
+              }
+            }
             break;
           case 3:
             if (many > scanline) {
               uint32_t i = many, j = many - scanline - 1;
               for (; i < many + bpp; i++, j++)
-                output[i] += output[j] / 2;
+                output[i] += output[j] >> 1;
+              for (int k = many; i < (scanline - bpp) >> 4; i+=16, j+=16, k+=16) {
+                __m128i op1 = _mm_loadu_si128 ((__m128i*)(&output[i]));
+                __m128i op2 = _mm_loadu_si128 ((__m128i*)(&output[j]));
+                __m128i op3 = _mm_loadu_si128 ((__m128i*)(&output[k]));
+                _mm_storeu_si128((__m128i*)(&output[i]), _mm_add_epi8(op1, _mm_avg_epu8(op2, op3)));
+              }
               for (int k = many; i < scanline + many; i++, j++, k++)
                 output[i] += (output[j] + output[k]) / 2;
             } else {
@@ -455,16 +471,30 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
                 pass[i] += pass[j];
               break;
             case 2:
-              if (many > scanline)
-                for (uint32_t i = many, j = many - scanline - 1; i < scanline + many; i++, j++)
+              if (many > scanline) {
+                uint32_t i = many, j = many - scanline - 1;
+                for (uint32_t count = 0; count < (scanline >> 4); count++, j+=16, i+=16) {
+                  __m128i op1 = _mm_loadu_si128 ((__m128i*)(&pass[i]));
+                  __m128i op2 = _mm_loadu_si128 ((__m128i*)(&pass[j]));
+                  _mm_storeu_si128((__m128i*)(&pass[i]), _mm_add_epi8(op1, op2));
+                }
+                for (uint32_t count = 0; count < (scanline & 0b1111); count++, i++, j++) {
                   pass[i] += pass[j];
+                }
+              }
               break;
             case 3:
               if (many > scanline) {
                 uint32_t i = many, j = many - scanline - 1;
                 for (; i < many + bpp; i++, j++)
-                  pass[i] += pass[j] / 2;
-                for (uint32_t k = many; i < scanline + many; i++, j++, k++)
+                  pass[i] += pass[j] >> 1;
+                for (int k = many; i < (scanline - bpp) >> 4; i+=16, j+=16, k+=16) {
+                  __m128i op1 = _mm_loadu_si128 ((__m128i*)(&pass[i]));
+                  __m128i op2 = _mm_loadu_si128 ((__m128i*)(&pass[j]));
+                  __m128i op3 = _mm_loadu_si128 ((__m128i*)(&pass[k]));
+                  _mm_storeu_si128((__m128i*)(&pass[i]), _mm_add_epi8(op1, _mm_avg_epu8(op2, op3)));
+                }
+                for (int k = many; i < scanline + many; i++, j++, k++)
                   pass[i] += (pass[j] + pass[k]) / 2;
               } else {
                 /* mismo caso que en el 1 */

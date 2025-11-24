@@ -8,8 +8,7 @@ void resolve_collition (Circle& cir1, Circle& cir2) {
   cir1._velocity -= n * (p * mass_2 * cir1._movible);
   cir2._velocity += n * (p * mass_1 * cir2._movible);
 
-  cir1.position = cir2.position;
-  cir1.position += n * (cir1.radio + cir2.radio);
+  cir1.position = n.madd(cir1.radio + cir2.radio, cir2.position);
 
   cir1._collition_normal = n;
   cir2._collition_normal = -n;
