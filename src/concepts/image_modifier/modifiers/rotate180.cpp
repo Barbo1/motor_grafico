@@ -1,0 +1,28 @@
+#include "../../../../headers/concepts/image_modifier.hpp"
+#include <cstdint>
+
+ImageModifier& ImageModifier::rotate180 () {
+  Uint32* arr = (Uint32*)this->texture->pixels;
+  uint32_t h = this->texture->h;
+  uint32_t w = this->texture->w;
+  for (uint32_t i = 0; i < h/2; i++) {
+    for (uint32_t j = i * w; j < (i + 1) * w; j++) {
+      std::swap(
+        arr[h * w - 1 - j], 
+        arr[j]
+      );
+    }
+  }
+  return *this;
+}
+
+/*
+  for (uint32_t i = 0; i < h/2; i++) {
+    for (uint32_t j = 0; j < w; j++) {
+      std::swap(
+        arr[(h - i - 1) * w + (w - 1 - j)], 
+        arr[i * w + j]
+      );
+    }
+  }
+ * */
