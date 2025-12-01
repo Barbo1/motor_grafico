@@ -1,0 +1,106 @@
+#include "../../../../../headers/concepts/lights.hpp"
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+
+ViewMask ViewMask::create_view_mask_by_point (Global glb, Dir2 position, const std::vector<MaskObject>& segments) {
+
+  /* Copy lines to an internal buffer. */
+  std::vector<ViewMask::MaskLineInfo> lines (segments.size(), MaskLineInfo {});
+  for (uint32_t i = 0; i < segments.size(); i++) {
+    MaskLineInfo& line = lines[i];
+    Dir2 point1 = segments[i].point1;
+    Dir2 point2 = segments[i].point2;
+
+    line.point1 = point1;
+    line.point2 = point2;
+
+    line.center_distance = (((point1 + point2) * 0.5f) - position).modulo();
+    line.partition_offset = -1;
+  }
+
+  /* Sorting lines by distance to the point. */
+  std::sort(
+    lines.begin(), 
+    lines.end(), 
+    [](const MaskLineInfo& elem1, const MaskLineInfo& elem2) {return elem1.center_distance < elem2.center_distance;}
+  );
+
+  /* Initialization of the buckets. */
+  std::vector<FirstLevelElement> buckets(
+    segments.size(), 
+    FirstLevelElement{
+      .data = std::vector<MaskLineInfo>(),
+      .offset = 0,
+      .second_level_offset = 0
+    }
+  );
+  for (int32_t i = 0; i < (int32_t)segments.size(); i++) {
+    FirstLevelElement& bucket = buckets[i];
+    bucket.data.reserve(BUCKET_LINES_ESTIMATED_PARTITIONS);
+    bucket.data[0] = lines[i];
+    bucket.offset = i-1;
+  }
+
+  /* Rejecting volumes. */
+  int32_t pos_1 = segments.size() - 1;
+  while (pos_1 > -1) {
+    int32_t pos_2 = buckets[pos_1].offset;
+    int32_t prev_pos_2 = pos_1;
+
+    while (pos_2 > -1) {
+      bool more_posibilities = true;
+      int32_t inner_pos_1 = buckets[pos_1].second_level_offset;
+
+      while (inner_pos_1 > -1 && more_posibilities) {
+        MaskLineInfo& line_1 = buckets[pos_1].data[inner_pos_1];
+        Dir2 dir_u1 = (line_1.point1 - position).percan(); 
+        Dir2 dir_u2 = (line_1.point2 - position).percan(); 
+      
+        int32_t inner_pos_2 = buckets[pos_2].second_level_offset;
+        int32_t prev_inner_pos_2 = -1;
+        while (inner_pos_2 > -1) {
+          MaskLineInfo& line_2 = buckets[pos_2].data[inner_pos_2];
+          Dir2 dir_v = line_2.point2 - line_2.point1; 
+          Dir2 dir_b = line_2.point1 - position; 
+          float coef_1 = (dir_u1 * dir_b) / (dir_u1 * dir_v);
+          float coef_2 = (dir_u2 * dir_b) / (dir_u2 * dir_v);
+          float coefMax = std::max (coef_1, coef_2);
+          float coefMin = std::min (coef_1, coef_2);
+
+          /* obfuscate completely. */
+          if (coefMax == 1.f && coefMin == 0.f) {
+            if (prev_inner_pos_2 == -1)
+              buckets[pos_2].second_level_offset = inner_pos_2;
+            else 
+              prev_inner_pos_2 = inner_pos_2;
+            inner_pos_2 = buckets[pos_2].data[inner_pos_2].partition_offset;
+
+          /* obfuscate one side. */
+          } else if (coefMax == 1.f || coefMin == 0.f) {
+            line_2.point1 += dir_v * coefMax;
+            line_2.point2 = dir_v * coefMin + line_2.point1;
+          
+          /* divide the line. */
+          } else {
+            uint32_t aux = buckets[pos_2].data.size();
+            buckets[pos_2].data.push_back(line_2);
+            buckets[pos_2].data[aux].partition_offset = -1;
+            buckets[pos_2].data[aux-1].partition_offset = aux;
+
+            buckets[pos_2].data[aux].point2 = line_2.point2;
+            buckets[pos_2].data[aux].point1 = dir_v * coefMax + line_2.point1;
+            line_2.point2 = dir_v * coefMin + line_2.point1;
+            inner_pos_2 = -1;
+          }
+        }
+
+        more_posibilities = buckets[pos_2].second_level_offset < 0;
+        inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
+      }
+      if (!more_posibilities)
+        buckets[prev_pos_2].offset = buckets[pos_2].offset;
+      prev_pos_2 = std::exchange(pos_2, buckets[pos_2].offset);
+    }
+  }
+}

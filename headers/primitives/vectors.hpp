@@ -152,6 +152,22 @@ class alignas(8) Dir2 {
       }
     }
 
+    template<typename Self>
+    inline auto operator/ (this Self&& self, const float& number) {
+      __m128 opr = _mm_mul_ps(
+        _mm_loadl_pi (_mm_undefined_ps(), (__m64*)&self), 
+        _mm_rcp_ps(_mm_set1_ps (number))
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_storel_pi ((__m64*)&self, opr);
+        return std::forward<Self>(self);
+      } else {
+        Dir2 ret;
+        _mm_storel_pi ((__m64*)&ret, opr);
+        return ret;
+      }
+    }
+
     inline Dir2& operator*= (const float& number) {
       _mm_storel_pi ((__m64*)this, _mm_mul_ps(
         _mm_loadl_pi(_mm_undefined_ps(), (__m64*)this), 
@@ -163,16 +179,18 @@ class alignas(8) Dir2 {
     /* Operations by functions. */
     template<typename Self>
     inline auto percan (this Self&& self) {
-      __m128i opr = _mm_xor_si128(
-        _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
-        _mm_set_epi64x(0, 0x0000000080000000)
-      );
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
-        _mm_storel_epi64((__m128i_u*)&self, opr);
+        _mm_storel_epi64((__m128i_u*)&self, _mm_xor_si128(
+          _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
+          _mm_set_epi64x(0, 0x80000000)
+        ));
         return std::forward<Self>(self);
       } else {
         Dir2 ret;
-        _mm_storel_epi64((__m128i_u*)&ret, opr);
+        _mm_storel_epi64((__m128i_u*)&ret,_mm_xor_si128(
+          _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
+          _mm_set_epi64x(0, 0x80000000)
+        ));
         return ret;
       }
     }
@@ -513,6 +531,22 @@ class alignas(16) AngDir2 {
       }
     }
 
+    template<typename Self>
+    inline auto operator/ (this Self&& self, const float& number) {
+      __m128 opr = _mm_mul_ps(
+        _mm_load_ps (&self.x), 
+        _mm_rcp_ps(_mm_set_ps (1.f, 1.f, number, number))
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        _mm_store_ps (&self.x, opr);
+        return std::forward<Self>(self);
+      } else {
+        AngDir2 ret;
+        _mm_store_ps (&ret.x, opr);
+        return ret;
+      }
+    }
+
     inline AngDir2& operator*= (const float& number) {
       _mm_store_ps (&this->x, _mm_mul_ps(
         _mm_load_ps (&this->x), 
@@ -587,7 +621,7 @@ class alignas(16) AngDir2 {
         ));
         return std::forward<Self>(self);
       } else {
-        Dir2 ret;
+        AngDir2 ret;
         _mm_storel_epi64((__m128i_u*)&ret,_mm_xor_si128(
           _mm_shuffle_epi32(_mm_loadl_epi64((__m128i_u*)&self), 0b00000001),
           _mm_set_epi64x(0, 0x80000000)

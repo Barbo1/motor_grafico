@@ -1,4 +1,5 @@
 #include "../../../../headers/primitives/global.hpp"
+#include <SDL2/SDL_pixels.h>
 #include <cstdint>
 #include <iostream>
 #include <cstring>
@@ -42,6 +43,7 @@ Global::Global (std::string_view window_name, uint32_t height, uint32_t width, S
   this->c_height = height;
   this->c_bg_color = bg_color;
   this->c_window_name = window_name;
+  this->darkness_color = SDL_Color {0, 0, 0, 0};
 
   /* Generation of random variables. */
   uint64_t seed = static_cast<uint64_t>(

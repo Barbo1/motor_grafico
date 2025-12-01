@@ -40,6 +40,18 @@
        |T| + Particularmente voy a utilizar SDL_HasAVX_n y SDL_HasSSE_n para diferenciar casos.
        |V| + usar intrinsecos para aumentar al eficiencia.
        |V| + agregar operaciones necesarias para disminuir computo de vectores, reduciendo la operations.
+ |V| - leer modelo de iluminacion 2d.
+ | | - clases para manejo de luz.
+ | | - crear algoritmos para luz:
+        |V| + view covering para un punto,
+        | | + creacion de mascara con luz en un punto y lineas de bloqueo de luz,
+        | | + creacion de mascara con de vista y lineas de bloqueo de luz,
+        | | + creacion de mascara con luz en un punto,
+        | | + creacion de mascara uniforme,
+ | | - mejora del modelo de luz:
+        | | + view covering para un circulo, linea y square,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
  | | - cambiar algoritmo de dibujo de un circulo.
  | | - falta implementar: 
         + la funcion project de image_modifier, y la function de print polygon,
@@ -62,7 +74,5 @@
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.
  | | - implementar gear.
- | | - leer modelo de iluminacion 2d.
- | | - clases para manejo de luz.
  | | - agregar utilizacion de audios.
  | | - mejorar eficiencia de figures_constructors.
