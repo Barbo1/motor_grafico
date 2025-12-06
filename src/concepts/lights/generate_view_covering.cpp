@@ -110,10 +110,10 @@ inline int meeting_condition_for_obfuscating (
   const Dir2 dir_p2_u1 = line_2.point1 - position; 
   const Dir2 dir_p2_u2 = line_2.point2 - position; 
 
-  lipstick_marks = Dir2 {
-    dir_p1_u1.pL(dir_p2_u1) / (dir_v * dir_p1_u1_L),
-    dir_p1_u1.pL(dir_p2_u1) / (dir_v * dir_p1_u2_L)
-  }.bound01();
+  lipstick_marks = (-Dir2 {
+    (dir_p2_u1 * dir_p1_u1_L) / (dir_v * dir_p1_u1_L),
+    (dir_p2_u1 * dir_p1_u2_L) / (dir_v * dir_p1_u2_L)
+  }).bound01();
 
   if (lipstick_marks.y > lipstick_marks.x) {
     std::swap (lipstick_marks.y, lipstick_marks.x);
