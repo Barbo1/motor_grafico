@@ -8,7 +8,7 @@
 #include "../primitives/vectors.hpp"
 #include "../primitives/global.hpp"
 
-#define BUCKET_LINES_ESTIMATED_PARTITIONS 4
+#define BUCKET_LINES_ESTIMATED_PARTITIONS 16
 
 struct Light {
   Dir2 position;
@@ -27,15 +27,13 @@ struct MaskObject {
 struct MaskLineInfo {
   Dir2 point1;
   Dir2 point2;
-
-  float center_distance;
   int32_t partition_offset;
 };
 
 struct FirstLevelElement {
   std::vector<MaskLineInfo> data;
-  int32_t offset;
-  int32_t second_level_offset;
+  int32_t first_level_offset;
+  int32_t first_second_level_offset;
   int32_t last_second_level_offset;
 };
 
