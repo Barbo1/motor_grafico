@@ -3,8 +3,7 @@
    
 ImageModifier ImageModifier::polygon (std::vector<Dir2> points, SDL_Color color) {
   std::size_t many_points = points.size();
-  if (many_points > 64) return ImageModifier();
-    
+
   /* Searching maximum and minimum coordenates. */
   Dir2 max(points[0]), min(points[0]);
   for (auto& point: points) {
@@ -17,12 +16,6 @@ ImageModifier ImageModifier::polygon (std::vector<Dir2> points, SDL_Color color)
   /* Calculating texture parameter. */
   uint32_t height = max.y - min.y;
   uint32_t width = max.x - min.x;
-  Dir2 center;
-  for (auto& point: points) {
-    point -= min;
-    center += point;
-  }
-  center *= (1.f/many_points);
 
   /* Calculating coefitients. */
   using coefType = std::pair<std::array<double, 4>, bool>;
@@ -46,8 +39,6 @@ ImageModifier ImageModifier::polygon (std::vector<Dir2> points, SDL_Color color)
       {{mi, ci, q, p}, (points[i].y - points[i-1].y) * (points[i].y - points[i+1].y) < 0}
     );
   }
-
-  /* Sorting the lines(optional). */
 
   /* Calculate the bound to make the texture. */
   int * bounds = new int[height * many_points];

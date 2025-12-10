@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 
+#include "../concepts/lights.hpp"
+
 class Global {
   private: 
     SDL_Window* window;
@@ -58,4 +60,5 @@ class Global {
 
     /* Printing options. */
     void set_ambient_light (float per);
+    void apply_mask (const ViewMask&);
 };

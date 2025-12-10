@@ -41,11 +41,11 @@
        |V| + usar intrinsecos para aumentar al eficiencia.
        |V| + agregar operaciones necesarias para disminuir computo de vectores, reduciendo la operations.
  |V| - leer modelo de iluminacion 2d.
- | | - clases para manejo de luz.
+ | | - corregir manejo de memoria de SDL_Surface.
  | | - crear algoritmos para luz:
         |V| + view covering para un punto,
         | | + creacion de mascara con luz en un punto y lineas de bloqueo de luz,
-        | | + creacion de mascara con de vista y lineas de bloqueo de luz,
+        |V| + creacion de mascara con de vista y lineas de bloqueo,
         | | + creacion de mascara con luz en un punto,
         | | + creacion de mascara uniforme,
  | | - mejora del modelo de luz:

@@ -5,17 +5,7 @@
 #include <utility>
 #include <immintrin.h>
 
-#include <iostream>
-#include <bitset>
-
-float most_suitable_lipstick (const Dir2& lipstick_marks) {
-  float dx = std::fabsf (lipstick_marks.x - 0.5f);
-  float dy = std::fabsf (lipstick_marks.y - 0.5f);
-  float mask = dx < dy;
-  return mask * lipstick_marks.x + (1.f - mask) * lipstick_marks.y;
-}
-
-inline int meeting_condition_for_ordering (const MaskLineInfo& line_1, const MaskLineInfo& line_2, const Dir2& position) {
+inline int meeting_condition_for_ordering_by_point (const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position) {
   const Dir2 dir_v = line_2.point2 - line_2.point1;
   const Dir2 dir_p1_u1 = line_1.point1 - position; 
   const Dir2 dir_p1_u2 = line_1.point2 - position; 
@@ -29,7 +19,7 @@ inline int meeting_condition_for_ordering (const MaskLineInfo& line_1, const Mas
     (dir_p2_u1 * dir_p1_u2_L) / (dir_v * dir_p1_u2_L)
   }).bound01();
 
-  Dir2 middle_kiss = dir_v.madd((lipstick_marks.x + lipstick_marks.y) * 0.5f, line_2.point1);
+  Dir2 middle_kiss = dir_v.madd(_mm_cvtss_f32(_mm_hadd_ps(lipstick_marks.v, lipstick_marks.v)) * 0.5f, line_2.point1);
 
   __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
 
@@ -97,8 +87,8 @@ inline int meeting_condition_for_ordering (const MaskLineInfo& line_1, const Mas
   return (_mm_movemask_ps(meet_cond) & 0b111) << 3 | _mm_movemask_ps(over_both);
 }
 
-inline int meeting_condition_for_obfuscating (
-  const MaskLineInfo& line_1, const MaskLineInfo& line_2, const Dir2& position, 
+inline int meeting_condition_for_obfuscating_by_point (
+  const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position, 
   Dir2& lipstick_marks
 ) {
 
@@ -115,11 +105,12 @@ inline int meeting_condition_for_obfuscating (
     (dir_p2_u1 * dir_p1_u2_L) / (dir_v * dir_p1_u2_L)
   }).bound01();
 
-  if (lipstick_marks.y > lipstick_marks.x) {
+  if (lipstick_marks.y > lipstick_marks.x)
     std::swap (lipstick_marks.y, lipstick_marks.x);
-  }
 
-  Dir2 middle_kiss = dir_v.madd(lipstick_marks.sum() * 0.5f, dir_p2_u1);
+  Dir2 middle_kiss = dir_v.madd(_mm_cvtss_f32(_mm_hadd_ps(lipstick_marks.v, lipstick_marks.v)) * 0.5f, dir_p2_u1);
+
+  __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
 
   __m128 coef = _mm_rcp_ps(_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
   __m128 over_both = _mm_and_ps (
@@ -129,7 +120,7 @@ inline int meeting_condition_for_obfuscating (
         middle_kiss * dir_p1_u2_L, 
         dir_p2_u1 * dir_p1_u2_L,
         dir_p2_u2 * dir_p1_u2_L
-      )), _mm_setzero_ps()
+      )), bound_p
     ),
     _mm_cmple_ps (
       _mm_mul_ps (coef, _mm_set_ps (
@@ -137,20 +128,20 @@ inline int meeting_condition_for_obfuscating (
         middle_kiss * dir_p1_u1_L, 
         dir_p2_u1 * dir_p1_u1_L,
         dir_p2_u2 * dir_p1_u1_L
-      )), _mm_setzero_ps()
+      )), bound_n
     )
   );
 
   return _mm_movemask_ps(over_both);
 }
 
-std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector<MaskObject>& segments) {
+std::vector<MaskObject> generate_view_covering_by_point (Dir2 position, const std::vector<MaskObject>& segments) {
 
   /* Initialization of the buckets. */
   std::vector<FirstLevelElement> buckets(
     segments.size (),
     FirstLevelElement {
-      .data = std::vector<MaskLineInfo>(),
+      .data = std::vector<SecondLevelElement>(),
       .first_level_offset = 0,
       .first_second_level_offset = 0,
       .last_second_level_offset = 0
@@ -158,7 +149,7 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
   );
   for (int32_t i = 0; i < (int32_t)segments.size(); i++) {
     buckets[i].data.reserve (BUCKET_LINES_ESTIMATED_PARTITIONS);
-    buckets[i].data.push_back (MaskLineInfo {
+    buckets[i].data.push_back (SecondLevelElement {
       .point1 = segments[i].point1,
       .point2 = segments[i].point2,
       .partition_offset = -1
@@ -167,8 +158,6 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
   }
 
   uint32_t many_elements = segments.size();
-
-  //std::cout << ">>>>>>>>>>>>>>>>>>>>>___________________>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 
   /* Rejecting volumes. */
   int32_t pos_1 = many_elements - 1;
@@ -190,42 +179,20 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
         while (inner_pos_2 >= 0) {
 
           Dir2 lipstick_marks, proportional_distance;
-          int meet_cond = meeting_condition_for_ordering (
+          int meet_cond = meeting_condition_for_ordering_by_point (
             buckets[pos_1].data[inner_pos_1], 
             buckets[pos_2].data[inner_pos_2], 
             position
           );
-          /*
-          std::cout << std::endl << std::endl << "pos_1: " << pos_1 << ", pos_2: " << pos_2 << std::endl;
-          std::cout << std::endl << std::endl << "inner_pos_1: " << inner_pos_1 << ", inner_pos_2: " << inner_pos_2 << std::endl;
-          std::cout << "line_1: (" 
-            << buckets[pos_1].data[inner_pos_1].point1.x << ", " 
-            << buckets[pos_1].data[inner_pos_1].point1.y << ") -> (" 
-            << buckets[pos_1].data[inner_pos_1].point2.x << ", " 
-            << buckets[pos_1].data[inner_pos_1].point2.y << ")" 
-            << std::endl;
-          std::cout << "line_2: (" 
-            << buckets[pos_2].data[inner_pos_2].point1.x << ", " 
-            << buckets[pos_2].data[inner_pos_2].point1.y << ") -> (" 
-            << buckets[pos_2].data[inner_pos_2].point2.x << ", " 
-            << buckets[pos_2].data[inner_pos_2].point2.y << ")" 
-            << std::endl;
-          std::cout << "position: (" 
-            << position.x << ", " 
-            << position.y << ")" 
-            << std::endl;
-          */
 
           if (meet_cond & 0b111) {
             if (meet_cond & 0b111000) {
               pos_2 = buckets[pos_2].first_level_offset;
-              //std::cout << "dominante: line_1" << std::endl;
               goto POS_2_NEXT;
             } else {
               std::swap (buckets[pos_1].data, buckets[pos_2].data);
               std::swap (buckets[pos_1].last_second_level_offset, buckets[pos_2].last_second_level_offset);
               std::swap (buckets[pos_1].first_second_level_offset, buckets[pos_2].first_second_level_offset);
-              //std::cout << "dominante: line_2" << std::endl;
               pos_2 = buckets[pos_1].first_level_offset;
               goto POS_2_NEXT;
             }
@@ -236,8 +203,6 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
       }
       pos_2 = buckets[pos_2].first_level_offset;
     }
-
-    //std::cout << "REALIZO" << std::endl;
 
     /* * * * * * * * * * * * * * * * * * 
      * obfuscating submissive segments. *
@@ -256,53 +221,36 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
         int32_t prev_inner_pos_2 = -1;
         while (inner_pos_2 >= 0) {
 
-          MaskLineInfo& line_2 = buckets[pos_2].data[inner_pos_2];
+          SecondLevelElement& line_2 = buckets[pos_2].data[inner_pos_2];
+          const Dir2 dir_v = line_2.point2 - line_2.point1;
 
           Dir2 lipstick_marks;
-          int meet_cond = meeting_condition_for_obfuscating (
+          int meet_cond = meeting_condition_for_obfuscating_by_point (
             buckets[pos_1].data[inner_pos_1], 
             line_2, 
             position, 
             lipstick_marks
           );
-          
-          /*
-          std::cout << std::endl << std::endl << pos_1 << ", " << pos_2 << std::endl;
-          std::cout << "line_1: (" 
-            << buckets[pos_1].data[inner_pos_1].point1.x << ", " 
-            << buckets[pos_1].data[inner_pos_1].point1.y << ") -> (" 
-            << buckets[pos_1].data[inner_pos_1].point2.x << ", " 
-            << buckets[pos_1].data[inner_pos_1].point2.y << ")" 
-            << std::endl;
-          std::cout << "line_2: (" 
-            << buckets[pos_2].data[inner_pos_2].point1.x << ", " 
-            << buckets[pos_2].data[inner_pos_2].point1.y << ") -> (" 
-            << buckets[pos_2].data[inner_pos_2].point2.x << ", " 
-            << buckets[pos_2].data[inner_pos_2].point2.y << ")" 
-            << std::endl;
-          std::cout << "position: (" 
-            << position.x << ", " 
-            << position.y << ")" 
-            << std::endl;
-          std::cout << "La condicion retorno el siguiente numero: " << std::bitset<4>(meet_cond) << std::endl;
-          */
-          
-          const Dir2 dir_v = line_2.point2 - line_2.point1;
 
           /* obfuscate one side. */
           if ((meet_cond & 0b11) == 0b10) {
-            line_2.point1 += dir_v * most_suitable_lipstick (lipstick_marks);
+            if (meet_cond & 0b100)
+              line_2.point1 += dir_v * lipstick_marks.x;
+            else
+              line_2.point1 += dir_v * lipstick_marks.y;
 
           } else if ((meet_cond & 0b11) == 0b01) {
-            line_2.point2 = dir_v.madd(most_suitable_lipstick (lipstick_marks), line_2.point1);
+            if (meet_cond & 0b100)
+              line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
+            else
+              line_2.point2 = dir_v.madd(lipstick_marks.x, line_2.point1);
           
           /* obfuscate subsegment(divide the segment in two parts). */
           } else if (meet_cond == 0b100) {
+            Dir2 kiss_x = dir_v.madd(lipstick_marks.x, line_2.point1);
+            Dir2 kiss_y = dir_v.madd(lipstick_marks.y, line_2.point1);
 
-            Dir2 new_point_2 = dir_v.madd(lipstick_marks.x, line_2.point1);
-            Dir2 new_point_1 = dir_v.madd(lipstick_marks.y, line_2.point1);
-
-            if ((line_2.point2 - new_point_2).modulo2() >= 1.f) {
+            if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
               int32_t aux = buckets[pos_2].data.size();
               int32_t last = buckets[pos_2].last_second_level_offset;
 
@@ -312,32 +260,27 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
                 buckets[pos_2].data[last].partition_offset = 
                   aux;
               buckets[pos_2].data[aux].partition_offset = -1;
-              buckets[pos_2].data[aux].point1 = new_point_2;
+              buckets[pos_2].data[aux].point1 = kiss_x;
               many_elements++;
             }
-
-            if ((line_2.point1 - new_point_1).modulo2() < 1.f) {
+            
+            if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
               if (buckets[pos_2].first_second_level_offset == inner_pos_2)
-                inner_pos_2 = 
-                  buckets[pos_2].first_second_level_offset = 
-                    buckets[pos_2].data[inner_pos_2].partition_offset;
+                buckets[pos_2].first_second_level_offset = 
+                  buckets[pos_2].data[inner_pos_2].partition_offset;
               else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
                 buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
                 buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
-                inner_pos_2 = -1;
               } else 
-                inner_pos_2 =
-                  buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                    buckets[pos_2].data[inner_pos_2].partition_offset;
+                buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                  buckets[pos_2].data[inner_pos_2].partition_offset;
               many_elements--;
             } else {
-              line_2.point2 = new_point_1;
+              line_2.point2 = kiss_y;
             }
-            
-            inner_pos_2 = -1;
-            inner_pos_1 = -1;
 
-            goto FIN_ITER;
+            inner_pos_2 = -1;
+            goto FIN_INNER;
           }
   
           /* obfuscate completely. */
@@ -348,22 +291,22 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
                   buckets[pos_2].data[inner_pos_2].partition_offset;
             else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
               buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
-              buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
-              inner_pos_2 = -1;
+              inner_pos_2 = 
+                buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                  -1;
             } else 
               inner_pos_2 =
                 buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
                   buckets[pos_2].data[inner_pos_2].partition_offset;
             many_elements--;
-          } else if (inner_pos_2 >= 0) {
+          } else {
             prev_inner_pos_2 = std::exchange (inner_pos_2, buckets[pos_2].data[inner_pos_2].partition_offset);
           }
-
-          FIN_ITER:
         }
 
+        FIN_INNER:
         more_posibilities = buckets[pos_2].first_second_level_offset >= 0;
-        inner_pos_1 = (inner_pos_1 >= 0 ? buckets[pos_1].data[inner_pos_1].partition_offset : -1);
+        inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
       }
       if (!more_posibilities)
         pos_2 = 
@@ -380,11 +323,11 @@ std::vector<MaskObject> generate_view_covering (Dir2 position, const std::vector
   ret.reserve (many_elements);
 
   pos_1 = segments.size() - 1;
-  while (pos_1 > -1) {
+  while (pos_1 >= 0) {
     int32_t inner_pos_1 = buckets[pos_1].first_second_level_offset;
 
-    while (inner_pos_1 > -1) {
-      MaskLineInfo& line_1 = buckets[pos_1].data[inner_pos_1];
+    while (inner_pos_1 >= 0) {
+      SecondLevelElement& line_1 = buckets[pos_1].data[inner_pos_1];
       ret.push_back(MaskObject {
         .point1 = line_1.point1, 
         .point2 = line_1.point2, 

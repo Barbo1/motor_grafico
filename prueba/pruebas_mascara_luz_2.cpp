@@ -72,6 +72,12 @@ std::vector<MaskObject> get_segments_2 () {
   };
 }
 
+std::vector<MaskObject> get_segments_3 () {
+  return {
+    MaskObject {.point1 = Dir2 {134.f, 114.f}, .point2 = Dir2 {52.f, 274.f}, .circle = false},
+  };
+}
+
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
@@ -81,6 +87,11 @@ int main () {
 
   bool cont = true;
   SDL_Event event;
+  
+  SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
+  Uint32 color = SDL_MapRGBA(format, 0, 0, 0, 200);
+  SDL_FreeFormat(format);
+
 
   while (cont) {
     glb->begin_render();
@@ -88,19 +99,16 @@ int main () {
     /* The delay must be inside. */
     SDL_Delay(1);
 
-      SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
-      for (const auto& segment: segments) {
-        SDL_RenderDrawLine(glb->get_render(), segment.point1.x, segment.point1.y, segment.point2.x, segment.point2.y);
-      }
-
       float a = clock();
       std::cout << "position: (" << origen.x << ", " << origen.y << ")";
-      std::vector<MaskObject> view = generate_view_covering_by_point(origen, segments);
+      ViewMask view = ViewMask::create_view_mask_by_point (glb->get_width(), glb->get_height(), origen, segments, color);
       std::cout << ", tiempo: " << ((clock() - a) / CLOCKS_PER_SEC);
       std::cout << std::endl;
 
-      SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
-      for (const auto& segment: view) {
+      glb->apply_mask(view);
+
+      SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
+      for (const auto& segment: segments) {
         SDL_RenderDrawLine(glb->get_render(), segment.point1.x, segment.point1.y, segment.point2.x, segment.point2.y);
       }
 

@@ -29,15 +29,14 @@ class alignas(16) Dir2 {
     };
 
     /* Basic operations. */
-    inline Dir2 () noexcept: x(0.f), y(0.f), pad1(0.f), pad2(0.f) {}
+    inline Dir2 () noexcept: v(_mm_setzero_ps()) {}
     inline Dir2 (__m128 m) noexcept: v(m) {}
     inline Dir2 (float x, float y) noexcept: x(x), y(y), pad1(0.f), pad2(0.f) {}
     inline Dir2 (const Dir2 & dir) noexcept: x(dir.x), y(dir.y), pad1(0.f), pad2(0.f) {}
     inline Dir2 (Dir2 && dir) noexcept: x(dir.x), y(dir.y), pad1(0.f), pad2(0.f) {}
 
     inline Dir2 & operator= (const Dir2 & dir) noexcept {
-      this->x = dir.x;
-      this->y = dir.y;
+      this->v = dir.v;
       return *this;
     }
 
@@ -48,12 +47,12 @@ class alignas(16) Dir2 {
     /* Comparations. */
     template<DirFin R>
     inline bool operator== (R&& dir) const {
-      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) == 0x1111;
+      return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0x0011) == 0x0011;
     }
 
     template<DirFin R>
     inline bool operator!= (R&& dir) const {
-      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) != 0x1111;
+      return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0x0011) != 0x0011;
     }
 
     /* Operators by overloading. */
@@ -131,12 +130,12 @@ class alignas(16) Dir2 {
     inline auto percan (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
         self.v = _mm_castsi128_ps(_mm_xor_si128 (
-          _mm_shuffle_epi32(_mm_castps_si128(self.v), 0b00000001),
+          _mm_shuffle_epi32(_mm_castps_si128(self.v), 0b11100001),
           _mm_set_epi64x(0, 0x80000000)
         ));
         return std::forward<Self>(self);
       } else return Dir2 {_mm_castsi128_ps(_mm_xor_si128 (
-        _mm_shuffle_epi32(_mm_castps_si128(self.v), 0b00000001),
+        _mm_shuffle_epi32(_mm_castps_si128(self.v), 0b11100001),
         _mm_set_epi64x(0, 0x80000000)
       ))};
     }
@@ -162,15 +161,15 @@ class alignas(16) Dir2 {
     template<typename Self>
     inline auto abs (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_castsi128_ps(_mm_and_si128(_mm_castps_si128(self.v), _mm_set1_epi32(0x7FFFFFFF)));
+        self.v = _mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)));
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_castsi128_ps(_mm_and_si128(self.v, _mm_set1_epi32(0x7FFFFFFF)))};
+      } else return Dir2 {_mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)))};
     }
 
     template<DirFin R>
     inline float pL (R&& dir) const {
       __m128 opr = _mm_mul_ps (
-        _mm_castsi128_ps (_mm_shuffle_epi32(_mm_castps_si128(this->v), 0b00000001)), 
+        _mm_castsi128_ps (_mm_shuffle_epi32(_mm_castps_si128(this->v), 0b11100001)), 
         dir.v
       );
       return _mm_cvtss_f32 (_mm_hsub_ps(opr, opr));
@@ -422,8 +421,8 @@ class alignas(16) AngDir2 {
     template<typename Self>
     inline auto normalize (this Self&& self) {
       __m128 opr = _mm_mul_ps (self.v, self.v);
-      float b = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)));
-      opr = _mm_mul_ps(_mm_set_ps (0.f, 1.f, b, b), self.v);
+      float b = _mm_cvtss_f32 (_mm_rsqrt_ss (_mm_hadd_ps (opr, opr)));
+      opr = _mm_mul_ps (_mm_set_ps (0.f, 1.f, b, b), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<AngDir2>(self);
@@ -432,7 +431,7 @@ class alignas(16) AngDir2 {
 
     template<typename Self>
     inline auto abs (this Self&& self) {
-      __m128 opr = _mm_castsi128_ps(_mm_and_si128(_mm_castps_si128(self.v), _mm_set1_epi32(0x7FFFFFFF)));
+      __m128 opr = _mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self&&>(self);
@@ -534,23 +533,24 @@ class alignas(16) AngDir2 {
 
 class alignas(16) Dir3 {
   public:
-    float x;
-    float y;
-    float z;
-    float pad;
+    union {
+      struct {float x, y, z, pad;};
+      __m128 v;
+    };
 
-    inline Dir3 () noexcept: x(0.f), y(0.f), z(0.f), pad(0.f) {}
+    inline Dir3 () noexcept: v(_mm_setzero_ps()) {}
+    inline Dir3 (__m128 m) noexcept: v(m) {}
     inline Dir3 (float x, float y, float z) noexcept: x(x), y(y), z(z), pad(0.f) {}
     inline Dir3 (const Dir3 & dir) noexcept: x(dir.x), y(dir.y), z(dir.z), pad(0.f) {}
     inline Dir3 (Dir3 && dir) noexcept: x(dir.x), y(dir.y), z(dir.z), pad(0.f) {}
 
     inline Dir3& operator= (const Dir3 & dir) noexcept {
-      _mm_store_ps ((float*)this, _mm_load_ps (&dir.x));
+      this->v = dir.v;
       return *this;
     }
 
     inline Dir3& operator= (Dir3 && dir) noexcept {
-      _mm_store_ps ((float*)this, _mm_load_ps (&dir.x));
+      this->v = dir.v;
       return *this;
     }
 
@@ -560,17 +560,11 @@ class alignas(16) Dir3 {
 
     /* Comparations. */
     inline bool operator== (const Dir3& dir) const {
-      return _mm_movemask_ps(_mm_cmpeq_ps (
-        _mm_load_ps(&this->x),
-        _mm_load_ps(&dir.x)
-      )) == 0x1111;
+      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) == 0x1111;
     }
 
     inline bool operator!= (const Dir3& dir) const {
-      return _mm_movemask_ps(_mm_cmpeq_ps (
-        _mm_load_ps(&this->x),
-        _mm_load_ps(&dir.x)
-      )) != 0x1111;
+      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) != 0x1111;
     }
 
     /* Operators by overloading. */
@@ -578,26 +572,23 @@ class alignas(16) Dir3 {
     inline auto operator+ (this Self&& self, R&& dir) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         _mm_store_ps (&self.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+        self.v = _mm_add_ps (dir.v, self.v);
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        _mm_store_ps (&dir.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+        dir.v = _mm_add_ps (dir.v, self.v);
         return std::forward<R>(dir);
-      } else {
-        AngDir2 ret;
-        _mm_store_ps (&ret.x, _mm_add_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
-        return ret;
-      }
+      } else return Dir3 {_mm_add_ps (dir.v, self.v)};
     }
 
     template<DirFin3 R> 
     inline Dir3& operator+= (R&& dir) {
-      _mm_store_ps (&this->x, _mm_add_ps (_mm_load_ps (&this->x), _mm_load_ps (&dir.x)));
+      this->v = _mm_add_ps (this->v, dir.v);
       return *this;
     }
 
     template<DirFin3 R>
     inline float operator* (R&& dir) const {
-      __m128 opr = _mm_mul_ps(_mm_load_ps(&this->x), _mm_load_ps(&dir.x));
+      __m128 opr = _mm_mul_ps(this->v, dir.v);
       opr = _mm_hadd_ps(opr, opr);
       return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
     }
@@ -605,50 +596,38 @@ class alignas(16) Dir3 {
     template<typename Self>
     inline auto operator* (this Self&& self, const float& number) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        _mm_store_ps (&self.x, _mm_mul_ps (_mm_load_ps (&self.x), _mm_set1_ps(number)));
+        self.v = _mm_mul_ps (self.v, _mm_set1_ps(number));
         return std::forward<Self>(self);
-      } else {
-        Dir3 ret;
-        _mm_store_ps (&ret.x, _mm_mul_ps (_mm_load_ps (&self.x), _mm_set1_ps(number)));
-        return ret;
-      }
+      } else return Dir3 {_mm_mul_ps (self.v, _mm_set1_ps(number))};
     }
 
     inline Dir3& operator*= (const float& number) {
-      _mm_store_ps (&this->x, _mm_mul_ps (_mm_load_ps (&this->x), _mm_set1_ps(number)));
+      this->v = _mm_mul_ps (this->v, _mm_set1_ps(number));
       return *this;
     }
 
     template<typename Self>
     inline auto operator- (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        _mm_store_ps (&self.x, _mm_xor_ps (_mm_load_si128 (&self.x), _mm_set1_epi32(0x80000000)));
+        self.v = _mm_xor_ps (self.x, _mm_set1_ps(-0.f));
         return std::forward<Self>(self);
-      } else {
-        Dir3 ret;
-        _mm_store_ps (&ret.x, _mm_xor_ps (_mm_load_si128 (&self.x), _mm_set1_epi32(0x80000000)));
-        return ret;
-      }
+      } else return Dir3 {_mm_xor_ps (self.x, _mm_set1_ps(-0.f))};
     }
 
     template<typename Self, DirFin3 R>
     inline auto operator- (this Self&& self, R&& dir) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        _mm_store_ps (&self.x, _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+        self.v = _mm_sub_ps (self.v, dir.v);
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        _mm_store_ps (&dir.x, _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
+        dir.v = _mm_sub_ps (self.v, dir.v);
         return std::forward<R>(dir);
-      } else {
-        AngDir2 ret;
-        _mm_store_ps (&ret.x, _mm_sub_ps (_mm_load_ps (&self.x), _mm_load_ps (&dir.x)));
-        return ret;
-      }
+      } else return Dir3 {_mm_sub_ps (self.v, dir.v)};
     }
 
     template<DirFin3 R>
     inline Dir3& operator-= (R&& dir) {
-      _mm_store_ps (&this->x, _mm_sub_ps (_mm_load_ps (&this->x), _mm_load_ps (&dir.x)));
+      this->v = _mm_sub_ps (this->v, dir.v);
       return *this;
     }
 
@@ -657,13 +636,9 @@ class alignas(16) Dir3 {
     template<typename Self>
     inline auto abs (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && ! std::is_const_v<Self&&>) {
-        _mm_store_si128((__m128i_u*)&self, _mm_and_si128(_mm_load_si128(&self), _mm_set1_epi32(0x7FFFFFFF)));
+        self.v = _mm_and_ps (self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)));
         return std::forward<Self>(self);
-      } else {
-        Dir3 ret;
-        _mm_store_si128((__m128i_u*)&ret, _mm_and_si128(_mm_load_si128(&self), _mm_set1_epi32(0x7FFFFFFF)));
-        return ret;
-      }
+      } else return Dir3 {_mm_and_ps (self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)))};
     }
 
     template<typename Self, DirFin3 R>
@@ -688,34 +663,27 @@ class alignas(16) Dir3 {
     }
 
     inline float modulo () const {
-      __m128 opr = _mm_load_ps(&this->x);
-      opr = _mm_mul_ps(opr, opr);
+      __m128 opr = _mm_mul_ps(this->v, this->v);
       opr = _mm_hadd_ps(opr, opr);
       return _mm_cvtss_f32(_mm_sqrt_ss(_mm_hadd_ps(opr, opr)));
     }
 
     inline float modulo2 () const {
-      __m128 opr = _mm_load_ps(&this->x);
-      opr = _mm_mul_ps(opr, opr);
+      __m128 opr = _mm_mul_ps(this->v, this->v);
       opr = _mm_hadd_ps(opr, opr);
       return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
     }
 
     template<typename Self>
     inline auto normalize (this Self&& self) {
-      __m128 charged = _mm_load_ps (&self.x);
-      __m128 opr = _mm_mul_ps (charged, charged);
+      __m128 opr = _mm_mul_ps (self.v, self.v);
       opr = _mm_hadd_ps(opr, opr);
       float b = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)));
-      opr = _mm_mul_ps(_mm_set1_ps (b), charged);
+      opr = _mm_mul_ps(_mm_set1_ps (b), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        _mm_store_ps (&self.x, opr);
+        self.v = opr;
         return std::forward<Self> (self);
-      } else {
-        Dir3 ret;
-        _mm_store_ps (&ret.x, opr);
-        return ret;
-      }
+      } else return Dir3 {opr};
     }
 
     inline void rotate_x (const float& angle) {
@@ -744,13 +712,11 @@ class alignas(16) Dir3 {
 };
     
 Dir2::Dir2 (const Dir3& dir3) noexcept {
-  this->x = dir3.x;
-  this->y = dir3.y;
+  this->v = dir3.v;
 }
 
 Dir2::Dir2 (const AngDir2& dir) noexcept {
-  this->x = dir.x;
-  this->y = dir.y;
+  this->v = dir.v;
 }
 
 AngDir2::AngDir2 (const Dir2& dir) noexcept {

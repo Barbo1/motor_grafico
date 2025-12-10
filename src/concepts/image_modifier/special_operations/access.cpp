@@ -4,9 +4,9 @@
 
 SDL_Color ImageModifier::operator() (uint32_t i, uint32_t j) {
   if (i < static_cast<uint32_t>(this->texture->h) && 
-      j < static_cast<uint32_t>(this->texture->w) && 
-      this->texture->pixels != nullptr
-    ) {
+    j < static_cast<uint32_t>(this->texture->w) && 
+    this->texture->pixels != nullptr
+  ) {
     SDL_Color color;
     SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
     SDL_GetRGBA(
