@@ -44,10 +44,10 @@
  | | - corregir manejo de memoria de SDL_Surface.
  | | - crear algoritmos para luz:
         |V| + view covering para un punto,
-        | | + creacion de mascara con luz en un punto y lineas de bloqueo de luz,
-        |V| + creacion de mascara con de vista y lineas de bloqueo,
-        | | + creacion de mascara con luz en un punto,
-        | | + creacion de mascara uniforme,
+        |V| + dibujo de mascara con de vista y lineas de bloqueo,
+        | | + dibujo de mascara con luz en un punto y lineas de bloqueo de luz,
+        | | + dibujo de mascara con luz en un punto,
+        | | + dibujo de mascara uniforme,
  | | - mejora del modelo de luz:
         | | + view covering para un circulo, linea y square,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,

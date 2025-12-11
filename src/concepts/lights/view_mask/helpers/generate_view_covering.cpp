@@ -1,4 +1,4 @@
-#include "./../../../headers/concepts/lights.hpp"
+#include "../../../../../headers/concepts/lights.hpp"
 
 #include <cmath>
 #include <cstdint>

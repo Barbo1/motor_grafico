@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 #include <vector>
 
@@ -8,19 +9,85 @@
 
 #define BUCKET_LINES_ESTIMATED_PARTITIONS 16
 
-struct Light {
-  Dir2 position;
-  SDL_Color color;
-  float intensity;
-};
+/***********************/
+/*       Objects       */
+/***********************/
 
-/* Objects to help construct the arrange of buckets to discard lines. */
+struct Light {
+  float intensity;
+  float attenuation;
+  Dir2 position;
+  struct LightColorTy{
+    float r, g, b;
+  } color;
+};
 
 struct MaskObject {
   Dir2 point1;
   Dir2 point2;
   bool circle;
 };
+
+class Global;
+class ViewMask {
+  private:
+    SDL_Surface* img;
+
+    ViewMask (SDL_Surface*);
+
+  public:
+    /* Creation of a uniform mask. */
+    ViewMask (uint32_t width, uint32_t height);
+
+    /* mask drawing. */
+    ViewMask& draw_color_uniform_mask (const Uint32 color);
+    ViewMask& draw_light_uniform_mask (
+      const Light& light, const std::vector<MaskObject>& segments, const Uint32 shadow_color
+    );
+    ViewMask& draw_color_view_mask (
+      const Dir2& position, const std::vector<MaskObject>& segments, const Uint32 shadow_color
+    );
+    ViewMask& draw_light_view_mask (
+      const Light& light, const std::vector<MaskObject>& segments, const Uint32 shadow_color
+    );
+    ViewMask& draw_color_directional_mask (
+      const Dir2& direction, const std::vector<MaskObject>& segments, const Uint32 shadow_color
+    );
+    ViewMask& draw_light_directional_mask (
+      const Dir2& direction, const std::vector<MaskObject>& segments, const Uint32 shadow_color
+    );
+
+    /* mask fusion. */
+    ViewMask operator& (ViewMask mask);
+    ViewMask operator| (ViewMask mask);
+
+    friend Global;
+
+    ~ViewMask();
+};
+
+
+/***********************/
+/*       Helpers       */
+/***********************/
+
+/* This function is meant to draw a shadow in the buffer of a view mask. The 
+ * function takes an array of 8, meaning that it receives 6 points denoting
+ * the polygon.
+ * */
+void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, Uint32 color);
+
+/* This function uses cast_shadow to create the shadows for a view in the 
+ * surface img. 
+ * */
+void fill_view_with_shadows (
+  SDL_Surface*& img, 
+  const Dir2& position, 
+  const std::vector<MaskObject>& segments, 
+  const Uint32 color
+);
+
+/* Objects to help construct the arrange of buckets to discard lines. */
 
 struct SecondLevelElement {
   Dir2 point1;
@@ -45,60 +112,3 @@ std::vector<MaskObject> generate_view_covering_by_point (Dir2 position, const st
  * resembling a parallel view.
  * */
 std::vector<MaskObject> generate_view_covering_by_direction (Dir2 direction, const std::vector<MaskObject>& segments);
-
-class Global;
-
-class ViewMask {
-  private:
-    SDL_Surface* img;
-
-    ViewMask (SDL_Surface*);
-
-  public:
-    /* Creation of a uniform mask. */
-    ViewMask (uint32_t width, uint32_t height, SDL_Color color);
-    ViewMask (uint32_t width, uint32_t height);
-
-    static ViewMask create_view_mask_by_direction (
-      const uint32_t& width, const uint32_t& height, 
-      Dir2 direction, const std::vector<MaskObject>& segments,
-      const Uint32 color
-    );
-    static ViewMask create_view_mask_by_point (
-      const uint32_t& width, const uint32_t& height, 
-      Dir2 position, const std::vector<MaskObject>& segments,
-      const Uint32 color
-    );
-    static ViewMask create_light_screen_by_point (
-      const uint32_t& width, const uint32_t& height, 
-      Light light, const std::vector<MaskObject>& segments,
-      const Uint32 color
-    );
-    static ViewMask create_light_mask_by_point (
-      const uint32_t& width, const uint32_t& height, 
-      Light light, const std::vector<MaskObject>& segments,
-      const Uint32 color
-    );
-
-    /* mask drawing. */
-    ViewMask& draw_view_mask_by_direction (
-      const Dir2& direction, const std::vector<MaskObject>& segments, const Uint32 color
-    );
-    ViewMask& draw_view_mask_by_point (
-      const Dir2& position, const std::vector<MaskObject>& segments, const Uint32 color
-    );
-    ViewMask& draw_light_screen_by_point (
-      const Light& light, const std::vector<MaskObject>& segments, const Uint32 color
-    );
-    ViewMask& draw_light_mask_by_point (
-      const Light& light, const std::vector<MaskObject>& segments, const Uint32 color
-    );
-
-    /* mask operations. */
-    ViewMask operator& (ViewMask mask);
-    ViewMask operator| (ViewMask mask);
-
-    friend Global;
-
-    ~ViewMask();
-};
