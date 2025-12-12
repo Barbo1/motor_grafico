@@ -1,7 +1,7 @@
 #include "../../../../../headers/concepts/lights.hpp"
 #include <SDL2/SDL_surface.h>
 
-void fill_view_with_lights (SDL_Surface*& img, const Light& light) {
+void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
   Uint32* buffer = (Uint32*)img->pixels;
 
   float add_coef = light.attenuation / std::sqrt(light.intensity);

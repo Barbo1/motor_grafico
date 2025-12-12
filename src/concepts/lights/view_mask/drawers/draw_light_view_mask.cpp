@@ -6,7 +6,7 @@ ViewMask& ViewMask::draw_light_view_mask (const Light& light, const std::vector<
     buffer[i] = 0;
 
   fill_view_with_shadows (this->img, light.position, segments, shadow_color);
-  fill_view_with_lights (this->img, light);
+  fill_remain_with_lights (this->img, light);
 
   return *this;
 }

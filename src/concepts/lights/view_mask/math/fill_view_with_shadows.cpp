@@ -41,6 +41,6 @@ void fill_view_with_shadows (
     points[6] = points[0];
     points[7] = points[1];
 
-    cast_shadow (buffer, (int32_t)img->w, (int32_t)img->h, points, color);
+    cast_shadow (buffer, (int32_t)img->w, (int32_t)img->h, points, 6, color);
   }
 }

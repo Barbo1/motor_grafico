@@ -72,56 +72,51 @@ std::vector<MaskObject> get_segments_2 () {
   };
 }
 
-std::vector<MaskObject> get_segments_3 () {
-  return {
-    MaskObject {.point1 = Dir2 {134.f, 114.f}, .point2 = Dir2 {52.f, 274.f}, .circle = false},
-  };
-}
-
 int main () {
   std::string name = "Ventana";
-  Global* glb = Global::create(name, 800, 1000, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
 
-  Light light_0 = {
-    .intensity = 100.f,
-    .attenuation = 0.01f,
-    .position = {518.f, 334.f},
-    .color = {.r = 1.0f, .g = 0.50f, .b = 0.1f},
-  }; 
-  SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
-  Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
-  SDL_FreeFormat(format);
-
-  const std::vector<MaskObject> segments = get_segments_1();
+  Dir2 direction = {518.f, 334.f};
+  const std::vector<MaskObject> segments = get_segments_2();
 
   bool cont = true;
   SDL_Event event;
-  
-  ViewMask view (glb->get_width(), glb->get_height());
-  float aux_time_1 = 0.f, avg_time_1 = 0.f;
 
   while (cont) {
+    int mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+    const Dir2 dims2 = Dir2 {static_cast<float>(glb->get_width()) * 0.5f, static_cast<float>(glb->get_height()) * 0.5f};
+    direction = Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)} - dims2;
+
     glb->begin_render();
-      std::cout << "position: (" << light_0.position.x << ", " << light_0.position.y << ")";
 
-      aux_time_1 += 1;
-
-      view.draw_light_view_mask (light_0, segments, shadow_color);
-      glb->apply_mask(view);
+    /* The delay must be inside. */
+    SDL_Delay(1);
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
       for (const auto& segment: segments) {
         SDL_RenderDrawLine(glb->get_render(), segment.point1.x, segment.point1.y, segment.point2.x, segment.point2.y);
       }
 
-      SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
-      SDL_RenderDrawPoint(glb->get_render(), light_0.position.x, light_0.position.y);
+      float a = clock();
+      std::cout << "position: (" << direction.x << ", " << direction.y << ")";
+      std::vector<MaskObject> view = generate_view_covering_by_direction (direction, segments);
+      std::cout << ", tiempo: " << ((clock() - a) / CLOCKS_PER_SEC);
+      std::cout << std::endl;
 
-      float a = glb->get_time();
-      avg_time_1 += (a - avg_time_1) / aux_time_1;
-      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
+      SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
+      for (const auto& segment: view) {
+        SDL_RenderDrawLine(glb->get_render(), segment.point1.x, segment.point1.y, segment.point2.x, segment.point2.y);
+      }
+
+      SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
+      SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
+      SDL_RenderDrawPoint(glb->get_render(), mouse_x, mouse_y);
+      SDL_RenderDrawPoint(glb->get_render(), dims2.x, dims2.y);
+
     glb->end_render();
     
+    /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_QUIT:
@@ -134,12 +129,6 @@ int main () {
               cont = false;
               break;
           }
-          break;
-        
-        case SDL_MOUSEMOTION:
-          int mouse_x, mouse_y;
-          SDL_GetMouseState(&mouse_x, &mouse_y);
-          light_0.position = Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)};
           break;
       }
     }

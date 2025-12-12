@@ -75,7 +75,14 @@ enum ViewCoveringType {point, direction};
  * function takes an array of 8, meaning that it receives 6 points denoting
  * the polygon.
  * */
-void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, Uint32 color);
+void cast_shadow (
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
+  const std::array<Dir2, 8>& points,
+  uint32_t many_points,
+  Uint32 color
+);
 
 /* This function uses cast_shadow to create the shadows for a view in the 
  * surface img. 
@@ -87,10 +94,20 @@ void fill_view_with_shadows (
   const Uint32 color
 );
 
+/* This function uses cast_shadow to create the shadows for a directional 
+ * view in the surface img. 
+ * */
+void fill_directional_with_shadows (
+  SDL_Surface*& img, 
+  const Dir2& direction, 
+  const std::vector<MaskObject>& segments, 
+  const Uint32 color
+);
+
 /* This function fill the remaining space of a view with light from the 
  * position of the light to all the places with no color defined (0). 
  * */
-void fill_view_with_lights (
+void fill_remain_with_lights (
   SDL_Surface*& img, 
   const Light& light
 );

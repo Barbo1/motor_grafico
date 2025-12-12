@@ -3,9 +3,10 @@
 #include <SDL2/SDL_surface.h>
 #include <array>
 #include <algorithm>
+#include <cstdint>
 #include <optional>
 
-void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, Uint32 color) {
+void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, uint32_t many_points, Uint32 color) {
 
   /* Searching maximum and minimum coordenates. */
   float maxy = Dir2 {_mm_max_ps (points[0].v, _mm_max_ps (points[1].v, _mm_max_ps(points[2].v,
@@ -26,7 +27,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   alignas(16) std::array<std::array<float, 4>, 6> coef = std::array<std::array<float, 4>, 6>();
 
   uint32_t many_segments = 0;
-  for (std::size_t i = 1; i <= 6; i++) {
+  for (std::size_t i = 1; i <= many_points; i++) {
     const Dir2 p1_p2 = points[i+1] - points[i];
     if (p1_p2.y != 0) {
       float q = 1.f / p1_p2.y;

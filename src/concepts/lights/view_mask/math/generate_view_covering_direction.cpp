@@ -5,137 +5,75 @@
 #include <utility>
 #include <immintrin.h>
 
-static inline int meeting_condition_for_ordering_by_direction (const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position) {
-  const Dir2 dir_v = line_2.point2 - line_2.point1;
-  const Dir2 dir_p1_u1 = line_1.point1 - position; 
-  const Dir2 dir_p1_u2 = line_1.point2 - position; 
-  const Dir2 dir_p1_u1_L = dir_p1_u1.percan();
-  const Dir2 dir_p1_u2_L = dir_p1_u2.percan(); 
-  const Dir2 dir_p2_u1 = line_2.point1 - position; 
-  const Dir2 dir_p2_u2 = line_2.point2 - position; 
+static inline int meeting_condition_for_ordering_by_direction (
+  const SecondLevelElement& line_1, 
+  const SecondLevelElement& line_2, 
+  const Dir2& d
+) {
 
-  Dir2 lipstick_marks = (-Dir2 {
-    (dir_p2_u1 * dir_p1_u1_L) / (dir_v * dir_p1_u1_L),
-    (dir_p2_u1 * dir_p1_u2_L) / (dir_v * dir_p1_u2_L)
-  }).bound01();
+  const Dir2 v_1 = line_1.point2 - line_1.point1;
+  const Dir2 v_2 = line_2.point2 - line_2.point1;
+  const Dir2 d_L = d.percan();
 
-  Dir2 middle_kiss = dir_v.madd(_mm_cvtss_f32(_mm_hadd_ps(lipstick_marks.v, lipstick_marks.v)) * 0.5f, line_2.point1);
+  Dir2 lipstick_marks = Dir2 {
+    d.pLd (line_1.point1 - line_2.point1, v_2),
+    d.pLd (line_1.point2 - line_2.point1, v_2)
+  }.bound01();
 
-  __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
-
-  __m128 coef = _mm_rcp_ps(_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
-  __m128 over_both = _mm_and_ps (
-    _mm_cmpgt_ps (
-      _mm_mul_ps (coef, _mm_set_ps (
-        0.f,
-        (middle_kiss - position) * dir_p1_u2_L, 
-        dir_p2_u1 * dir_p1_u2_L,
-        dir_p2_u2 * dir_p1_u2_L
-      )), bound_p
-    ),
-    _mm_cmple_ps (
-      _mm_mul_ps (coef, _mm_set_ps (
-        0.f,
-        (middle_kiss - position) * dir_p1_u1_L, 
-        dir_p2_u1 * dir_p1_u1_L,
-        dir_p2_u2 * dir_p1_u1_L
-      )), bound_n
-    )
+  Dir2 middle_kiss = v_2.madd (
+    _mm_cvtss_f32 (_mm_hadd_ps (lipstick_marks.v, lipstick_marks.v)) * 0.5f, 
+    line_2.point1 - line_1.point1
   );
 
-  Dir2 v12p = (line_1.point1 - line_1.point2).percan();
-  __m128 coef_2 = _mm_rcp_ps(_mm_set1_ps (v12p * dir_p1_u2));
-  __m128 meet_cond_2 = _mm_and_ps(
-    _mm_cmpgt_ps (
-      _mm_mul_ps (coef_2, _mm_set_ps (
-        0.f,
-        (middle_kiss - line_1.point2) * v12p,
-        (line_2.point1 - line_1.point2) * v12p,
-        (line_2.point2 - line_1.point2) * v12p
-      )), bound_p
-    ),
-    _mm_cmple_ps (
-      _mm_mul_ps (coef_2, _mm_set_ps (
-        0.f,
-        (middle_kiss - line_1.point2) * dir_p1_u2_L,
-        (line_2.point1 - line_1.point2) * dir_p1_u2_L,
-        (line_2.point2 - line_1.point2) * dir_p1_u2_L
-      )), bound_n
-    )
+  __m128 dist = _mm_div_ps (
+    _mm_set_ps (0.f, 0.f, middle_kiss.percan() * v_1, middle_kiss * d_L), 
+    _mm_set1_ps (v_1 * d_L)
   );
 
-  Dir2 v21p = (line_1.point2 - line_1.point1).percan();
-  __m128 coef_1 = _mm_rcp_ps(_mm_set1_ps (v21p * dir_p1_u1));
-  __m128 meet_cond_1 = _mm_and_ps(
-    _mm_cmpgt_ps (
-      _mm_mul_ps (coef_1, _mm_set_ps (
-        0.f,
-        (middle_kiss - line_1.point1) * v21p,
-        (line_2.point1 - line_1.point1) * v21p,
-        (line_2.point2 - line_1.point1) * v21p
-      )), bound_p
-    ),
-    _mm_cmple_ps (
-      _mm_mul_ps (coef_1, _mm_set_ps (
-        0.f,
-        (middle_kiss - line_1.point1) * dir_p1_u1_L,
-        (line_2.point1 - line_1.point1) * dir_p1_u1_L,
-        (line_2.point2 - line_1.point1) * dir_p1_u1_L
-      )), bound_n
-    )
-  );
+  __m128 meet_cond = _mm_cmpgt_ps (dist, _mm_set1_ps (0.0001));
+  __m128 over_both = _mm_and_ps (_mm_cmplt_ps (dist, _mm_set1_ps (1.0001)), meet_cond);
 
-  __m128 meet_cond = _mm_and_ps (meet_cond_1, meet_cond_2);
-
-  return (_mm_movemask_ps(meet_cond) & 0b111) << 3 | _mm_movemask_ps(over_both);
+  return (_mm_movemask_ps(meet_cond) & 0b0010) | (_mm_movemask_ps(over_both) & 0b0001);
 }
 
 static inline int meeting_condition_for_obfuscating_by_direction (
-  const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position, 
+  const SecondLevelElement& line_1, 
+  const SecondLevelElement& line_2, 
+  const Dir2& d, 
   Dir2& lipstick_marks
 ) {
 
-  const Dir2 dir_v = line_2.point2 - line_2.point1;
-  const Dir2 dir_p1_u1 = line_1.point1 - position; 
-  const Dir2 dir_p1_u2 = line_1.point2 - position; 
-  const Dir2 dir_p1_u1_L = dir_p1_u1.percan();
-  const Dir2 dir_p1_u2_L = dir_p1_u2.percan(); 
-  const Dir2 dir_p2_u1 = line_2.point1 - position; 
-  const Dir2 dir_p2_u2 = line_2.point2 - position; 
+  const Dir2 v_1 = line_1.point2 - line_1.point1;
+  const Dir2 v_2 = line_2.point2 - line_2.point1;
+  const Dir2 d_L = d.percan();
 
-  lipstick_marks = (-Dir2 {
-    (dir_p2_u1 * dir_p1_u1_L) / (dir_v * dir_p1_u1_L),
-    (dir_p2_u1 * dir_p1_u2_L) / (dir_v * dir_p1_u2_L)
-  }).bound01();
+  lipstick_marks = Dir2 {
+    d.pLd (line_1.point1 - line_2.point1, v_2),
+    d.pLd (line_1.point2 - line_2.point1, v_2)
+  }.bound01();
 
-  if (lipstick_marks.y > lipstick_marks.x)
-    std::swap (lipstick_marks.y, lipstick_marks.x);
+  if (lipstick_marks.y > lipstick_marks.x) {
+    std::swap (lipstick_marks.x, lipstick_marks.y);
+  }
 
-  Dir2 middle_kiss = dir_v.madd(_mm_cvtss_f32(_mm_hadd_ps(lipstick_marks.v, lipstick_marks.v)) * 0.5f, dir_p2_u1);
-
-  __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
-
-  __m128 coef = _mm_rcp_ps(_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
+  Dir2 middle_kiss = v_2.madd (
+    _mm_cvtss_f32 (_mm_hadd_ps (lipstick_marks.v, lipstick_marks.v)) * 0.5f, 
+    line_2.point1
+  );
+  __m128 bound_under = _mm_set1_ps (0.0001);
+  __m128 denom = _mm_rcp_ps (_mm_set1_ps (v_1 * d_L));
+  __m128 dist = _mm_mul_ps (_mm_set_ps (
+    0.f,
+    (middle_kiss - line_1.point1) * d_L,
+    (line_2.point1 - line_1.point1) * d_L,
+    (line_2.point2 - line_1.point1) * d_L
+  ), denom);
   __m128 over_both = _mm_and_ps (
-    _mm_cmpgt_ps (
-      _mm_mul_ps (coef, _mm_set_ps (
-        0.f, 
-        middle_kiss * dir_p1_u2_L, 
-        dir_p2_u1 * dir_p1_u2_L, 
-        dir_p2_u2 * dir_p1_u2_L
-      )), bound_p
-    ),
-    _mm_cmple_ps (
-      _mm_mul_ps (coef, _mm_set_ps (
-        0.f, 
-        middle_kiss * dir_p1_u1_L, 
-        dir_p2_u1 * dir_p1_u1_L, 
-        dir_p2_u2 * dir_p1_u1_L
-      )), bound_n
-    )
+    _mm_cmplt_ps (dist, _mm_set1_ps (1.0001)), 
+    _mm_cmpgt_ps (dist, bound_under)
   );
 
-  return _mm_movemask_ps(over_both);
+  return (_mm_movemask_ps(over_both) & 0b111);
 }
 
 std::vector<MaskObject> generate_view_covering_by_direction (const Dir2& direction, const std::vector<MaskObject>& segments) {
@@ -188,8 +126,8 @@ std::vector<MaskObject> generate_view_covering_by_direction (const Dir2& directi
             direction
           );
 
-          if (meet_cond & 0b111) {
-            if (meet_cond & 0b111000) {
+          if (meet_cond & 0b1) {
+            if (meet_cond & 0b10) {
               pos_2 = buckets[pos_2].first_level_offset;
               goto POS_2_NEXT;
             } else {
@@ -231,22 +169,16 @@ std::vector<MaskObject> generate_view_covering_by_direction (const Dir2& directi
           int meet_cond = meeting_condition_for_obfuscating_by_direction (
             buckets[pos_1].data[inner_pos_1], 
             line_2, 
-            direction, 
+            direction,
             lipstick_marks
           );
 
           /* obfuscate one side. */
           if ((meet_cond & 0b11) == 0b10) {
-            if (meet_cond & 0b100)
-              line_2.point1 += dir_v * lipstick_marks.x;
-            else
-              line_2.point1 += dir_v * lipstick_marks.y;
+            line_2.point1 = dir_v.madd(lipstick_marks.x, line_2.point1);
 
           } else if ((meet_cond & 0b11) == 0b01) {
-            if (meet_cond & 0b100)
-              line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
-            else
-              line_2.point2 = dir_v.madd(lipstick_marks.x, line_2.point1);
+            line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
           
           /* obfuscate subsegment(divide the segment in two parts). */
           } else if (meet_cond == 0b100) {
