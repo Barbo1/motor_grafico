@@ -23,7 +23,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   int32_t bot = bound_inside (std::floor(miny), height);
 
   // Calculating coefitients.
-  std::array<std::array<float, 4>, 6> coef = std::array<std::array<float, 4>, 6>();
+  alignas(16) std::array<std::array<float, 4>, 6> coef = std::array<std::array<float, 4>, 6>();
 
   uint32_t many_segments = 0;
   for (std::size_t i = 1; i <= 6; i++) {
@@ -31,15 +31,17 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
     if (p1_p2.y != 0) {
       float q = 1.f / p1_p2.y;
       float mi = p1_p2.x * q;
-      float ci = points[i+1].x - points[i+1].y * mi;
+      float ci = std::fmaf(-mi, points[i+1].y, points[i+1].x);
       float p = -points[i].y * q;
       coef[many_segments++] = {
-        {mi, ci + bot * mi, q, p + bot * q}      
+        {mi, std::fmaf(mi, bot, ci), q, std::fmaf(q, bot, p)}
       };
     }
   }
 
-  std::array<std::optional<int32_t>, 2> bounds = std::array<std::optional<int32_t>, 2>();
+  // Filling the shadows.
+  __m256i color_mm = _mm256_set1_epi32 (color);
+  alignas(8) std::array<std::optional<int32_t>, 2> bounds = std::array<std::optional<int32_t>, 2>();
   
   auto is_value = [&] (int32_t inter) {
     return
@@ -47,8 +49,6 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
       (bounds[1].has_value() && bounds[1].value() == inter);
   };
 
-  // Filling the shadows.
-  __m256i color_mm = _mm256_set1_epi32 (color);
   for (int32_t level = bot * width; level < top; level += width) {
     bounds = {std::optional<int32_t>(), std::optional<int32_t>()};
     uint32_t founded = 0;
@@ -66,7 +66,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
       const std::pair<int32_t, int32_t> min_max_res = std::minmax(bounds[0].value(), bounds[1].value());
       int32_t first = bound_inside (min_max_res.first - 1, width) + level;
       int32_t last = bound_inside (min_max_res.second + 1, width) + level;
-      uint32_t many = (last - first);
+      uint32_t many = last - first;
 
       __m256i* position_256 = (__m256i*)(buffer + first);
       for (uint32_t i = 0; i < many/8; i++, position_256++)

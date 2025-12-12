@@ -5,7 +5,7 @@
 #include <utility>
 #include <immintrin.h>
 
-inline int meeting_condition_for_ordering_by_point (const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position) {
+static inline int meeting_condition_for_ordering_by_point (const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position) {
   const Dir2 dir_v = line_2.point2 - line_2.point1;
   const Dir2 dir_p1_u1 = line_1.point1 - position; 
   const Dir2 dir_p1_u2 = line_1.point2 - position; 
@@ -43,51 +43,54 @@ inline int meeting_condition_for_ordering_by_point (const SecondLevelElement& li
     )
   );
 
-  __m128 coef_1 = _mm_rcp_ps(_mm_set1_ps ((line_1.point2 - line_1.point1).percan() * dir_p1_u1));
-  __m128 coef_2 = _mm_rcp_ps(_mm_set1_ps ((line_1.point1 - line_1.point2).percan() * dir_p1_u2));
-  __m128 meet_cond = _mm_and_ps (
-    _mm_and_ps(
-      _mm_cmpgt_ps (
-        _mm_mul_ps (coef_2, _mm_set_ps (
-          0.f,
-          (middle_kiss - line_1.point2) * (line_1.point1 - line_1.point2).percan(),
-          (line_2.point1 - line_1.point2) * (line_1.point1 - line_1.point2).percan(),
-          (line_2.point2 - line_1.point2) * (line_1.point1 - line_1.point2).percan()
-        )), bound_p
-      ),
-      _mm_cmple_ps (
-        _mm_mul_ps (coef_2, _mm_set_ps (
-          0.f,
-          (middle_kiss - line_1.point2) * dir_p1_u2_L,
-          (line_2.point1 - line_1.point2) * dir_p1_u2_L,
-          (line_2.point2 - line_1.point2) * dir_p1_u2_L
-        )), bound_n
-      )
+  Dir2 v12p = (line_1.point1 - line_1.point2).percan();
+  __m128 coef_2 = _mm_rcp_ps(_mm_set1_ps (v12p * dir_p1_u2));
+  __m128 meet_cond_2 = _mm_and_ps(
+    _mm_cmpgt_ps (
+      _mm_mul_ps (coef_2, _mm_set_ps (
+        0.f,
+        (middle_kiss - line_1.point2) * v12p,
+        (line_2.point1 - line_1.point2) * v12p,
+        (line_2.point2 - line_1.point2) * v12p
+      )), bound_p
     ),
-    _mm_and_ps(
-      _mm_cmpgt_ps (
-        _mm_mul_ps (coef_1, _mm_set_ps (
-          0.f,
-          (middle_kiss - line_1.point1) * (line_1.point2 - line_1.point1).percan() ,
-          (line_2.point1 - line_1.point1) * (line_1.point2 - line_1.point1).percan(),
-          (line_2.point2 - line_1.point1) * (line_1.point2 - line_1.point1).percan()
-        )), bound_p
-      ),
-      _mm_cmple_ps (
-        _mm_mul_ps (coef_1, _mm_set_ps (
-          0.f,
-          (middle_kiss - line_1.point1) * dir_p1_u1_L,
-          (line_2.point1 - line_1.point1) * dir_p1_u1_L,
-          (line_2.point2 - line_1.point1) * dir_p1_u1_L
-        )), bound_n
-      )
+    _mm_cmple_ps (
+      _mm_mul_ps (coef_2, _mm_set_ps (
+        0.f,
+        (middle_kiss - line_1.point2) * dir_p1_u2_L,
+        (line_2.point1 - line_1.point2) * dir_p1_u2_L,
+        (line_2.point2 - line_1.point2) * dir_p1_u2_L
+      )), bound_n
     )
   );
+
+  Dir2 v21p = (line_1.point2 - line_1.point1).percan();
+  __m128 coef_1 = _mm_rcp_ps(_mm_set1_ps (v21p * dir_p1_u1));
+  __m128 meet_cond_1 = _mm_and_ps(
+    _mm_cmpgt_ps (
+      _mm_mul_ps (coef_1, _mm_set_ps (
+        0.f,
+        (middle_kiss - line_1.point1) * v21p,
+        (line_2.point1 - line_1.point1) * v21p,
+        (line_2.point2 - line_1.point1) * v21p
+      )), bound_p
+    ),
+    _mm_cmple_ps (
+      _mm_mul_ps (coef_1, _mm_set_ps (
+        0.f,
+        (middle_kiss - line_1.point1) * dir_p1_u1_L,
+        (line_2.point1 - line_1.point1) * dir_p1_u1_L,
+        (line_2.point2 - line_1.point1) * dir_p1_u1_L
+      )), bound_n
+    )
+  );
+
+  __m128 meet_cond = _mm_and_ps (meet_cond_1, meet_cond_2);
 
   return (_mm_movemask_ps(meet_cond) & 0b111) << 3 | _mm_movemask_ps(over_both);
 }
 
-inline int meeting_condition_for_obfuscating_by_point (
+static inline int meeting_condition_for_obfuscating_by_point (
   const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position, 
   Dir2& lipstick_marks
 ) {
@@ -116,17 +119,17 @@ inline int meeting_condition_for_obfuscating_by_point (
   __m128 over_both = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef, _mm_set_ps (
-        0.f,
+        0.f, 
         middle_kiss * dir_p1_u2_L, 
-        dir_p2_u1 * dir_p1_u2_L,
+        dir_p2_u1 * dir_p1_u2_L, 
         dir_p2_u2 * dir_p1_u2_L
       )), bound_p
     ),
     _mm_cmple_ps (
       _mm_mul_ps (coef, _mm_set_ps (
-        0.f,
+        0.f, 
         middle_kiss * dir_p1_u1_L, 
-        dir_p2_u1 * dir_p1_u1_L,
+        dir_p2_u1 * dir_p1_u1_L, 
         dir_p2_u2 * dir_p1_u1_L
       )), bound_n
     )
@@ -135,7 +138,7 @@ inline int meeting_condition_for_obfuscating_by_point (
   return _mm_movemask_ps(over_both);
 }
 
-std::vector<MaskObject> generate_view_covering_by_point (Dir2 position, const std::vector<MaskObject>& segments) {
+std::vector<MaskObject> generate_view_covering_by_point (const Dir2& position, const std::vector<MaskObject>& segments) {
 
   /* Initialization of the buckets. */
   std::vector<FirstLevelElement> buckets(

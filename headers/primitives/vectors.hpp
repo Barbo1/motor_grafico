@@ -129,15 +129,15 @@ class alignas(16) Dir2 {
     template<typename Self>
     inline auto percan (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
-        self.v = _mm_castsi128_ps(_mm_xor_si128 (
-          _mm_shuffle_epi32(_mm_castps_si128(self.v), 0b11100001),
-          _mm_set_epi64x(0, 0x80000000)
-        ));
+        self.v = _mm_xor_ps (
+          _mm_shuffle_ps(self.v, self.v, 0b11100001),
+          _mm_set_ps (0.f, -0.f, 0.f, -0.f)
+        );
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_castsi128_ps(_mm_xor_si128 (
-        _mm_shuffle_epi32(_mm_castps_si128(self.v), 0b11100001),
-        _mm_set_epi64x(0, 0x80000000)
-      ))};
+      } else return Dir2 {_mm_xor_ps (
+        _mm_shuffle_ps(self.v, self.v, 0b11100001),
+        _mm_set_ps (0.f, -0.f, 0.f, -0.f)
+      )};
     }
 
     inline void rotate (const float& angle) {
@@ -168,11 +168,17 @@ class alignas(16) Dir2 {
 
     template<DirFin R>
     inline float pL (R&& dir) const {
-      __m128 opr = _mm_mul_ps (
-        _mm_castsi128_ps (_mm_shuffle_epi32(_mm_castps_si128(this->v), 0b11100001)), 
-        dir.v
-      );
+      __m128 opr = _mm_mul_ps (_mm_shuffle_ps(this->v, this->v, 0b11100001), dir.v);
       return _mm_cvtss_f32 (_mm_hsub_ps(opr, opr));
+    }
+
+    template<DirFin R1, DirFin R2>
+    inline float pLd (R1&& dir1, R2&& dir2) const {
+      __m128 mine = _mm_shuffle_ps(this->v, this->v, 0b00010001);
+      __m128 opr1 = _mm_mul_ps (mine, dir1.v);
+      __m128 opr2 = _mm_mul_ps (mine, dir2.v);
+      __m128 opr = _mm_hsub_ps(opr1, opr2);
+      return _mm_cvtss_f32 (_mm_div_ps(opr, _mm_shuffle_ps(opr, opr, 0b00010010)));
     }
 
     inline float modulo () const {

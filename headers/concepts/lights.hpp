@@ -41,9 +41,7 @@ class ViewMask {
 
     /* mask drawing. */
     ViewMask& draw_color_uniform_mask (const Uint32 color);
-    ViewMask& draw_light_uniform_mask (
-      const Light& light, const std::vector<MaskObject>& segments, const Uint32 shadow_color
-    );
+    ViewMask& draw_light_uniform_mask (const Light& light);
     ViewMask& draw_color_view_mask (
       const Dir2& position, const std::vector<MaskObject>& segments, const Uint32 shadow_color
     );
@@ -67,9 +65,11 @@ class ViewMask {
 };
 
 
-/***********************/
-/*       Helpers       */
-/***********************/
+/**************************/
+/*       Light Math       */
+/**************************/
+
+enum ViewCoveringType {point, direction};
 
 /* This function is meant to draw a shadow in the buffer of a view mask. The 
  * function takes an array of 8, meaning that it receives 6 points denoting
@@ -85,6 +85,14 @@ void fill_view_with_shadows (
   const Dir2& position, 
   const std::vector<MaskObject>& segments, 
   const Uint32 color
+);
+
+/* This function fill the remaining space of a view with light from the 
+ * position of the light to all the places with no color defined (0). 
+ * */
+void fill_view_with_lights (
+  SDL_Surface*& img, 
+  const Light& light
 );
 
 /* Objects to help construct the arrange of buckets to discard lines. */
@@ -103,12 +111,9 @@ struct FirstLevelElement {
 };
 
 /* Generate a covering view over the segments passed in 'segments', meaning that 
- * it will return the ones that can be "viewed" from the position. 
+ * it will return the ones that can be "viewed" from the position or through a 
+ * direction. The main difference between the position's and direction's versions 
+ * is that this one make a covering resembling a parallel view.
  * */
-std::vector<MaskObject> generate_view_covering_by_point (Dir2 position, const std::vector<MaskObject>& segments);
-
-/* Generate a covering view over the segments due a direction. The main difference 
- * between the position's and direction's versions is that this one make a covering 
- * resembling a parallel view.
- * */
-std::vector<MaskObject> generate_view_covering_by_direction (Dir2 direction, const std::vector<MaskObject>& segments);
+std::vector<MaskObject> generate_view_covering_by_point (const Dir2& position, const std::vector<MaskObject>& segments);
+std::vector<MaskObject> generate_view_covering_by_direction (const Dir2& direction, const std::vector<MaskObject>& segments);

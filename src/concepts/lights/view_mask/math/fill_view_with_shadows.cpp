@@ -6,11 +6,8 @@ void fill_view_with_shadows (
   SDL_Surface*& img, const Dir2& position, const std::vector<MaskObject>& segments, const Uint32 color
 ) {
   Uint32* buffer = (Uint32*)img->pixels;
-  for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++) {
-    buffer[i] = 0;
-  }
 
-  const std::vector<MaskObject> viewed = generate_view_covering_by_point(position, segments);
+  const std::vector<MaskObject> viewed = generate_view_covering_by_point (position, segments);
 
   Dir2 dims = Dir2 {(float)img->w, (float)img->h};
   const Dir2& position_off = dims.nmadd (0.5f, position);
@@ -21,14 +18,14 @@ void fill_view_with_shadows (
     const Dir2 dir2_off = segment.point2 - position;
 
     const Dir2 I_1 = Dir2 {_mm_xor_ps (_mm_and_ps (dir1_off.v, _mm_set1_ps (-0.f)), dims.v)};
-    const Dir2 aux1 = Dir2 {_mm_mul_ps ((I_1 - position_off).v, _mm_rcp_ps (dir1_off.v))};
+    const Dir2 aux1 = Dir2 {_mm_div_ps ((I_1 - position_off).v, dir1_off.v)};
     Dir2 Q_1 = dir1_off * std::min (aux1.x, aux1.y);
     
     const Dir2 I_2 = Dir2 {_mm_xor_ps (_mm_and_ps (dir2_off.v, _mm_set1_ps (-0.f)), dims.v)};
-    const Dir2 aux2 = Dir2 {_mm_mul_ps ((I_2 - position_off).v, _mm_rcp_ps (dir2_off.v))};
+    const Dir2 aux2 = Dir2 {_mm_div_ps ((I_2 - position_off).v, dir2_off.v)};
     Dir2 Q_2 = dir2_off * std::min (aux2.x, aux2.y);
 
-    const float opr = (dir2_off * (Q_2 - Q_1)) / dir2_off.pL(dir1_off);
+    const float opr = dir2_off.pLd(Q_2 - Q_1, dir1_off);
     const float mod = dir1_off.percan().madd(opr, Q_1).modulo();
 
     const Dir2 Q_off = (dir1_off.normalize() + dir2_off.normalize()) * mod;
