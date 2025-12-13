@@ -49,12 +49,12 @@
         |V| + dibujo de mascara con luz en un punto,
         |V| + dibujo de mascara uniforme,
         |V| + dibujo de mascara de vista direccional y lineas de bloqueo,
-        | | + dibujo de mascara de vista direccional con luz y lineas de bloqueo,
         | | + superposicion de mascaras,
  | | - mejora del modelo de luz:
         | | + view covering para un circulo, linea y square,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square),
+        | | + alguna forma de iluminacion ambiental?
  | | - cambiar algoritmo de dibujo de un circulo.
  | | - falta implementar: 
         + la funcion project de image_modifier, y la function de print polygon,

@@ -51,9 +51,6 @@ class ViewMask {
     ViewMask& draw_color_directional_mask (
       const Dir2& direction, const std::vector<MaskObject>& segments, const Uint32 shadow_color
     );
-    ViewMask& draw_light_directional_mask (
-      const Dir2& direction, const std::vector<MaskObject>& segments, const Uint32 shadow_color
-    );
 
     /* mask fusion. */
     ViewMask operator& (ViewMask mask);
@@ -132,5 +129,11 @@ struct FirstLevelElement {
  * direction. The main difference between the position's and direction's versions 
  * is that this one make a covering resembling a parallel view.
  * */
-std::vector<MaskObject> generate_view_covering_by_point (const Dir2& position, const std::vector<MaskObject>& segments);
-std::vector<MaskObject> generate_view_covering_by_direction (const Dir2& direction, const std::vector<MaskObject>& segments);
+std::vector<MaskObject> generate_view_covering_by_point (
+  const Dir2& position, 
+  const std::vector<MaskObject>& segments
+);
+std::vector<MaskObject> generate_view_covering_by_direction (
+  const Dir2& direction, 
+  const std::vector<MaskObject>& segments
+);
