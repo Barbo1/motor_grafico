@@ -2,4 +2,5 @@
 
 ImageModifier::ImageModifier (const ImageModifier & texture) noexcept {
   this->texture = SDL_ConvertSurface(texture.texture, texture.texture->format, 0);
+  this->aquired = 0;
 }

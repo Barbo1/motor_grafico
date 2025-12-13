@@ -2,5 +2,6 @@
 
 ImageModifier::ImageModifier () noexcept {
   this->texture = nullptr;
+  this->aquired = 0;
 }
 

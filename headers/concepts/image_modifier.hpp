@@ -15,6 +15,7 @@
 class ImageModifier {
   private: 
     SDL_Surface* texture;
+    int aquired;
     
     ImageModifier (int height, int width, Uint32* pixels) noexcept;
     static ImageModifier bounder (int* bounds, int height, int width, SDL_Color color);

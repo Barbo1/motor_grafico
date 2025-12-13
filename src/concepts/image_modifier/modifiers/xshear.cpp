@@ -20,7 +20,12 @@ ImageModifier& ImageModifier::xshear (float angle) {
       fin[j] = 0;
   }
 
+  if (this->aquired)
+    std::free(this->texture->pixels);
   SDL_FreeSurface (this->texture);
+
   this->texture = sur;
+  this->aquired = 0;
+
   return *this;
 }

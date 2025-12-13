@@ -89,10 +89,10 @@ int main () {
     .color = {.r = 1.0f, .g = 0.50f, .b = 0.1f},
   }; 
   SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
-  Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
+  //Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
   SDL_FreeFormat(format);
 
-  const std::vector<MaskObject> segments = get_segments_1();
+  const std::vector<MaskObject> segments = get_segments_2();
 
   bool cont = true;
   SDL_Event event;
@@ -106,7 +106,7 @@ int main () {
 
       aux_time_1 += 1;
 
-      view.draw_light_view_mask (light_0, segments, shadow_color);
+      view.draw_light_uniform_mask (light_0);
       glb->apply_mask(view);
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);

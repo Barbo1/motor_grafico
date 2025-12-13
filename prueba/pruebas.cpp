@@ -53,7 +53,7 @@ int main () {
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
   Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6, 0.3, false, true, &color);
-  c2.set_texture(img_mod_1.resize(400, 60).cast(glb));
+  c2.set_texture(img_mod_1.resize(400, 60).rotate180().cast(glb));
 
 
   /* Creacion de lineas de colision. */

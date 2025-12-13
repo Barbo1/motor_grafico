@@ -15,7 +15,12 @@ ImageModifier& ImageModifier::rotate90 () {
     }
   }
 
+  if (this->aquired)
+    std::free(this->texture->pixels);
   SDL_FreeSurface (this->texture);
+
   this->texture = sur;
+  this->aquired = 0;
+
   return *this;
 }

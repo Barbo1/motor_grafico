@@ -3,4 +3,5 @@
 
 ImageModifier::ImageModifier (ImageModifier && texture) noexcept {
   this->texture = std::exchange (texture.texture, nullptr);
+  this->aquired = std::exchange (texture.aquired, 0);
 }

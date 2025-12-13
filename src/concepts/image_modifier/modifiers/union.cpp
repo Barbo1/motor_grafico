@@ -58,8 +58,12 @@ ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
       }
     }
 
+    if (this->aquired)
+      std::free(this->texture->pixels);
     SDL_FreeSurface(this->texture);
+
     this->texture = sur;
+    this->aquired = 0;
   }
   return *this;
 }

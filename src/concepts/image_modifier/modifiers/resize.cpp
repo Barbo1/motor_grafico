@@ -7,8 +7,13 @@ ImageModifier& ImageModifier::resize (uint32_t height, uint32_t width) {
   );
   if (sur != nullptr) {
     SDL_BlitScaled (this->texture, nullptr, sur, nullptr);
+
+    if (this->aquired)
+      std::free(this->texture->pixels);
     SDL_FreeSurface(this->texture);
+
     this->texture = sur;
+    this->aquired = 0;
   }
   return *this;
 }

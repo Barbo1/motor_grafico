@@ -23,7 +23,12 @@ ImageModifier& ImageModifier::shift (const Dir2& offset) {
       for (uint32_t j = 0; j < w; j++)
         arr[i++] = ((Uint32*)this->texture->pixels)[k * w + j];
     }
+
+    if (this->aquired)
+      std::free(this->texture->pixels);
     SDL_FreeSurface(this->texture);
+
+    this->aquired = 0;
     this->texture = sur;
   }
   return *this;
