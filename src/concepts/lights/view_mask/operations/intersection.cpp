@@ -1,5 +1,6 @@
 #include "../../../../../headers/concepts/lights.hpp"
 
-ViewMask ViewMask::operator& (ViewMask mask) {
+ViewMask& ViewMask::operator& (const ViewMask& mask) {
+  
   return *this;
 }

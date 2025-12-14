@@ -41,7 +41,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   }
 
   // Filling the shadows.
-  __m256i color_mm = _mm256_set1_epi32 (color);
+  __m128i color_mm = _mm_set1_epi32 (color);
   alignas(8) std::array<std::optional<int32_t>, 2> bounds = std::array<std::optional<int32_t>, 2>();
   
   auto is_value = [&] (int32_t inter) {
@@ -69,12 +69,12 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
       int32_t last = bound_inside (min_max_res.second + 1, width) + level;
       uint32_t many = last - first;
 
-      __m256i* position_256 = (__m256i*)(buffer + first);
-      for (uint32_t i = 0; i < many/8; i++, position_256++)
-        _mm256_storeu_si256 (position_256, color_mm);
+      __m128i* position_256 = (__m128i*)(buffer + first);
+      for (uint32_t i = 0; i < many/4; i++, position_256++)
+        _mm_storeu_si128 (position_256, color_mm);
 
       Uint32* position_32 = (Uint32*)position_256;
-      for (uint32_t i = 0; i < many%8; position_32++, i++) {
+      for (uint32_t i = 0; i < many%4; position_32++, i++) {
         *position_32 = color;
       }
     }

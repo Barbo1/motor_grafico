@@ -22,8 +22,9 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
   Dir2 middle_kiss = dir_v.madd(_mm_cvtss_f32(_mm_hadd_ps(lipstick_marks.v, lipstick_marks.v)) * 0.5f, line_2.point1);
 
   __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
+  __m128 aux;
 
-  __m128 coef = _mm_rcp_ps(_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
+  __m128 coef = _mm_rcp_ps (_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
   __m128 over_both = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef, _mm_set_ps (
@@ -44,8 +45,9 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
   );
 
   Dir2 v12p = (line_1.point1 - line_1.point2).percan();
-  __m128 coef_2 = _mm_rcp_ps(_mm_set1_ps (v12p * dir_p1_u2));
-  __m128 meet_cond_2 = _mm_and_ps(
+  aux = _mm_mul_ps (v12p.v, dir_p1_u2.v);
+  __m128 coef_2 = _mm_rcp_ps (_mm_add_ps (_mm_shuffle_ps (aux, aux, 0b01010101), _mm_shuffle_ps (aux, aux, 0b00000000)));
+  __m128 meet_cond_2 = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef_2, _mm_set_ps (
         0.f,
@@ -64,15 +66,15 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
     )
   );
 
-  Dir2 v21p = (line_1.point2 - line_1.point1).percan();
-  __m128 coef_1 = _mm_rcp_ps(_mm_set1_ps (v21p * dir_p1_u1));
-  __m128 meet_cond_1 = _mm_and_ps(
+  aux = _mm_mul_ps ((-v12p).v, dir_p1_u1.v);
+  __m128 coef_1 = _mm_rcp_ps (_mm_add_ps (_mm_shuffle_ps (aux, aux, 0b01010101), _mm_shuffle_ps (aux, aux, 0b00000000)));
+  __m128 meet_cond_1 = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef_1, _mm_set_ps (
         0.f,
-        (middle_kiss - line_1.point1) * v21p,
-        (line_2.point1 - line_1.point1) * v21p,
-        (line_2.point2 - line_1.point1) * v21p
+        (line_1.point1 - middle_kiss) * v12p,
+        (line_1.point1 - line_2.point1) * v12p,
+        (line_1.point1 - line_2.point2) * v12p
       )), bound_p
     ),
     _mm_cmple_ps (
@@ -115,7 +117,8 @@ static inline int meeting_condition_for_obfuscating_by_point (
 
   __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
 
-  __m128 coef = _mm_rcp_ps(_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
+  __m128 aux = _mm_mul_ps (dir_p1_u2_L.v, dir_p1_u1.v);
+  __m128 coef = _mm_rcp_ps(_mm_add_ps (_mm_shuffle_ps (aux, aux, 0b01010101), _mm_shuffle_ps (aux, aux, 0b00000000)));
   __m128 over_both = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef, _mm_set_ps (

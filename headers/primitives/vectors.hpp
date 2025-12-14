@@ -100,8 +100,8 @@ class alignas(16) Dir2 {
     
     template<DirFin R>
     inline float operator* (R&& dir) const {
-      __m128 res = _mm_mul_ps(this->v, dir.v);
-      return _mm_cvtss_f32(_mm_hadd_ps (res, res));
+      __m128 res = _mm_mul_ps (this->v, dir.v);
+      return _mm_cvtss_f32 (_mm_add_ps (res, _mm_shuffle_ps(res, res, 0b01010101)));
     }
 
     template<typename Self>

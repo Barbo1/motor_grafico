@@ -1,4 +1,5 @@
 #include "../headers/concepts/lights.hpp"
+#include "../headers/concepts/image_modifier.hpp"
 #include "../headers/primitives/global.hpp"
 
 #include <SDL2/SDL.h>
@@ -80,16 +81,24 @@ std::vector<MaskObject> get_segments_3 () {
 
 int main () {
   std::string name = "Ventana";
-  Global* glb = Global::create(name, 800, 1000, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create(name, 600, 1000, SDL_Color {30, 30, 30, 0});
 
   Light light_0 = {
+    .intensity = 50.f,
+    .attenuation = 0.05f,
+    .position = {518.f, 334.f},
+    .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+  }; 
+
+  Light light_1 = {
     .intensity = 100.f,
     .attenuation = 0.01f,
-    .position = {518.f, 334.f},
-    .color = {.r = 1.0f, .g = 0.50f, .b = 0.1f},
-  }; 
+    .position = {318.f, 337.f},
+    .color = {.r = 0.0f, .g = 1.f, .b = 0.1f},
+  };
+
   SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
-  //Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
+  Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
   SDL_FreeFormat(format);
 
   const std::vector<MaskObject> segments = get_segments_2();
@@ -97,17 +106,28 @@ int main () {
   bool cont = true;
   SDL_Event event;
   
-  ViewMask view (glb->get_width(), glb->get_height());
+  Visualizer<D2FIG> img_mod = ImageModifier::chargePNG("../images/psic2.png").resize(200, 200).cast(glb);
+  
+  ViewMask view_0 (glb->get_width(), glb->get_height());
+  ViewMask view_1 (glb->get_width(), glb->get_height());
   float aux_time_1 = 0.f, avg_time_1 = 0.f;
 
   while (cont) {
     glb->begin_render();
-      std::cout << "position: (" << light_0.position.x << ", " << light_0.position.y << ")";
+      std::cout << "light_0: (" << light_0.position.x << ", " << light_0.position.y << ")" << std::endl;
+      std::cout << "light_1: (" << light_1.position.x << ", " << light_1.position.y << ")" << std::endl;
+
+      img_mod.draw(glb, Dir2 {200.f, 200.f});
 
       aux_time_1 += 1;
 
-      view.draw_light_uniform_mask (light_0);
-      glb->apply_mask(view);
+      view_0.draw_light_view_mask (light_0, segments, shadow_color);
+      view_1.draw_light_view_mask (light_1, segments, shadow_color);
+      glb->apply_mask(view_1 | view_0);
+
+      float a = glb->get_time();
+      avg_time_1 += (a - avg_time_1) / aux_time_1;
+      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
       for (const auto& segment: segments) {
@@ -116,10 +136,7 @@ int main () {
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
       SDL_RenderDrawPoint(glb->get_render(), light_0.position.x, light_0.position.y);
-
-      float a = glb->get_time();
-      avg_time_1 += (a - avg_time_1) / aux_time_1;
-      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
+      SDL_RenderDrawPoint(glb->get_render(), light_1.position.x, light_1.position.y);
     glb->end_render();
     
     if (SDL_PollEvent(&event)) {
