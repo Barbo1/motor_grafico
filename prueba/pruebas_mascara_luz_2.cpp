@@ -91,10 +91,10 @@ int main () {
   }; 
 
   Light light_1 = {
-    .intensity = 100.f,
+    .intensity = 120.f,
     .attenuation = 0.01f,
     .position = {318.f, 337.f},
-    .color = {.r = 0.0f, .g = 1.f, .b = 0.1f},
+    .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
   };
 
   SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
@@ -113,17 +113,17 @@ int main () {
   float aux_time_1 = 0.f, avg_time_1 = 0.f;
 
   while (cont) {
-    glb->begin_render();
-      std::cout << "light_0: (" << light_0.position.x << ", " << light_0.position.y << ")" << std::endl;
-      std::cout << "light_1: (" << light_1.position.x << ", " << light_1.position.y << ")" << std::endl;
+    std::cout << "light_0: (" << light_0.position.x << ", " << light_0.position.y << ")" << std::endl;
+    std::cout << "light_1: (" << light_1.position.x << ", " << light_1.position.y << ")" << std::endl;
 
-      img_mod.draw(glb, Dir2 {200.f, 200.f});
+    glb->begin_render();
+      img_mod.draw (glb, Dir2 {200.f, 200.f});
 
       aux_time_1 += 1;
 
       view_0.draw_light_view_mask (light_0, segments, shadow_color);
       view_1.draw_light_view_mask (light_1, segments, shadow_color);
-      glb->apply_mask(view_1 | view_0);
+      glb->apply_mask (view_1 | view_0);
 
       float a = glb->get_time();
       avg_time_1 += (a - avg_time_1) / aux_time_1;
