@@ -42,7 +42,7 @@
        |V| + agregar operaciones necesarias para disminuir computo de vectores, reduciendo la operations.
  |V| - leer modelo de iluminacion 2d.
  |V| - corregir manejo de memoria de SDL_Surface.
- | | - crear algoritmos para luz:
+ |V| - crear algoritmos para luz:
         |V| + view covering para un punto,
         |V| + dibujo de mascara con de vista y lineas de bloqueo,
         |V| + dibujo de mascara con luz en un punto y lineas de bloqueo de luz,
@@ -54,6 +54,19 @@
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.
+ | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
+        mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
+        | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
+              posicionarse en algun lugar de la pantalla,
+        | | + reducir la cantidad de pixeles que tienen que ser computados en las mascaras 
+              grandes,
+        | | + mantener solamente una mascara dinamica, que sea cambiada en funcion de las 
+              demas luces, para deducir alocaciones y computo innecesario,
+        | | + extender el manejo de luces para aceptar fuentes de luz fuera de la pantalla,
+      Estas cosas comprender:
+        Cambiar luces para que sean objetos, que cuando se inicializan calculen la distancia
+        maxima hasta la que llega la luz, que abarca todas las funcionalidades.
+        | | + ,
  | | - falta implementar: 
         | | + la funcion project de image_modifier, y la function de print polygon,
         | | + rounded_square dentro de los constructores de figuras,
@@ -71,6 +84,7 @@
         + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
         + https://en.wikipedia.org/wiki/GIF
  | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
+ | | - hacer test_and_resolve_collition para ahorrar operaciones.
  | | - clase para manejo de:
         + sequencias de imagenes(Visualizer<D2SEQ>),
         + imagenes continuas(Visualizer<D2CON>) y,

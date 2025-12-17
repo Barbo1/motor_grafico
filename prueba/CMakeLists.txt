@@ -1,4 +1,4 @@
-add_executable (fin pruebas_mascara_luz_2.cpp)
+add_executable (fin pruebas.cpp)
 target_include_directories (fin PRIVATE ${CMAKE_SOURCE_DIR}/headers)
 target_link_libraries (fin PRIVATE 
   objsrc_concepts

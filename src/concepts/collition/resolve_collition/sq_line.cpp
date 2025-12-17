@@ -14,7 +14,7 @@ void resolve_collition (Square& sq, Line& line) {
     sq.position
   );
 
-  sq._velocity -= sq._collition_normal * (sq._collition_normal * sq._velocity * 2.f);
+  sq._velocity = sq._collition_normal.nmadd (sq._collition_normal * sq._velocity * 2.f, sq._velocity);
 
   sq._acc_f_k = 1.f;
   sq._normal_presence = true;

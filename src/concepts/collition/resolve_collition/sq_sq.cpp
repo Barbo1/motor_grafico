@@ -14,10 +14,10 @@ void resolve_collition (Square& sq1, Square& sq2) {
   AngDir2 ns = n * std::copysign(1.f, res);
   float p = ns * (sq1._velocity - sq2._velocity) * 2.f / (mass_1 + mass_2);
 
-  sq1._velocity -= ns * (p * mass_2 * sq1._movible);
-  sq2._velocity += ns * (p * mass_1 * sq2._movible);
+  sq1._velocity = ns.nmadd (p * mass_2 * sq1._movible, sq1._velocity);
+  sq2._velocity = ns.madd (p * mass_1 * sq2._movible, sq2._velocity);
 
-  sq1.position += n * (size * ns - res);
+  sq1.position = n.madd (size * ns - res, sq1.position);
 
   sq1._collition_normal = ns;
   sq2._collition_normal = -ns;

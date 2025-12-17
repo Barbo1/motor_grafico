@@ -12,6 +12,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   float maxy = Dir2 {_mm_max_ps (points[0].v, _mm_max_ps (points[1].v, _mm_max_ps(points[2].v,
     _mm_max_ps(points[3].v, _mm_max_ps(points[4].v, points[5].v))
   )))}.y;
+
   float miny = Dir2{_mm_min_ps (points[0].v, _mm_min_ps (points[1].v, _mm_min_ps(points[2].v,
     _mm_min_ps(points[3].v, _mm_min_ps(points[4].v, points[5].v))
   )))}.y;
@@ -32,7 +33,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
     if (p1_p2.y != 0) {
       float q = 1.f / p1_p2.y;
       float mi = p1_p2.x * q;
-      float ci = std::fmaf(-mi, points[i+1].y, points[i+1].x);
+      float ci = std::fmaf (-mi, points[i+1].y, points[i+1].x);
       float p = -points[i].y * q;
       coef[many_segments++] = {
         {mi, std::fmaf(mi, bot, ci), q, std::fmaf(q, bot, p)}
@@ -69,11 +70,11 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
       int32_t last = bound_inside (min_max_res.second + 1, width) + level;
       uint32_t many = last - first;
 
-      __m128i* position_256 = (__m128i*)(buffer + first);
-      for (uint32_t i = 0; i < many/4; i++, position_256++)
-        _mm_storeu_si128 (position_256, color_mm);
+      __m128i* position_128 = (__m128i*)(buffer + first);
+      for (uint32_t i = 0; i < many/4; i++, position_128++)
+        _mm_storeu_si128 (position_128, color_mm);
 
-      Uint32* position_32 = (Uint32*)position_256;
+      Uint32* position_32 = (Uint32*)position_128;
       for (uint32_t i = 0; i < many%4; position_32++, i++) {
         *position_32 = color;
       }

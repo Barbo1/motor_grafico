@@ -8,10 +8,10 @@ void resolve_collition (Square& sq, Circle& cir) {
   AngDir2 n = b.normalize(); 
   float p = n * (sq._velocity - cir._velocity) * 2.f / (mass_1 + mass_2);
 
-  sq._velocity -= n * (p * mass_2 * sq._movible);
-  cir._velocity += n * (p * mass_1 * cir._movible);
+  sq._velocity = n.nmadd (p * mass_2 * sq._movible, sq._velocity);
+  cir._velocity = n.madd (p * mass_1 * cir._movible, cir._velocity);
 
-  sq.position += n.nmadd(cir.radio, b);
+  sq.position += n.nmadd (cir.radio, b);
 
   sq._acc_f_k = sq._f_k * cir._f_k;
   cir._acc_f_k = sq._acc_f_k;
