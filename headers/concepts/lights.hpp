@@ -53,7 +53,6 @@ class ViewMask {
     );
 
     /* mask fusion. */
-    ViewMask& operator& (const ViewMask&);
     ViewMask& operator| (const ViewMask&);
 
     friend Global;

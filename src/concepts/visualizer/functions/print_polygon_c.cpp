@@ -20,20 +20,15 @@ void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
   points.push_back (points[0]);
   points.push_back (points[1]);
   for (std::size_t i = 1; i <= many_points; i++) {
-    double denom = 1 / (points[i].y - points[i+1].y);
-    double mi = (points[i].x - points[i+1].x) * denom;
-    double ci = points[i+1].x - points[i+1].y * mi;
-    double q, p;
     if (points[i+1].y != points[i].y) {
-      q = -denom;
-      p = -points[i].y * q;
-    } else {
-      q = 1 / (points[i+1].x - points[i].x);
-      p = (ci - points[i].x) * q;
-      q = mi * q;
+      double denom = 1 / (points[i].y - points[i+1].y);
+      double mi = (points[i].x - points[i+1].x) * denom;
+      double ci = points[i+1].x - points[i+1].y * mi;
+      double q = -denom;
+      double p = -points[i].y * q;
+      coefs[i-1] = {mi, mi*min_h + ci, q, q*min_h + p};
+      conds[i-1] = (points[i].y - points[i-1].y) * (points[i].y - points[i+1].y) < 0;
     }
-    coefs[i-1] = {mi, mi*min_h + ci, q, q*min_h + p};
-    conds[i-1] = (points[i].y - points[i-1].y) * (points[i].y - points[i+1].y) < 0;
   }
 
   /* Calculate the bound to make the texture. */
@@ -45,14 +40,14 @@ void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
   SDL_SetRenderDrawBlendMode(glb->get_render(), SDL_BLENDMODE_ADD);
 
   bounds.reserve (many_points);
-  for (uint32_t level = std::roundl(min_h); level <= std::roundl(max_h); level++) {
+  for (uint32_t level = std::roundl (min_h); level <= std::roundl (max_h); level++) {
     for (uint32_t i = 0; i < coefs.size(); i++) {
       auto& [d_elem, elem, d_q, q] = coefs[i];
 
       if (-0.00001 < q && q < 1.00001) [[likely]] {
-        int32_t inter = std::lround(elem);
+        int32_t inter = std::lround (elem);
         if (!conds[i] || std::ranges::all_of (
-          bounds.begin(), bounds.end(), [&] (int elem) {return elem != inter;}
+          bounds.begin (), bounds.end (), [&] (int elem) {return elem != inter;}
         )) [[likely]] bounds.push_back (inter);
       }
 

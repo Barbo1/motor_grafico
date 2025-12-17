@@ -1,5 +1,7 @@
 #include "../../../../headers/primitives/global.hpp"
+#include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_pixels.h>
+#include <SDL2/SDL_render.h>
 #include <cstdint>
 #include <iostream>
 #include <cstring>
@@ -32,10 +34,14 @@ Global::Global (std::string_view window_name, uint32_t height, uint32_t width, S
     std::exit(-1);
   }
 
-  /* Creation of texture. */
+  /* Creation of textures. */
   this->global_render_texture = SDL_CreateTexture(
     this->render, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height
   );
+  this->render_mask = SDL_CreateTexture(
+    this->render, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height
+  );
+  SDL_SetTextureBlendMode(this->render_mask, SDL_BLENDMODE_BLEND);
 
   /* Initialization of configurations. */
   this->clock_ticks = 0;

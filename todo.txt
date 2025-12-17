@@ -49,19 +49,20 @@
         |V| + dibujo de mascara con luz en un punto,
         |V| + dibujo de mascara uniforme,
         |V| + dibujo de mascara de vista direccional y lineas de bloqueo,
-        | | + superposicion de mascaras,
+        |V| + superposicion de mascaras,
+ | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
+ | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
+ | | - colisiones de poligonos con circulos, cuadrados y lineas.
+ | | - colisiones de poligonos con poligonos.
+ | | - falta implementar: 
+        | | + la funcion project de image_modifier, y la function de print polygon,
+        | | + rounded_square dentro de los constructores de figuras,
+        | | + collition_point sq_sq,
  | | - mejora del modelo de luz:
         | | + view covering para un circulo, linea y square,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square),
         | | + alguna forma de iluminacion ambiental?
- | | - cambiar algoritmo de dibujo de un circulo.
- | | - falta implementar: 
-        + la funcion project de image_modifier, y la function de print polygon,
-        + rounded_square dentro de los constructores de figuras,
-        + collition_point sq_sq,
- | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
- | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - agregar soporte a fuentes de letras(lo puedo dejar para las vacaciones):
         + https://learn.microsoft.com/en-us/typography/opentype/spec/
         + https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html
@@ -74,8 +75,9 @@
         + sequencias de imagenes(Visualizer<D2SEQ>),
         + imagenes continuas(Visualizer<D2CON>) y,
         + imagenes continuas con mapeo(Visualizer<D2MAP>).
- | | - colisiones de poligonos con circulos, cuadrados y lineas.
- | | - colisiones de poligonos con poligonos.
+ | | - usar SIMD para las image_modifiers.
  | | - implementar gear.
  | | - agregar utilizacion de audios.
- | | - mejorar eficiencia de figures_constructors.
+ | | - mejorar eficiencia de figures_constructors:
+        | | + cambiar algoritmo de dibujo de un circulo,
+        | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.

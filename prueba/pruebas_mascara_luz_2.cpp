@@ -4,11 +4,15 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <vector>
 #include <cmath>
 #include <iostream>
+
+const int SCREEN_FPS = 60;
+const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 std::vector<MaskObject> get_segments_1 () {
   return {
@@ -81,24 +85,24 @@ std::vector<MaskObject> get_segments_3 () {
 
 int main () {
   std::string name = "Ventana";
-  Global* glb = Global::create(name, 600, 1000, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create(name, 786, 1280, SDL_Color {30, 30, 30, 0});
 
   Light light_0 = {
-    .intensity = 50.f,
-    .attenuation = 0.05f,
+    .intensity = 120.f,
+    .attenuation = 0.02f,
     .position = {518.f, 334.f},
     .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
   }; 
 
   Light light_1 = {
-    .intensity = 120.f,
+    .intensity = 200.f,
     .attenuation = 0.01f,
     .position = {318.f, 337.f},
     .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
   };
 
   SDL_PixelFormat* format = SDL_AllocFormat(SDL_PIXELFORMAT_RGBA8888);
-  Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
+  //Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
   SDL_FreeFormat(format);
 
   const std::vector<MaskObject> segments = get_segments_2();
@@ -121,9 +125,8 @@ int main () {
 
       aux_time_1 += 1;
 
-      view_0.draw_light_view_mask (light_0, segments, shadow_color);
-      view_1.draw_light_view_mask (light_1, segments, shadow_color);
-      glb->apply_mask (view_1 | view_0);
+      view_0.draw_light_uniform_mask (light_0);
+      glb->apply_mask (view_0);
 
       float a = glb->get_time();
       avg_time_1 += (a - avg_time_1) / aux_time_1;
@@ -136,7 +139,6 @@ int main () {
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
       SDL_RenderDrawPoint(glb->get_render(), light_0.position.x, light_0.position.y);
-      SDL_RenderDrawPoint(glb->get_render(), light_1.position.x, light_1.position.y);
     glb->end_render();
     
     if (SDL_PollEvent(&event)) {
@@ -154,11 +156,15 @@ int main () {
           break;
         
         case SDL_MOUSEMOTION:
-          int mouse_x, mouse_y;
-          SDL_GetMouseState(&mouse_x, &mouse_y);
-          light_0.position = Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)};
+          light_0.position.x = event.motion.x;
+          light_0.position.y = event.motion.y;
           break;
       }
+    }
+
+    uint32_t delta = glb->get_ticks();
+    if (delta < SCREEN_TICKS_PER_FRAME) {
+      SDL_Delay (SCREEN_TICKS_PER_FRAME - delta);
     }
   } 
 }

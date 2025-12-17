@@ -14,6 +14,7 @@ class Global {
     SDL_Window* window;
     SDL_Renderer* render;
     SDL_Texture* global_render_texture;
+    SDL_Texture* render_mask;
     
     Uint32 clock_ticks;
 
