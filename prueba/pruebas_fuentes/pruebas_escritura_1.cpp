@@ -8,6 +8,7 @@
 #include <cmath>
 #include <string>
 #include <cstring>
+#include <iostream>
 
 int main () {
   std::string name = "Ventana";
@@ -17,7 +18,7 @@ int main () {
   SDL_Event event;
 
   int error;
-  std::string path = "../fuentes_letras/Nostard-Medium.ttf";
+  std::string path = "../fuentes_letras/Monas-BLBW8.ttf";
   GlyphsSystem gs (glb, path, &error);
   if (error != 0) {
     std::exit (-1);
@@ -27,7 +28,10 @@ int main () {
     SDL_Delay(1);
     glb->begin_render();
       gs.print (std::u16string(u"hola, como andas?"), 20, Dir2 {0.f, 50.f});
+      gs.print (std::u16string(u"Esto, aparentemente, funciona bastante bien!"), 25, Dir2 {0.f, 100.f});
     glb->end_render();
+
+    std::exit (-1);
     
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

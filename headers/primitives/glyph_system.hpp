@@ -58,7 +58,7 @@ class GlyphsSystem {
 
     Global* glb;
     std::map<char16_t, uint16_t> mapping;
-    std::map<char16_t, TTFCachedGlyphInfo> cached_glyphs;
+    std::map<uint32_t, TTFCachedGlyphInfo> cached_glyphs;
     std::vector<ttf_glyph_data> glyphs;
     std::vector<float> advance_widths;
     
@@ -87,6 +87,14 @@ class TTFBoolMatrix {
 
   public:
     TTFBoolMatrix (unsigned rows, unsigned columns) noexcept ;
+
+    uint64_t get_width () {
+      return this->_columns_;
+    }
+
+    uint64_t get_height() {
+      return this->_rows_;
+    }
 
     uint64_t get_lenc () {
       return this->_lenc_;

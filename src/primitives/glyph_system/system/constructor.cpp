@@ -59,7 +59,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   }
 
   this->mapping = std::map<char16_t, uint16_t> ();
-  this->cached_glyphs = std::map<char16_t, TTFCachedGlyphInfo> ();
+  this->cached_glyphs = std::map<uint32_t, TTFCachedGlyphInfo> ();
   this->glyphs = std::vector<ttf_glyph_data> ();
   this->glb = glb;
 
