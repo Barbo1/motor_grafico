@@ -26,13 +26,17 @@ class SequentialFileReader {
     SequentialFileReader (std::string path, int * error) noexcept;
     ~SequentialFileReader ();
 
+    std::string get_path ();
+    std::size_t get_file_position ();
+    void set_file_position (std::size_t n);
+
     /* Test or set the file in finished mode. */
     bool finished ();
     void finish ();
 
     /* Discards elements until found the stop character, or n exact positions. */
-    void skip_until_n (std::size_t n);
-    void skip_until_c (char stop);
+    void skip (std::size_t n);
+    void skip_until (char stop);
 
     /* read the next char or word of data in the file. */
     char read_char ();

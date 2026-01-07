@@ -50,7 +50,10 @@
         |V| + dibujo de mascara uniforme,
         |V| + dibujo de mascara de vista direccional y lineas de bloqueo,
         |V| + superposicion de mascaras,
- | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
+ |T| - corregir problemas de velocidad que no se hace 0 cuando colisionan.
+ | | - probar performance de dibujado de proligonos ordenando las lineas con el algoritmo.
+ | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
+        como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.

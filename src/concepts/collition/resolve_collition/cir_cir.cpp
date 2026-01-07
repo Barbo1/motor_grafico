@@ -5,8 +5,8 @@ void resolve_collition (Circle& cir1, Circle& cir2) {
   AngDir2 n = (cir1.position - cir2.position).normalize();
   float p = (cir1._velocity - cir2._velocity) * n * 2.f / (mass_1 + mass_2);
 
-  cir1._velocity = n.nmadd (p * mass_2 * cir1._movible, cir1._velocity);
-  cir2._velocity = n.madd (p * mass_1 * cir2._movible, cir2._velocity);
+  cir1._velocity = n.nmadd (p * mass_2 * cir1._movible * ENERGY_DISIPATION, cir1._velocity);
+  cir2._velocity = n.madd (p * mass_1 * cir2._movible * ENERGY_DISIPATION, cir2._velocity);
 
   cir1.position = n.madd (cir1.radio + cir2.radio, cir2.position);
 

@@ -8,6 +8,6 @@ void resolve_collition (Particle& par, Square& sq) {
   AngDir2 n = b.normalize(); 
   float p = n * (sq.get_velocity() - par.get_velocity()) * 2.f / (mass_1 + mass_2);
 
-  par.add_velocity(n * (p * mass_1));
+  par.add_velocity(n * (p * mass_1 * ENERGY_DISIPATION));
   par.add_position(n.msub(par.get_radio(), b));
 }

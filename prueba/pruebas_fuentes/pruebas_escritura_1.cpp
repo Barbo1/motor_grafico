@@ -1,0 +1,49 @@
+#include "../../headers/primitives/global.hpp"
+#include "../../headers/primitives/glyph_system.hpp"
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_stdinc.h>
+#include <SDL2/SDL_surface.h>
+#include <cmath>
+#include <string>
+#include <cstring>
+
+int main () {
+  std::string name = "Ventana";
+  Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+
+  bool cont = true;
+  SDL_Event event;
+
+  int error;
+  std::string path = "../fuentes_letras/Nostard-Medium.ttf";
+  GlyphsSystem gs (glb, path, &error);
+  if (error != 0) {
+    std::exit (-1);
+  }
+
+  while (cont) {
+    SDL_Delay(1);
+    glb->begin_render();
+      gs.print (std::u16string(u"hola, como andas?"), 20, Dir2 {0.f, 50.f});
+    glb->end_render();
+    
+    /* Evaluacion de perifericos. */
+    if (SDL_PollEvent(&event)) {
+      switch (event.type) {
+        case SDL_QUIT:
+          cont = false;
+          break;
+
+        case SDL_KEYDOWN:
+          switch (event.key.keysym.sym) {
+            case SDLK_ESCAPE:
+              cont = false;
+              break;
+          }
+          break;
+      }
+    }
+  } 
+}

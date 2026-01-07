@@ -57,7 +57,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
   int compmethod = fil.read8();
   int filtmethod = fil.read8();
   int intemethod = fil.read8();
-  fil.skip_until_n(4);
+  fil.skip (4);
 
   if (width == 0 || height == 0) {
     std::cout 
@@ -252,11 +252,11 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
 
       /* The unused chunks are disregarded. */
       default:
-        fil.skip_until_n(info_lenght);
+        fil.skip (info_lenght);
         break;
     }
     /* CRC not supported. */
-    fil.skip_until_n(4);
+    fil.skip (4);
   }
 
   /* Descompression of IDAT field. */

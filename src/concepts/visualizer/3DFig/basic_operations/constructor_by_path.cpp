@@ -220,7 +220,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
     }
 
     /* skipping data until the end of the line. */
-    file.skip_until_c('\n');
+    file.skip_until('\n');
   }
 
   /* Aggregating an image if present. */

@@ -17,7 +17,7 @@ struct Light {
   float intensity;
   float attenuation;
   Dir2 position;
-  struct LightColorTy{
+  struct LightColorTy {
     float r, g, b;
   } color;
 };

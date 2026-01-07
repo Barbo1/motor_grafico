@@ -5,7 +5,7 @@
 
 #define DRAW_RATE 5.0f
 #define MOVEMENT_COEFITIENT 100.f
-#define MOVEMENT_BOUND 0.01
+#define ENERGY_DISIPATION 1.0f
 
 class Physical {
   protected:

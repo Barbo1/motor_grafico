@@ -1,6 +1,6 @@
 #include "../../../../../headers/primitives/file_processing.hpp"
 
-void SequentialFileReader::skip_until_c (char stop) {
+void SequentialFileReader::skip_until (char stop) {
   while (!this->finished() && this->buffer[this->pos] != stop) {
     this->pos++;
     this->curr_file_pos++;
