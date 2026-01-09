@@ -18,7 +18,7 @@ int main () {
   SDL_Event event;
 
   int error;
-  std::string path = "../fuentes_letras/Monas-BLBW8.ttf";
+  std::string path = "../fuentes_letras/Nostard-Medium.ttf";
   GlyphsSystem gs (glb, path, &error);
   if (error != 0) {
     std::exit (-1);
@@ -27,11 +27,10 @@ int main () {
   while (cont) {
     SDL_Delay(1);
     glb->begin_render();
-      gs.print (std::u16string(u"hola, como andas?"), 20, Dir2 {0.f, 50.f});
-      gs.print (std::u16string(u"Esto, aparentemente, funciona bastante bien!"), 25, Dir2 {0.f, 100.f});
+      gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
+      gs.print (std::u16string(u"incluso con distintos tamanios."), 20, Dir2 {0.f, 80.f});
+      gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
     glb->end_render();
-
-    std::exit (-1);
     
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {
