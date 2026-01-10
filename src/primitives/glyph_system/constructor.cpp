@@ -1,7 +1,6 @@
-#include "../../../../headers/primitives/glyph_system.hpp"
-#include "../../../../headers/primitives/file_processing.hpp"
+#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/primitives/file_processing.hpp"
 #include <bit>
-#include <cstdint>
 #include <iostream>
 
 GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {

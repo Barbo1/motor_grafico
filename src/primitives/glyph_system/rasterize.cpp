@@ -1,40 +1,41 @@
-#include "../../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 #include <algorithm>
-#include <cstdint>
-#include <iostream>
 
-static uint32_t draw_line (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, uint32_t last_height, float& prev_derivate) {
+static void draw_line (BoolMatrixS& bound, Dir2& P1, Dir2& P2, float& prev_derivate) {
   float bottom = _mm_cvtss_f32 (_mm_permute_ps (_mm_min_ps (P1.v, P2.v), 0b01010101));
   float top = _mm_cvtss_f32 ( _mm_permute_ps (_mm_max_ps (P1.v, P2.v), 0b01010101));
   Dir2 diff21 = P2 - P1;
 
-  uint32_t ret_y = -1;
-  if (diff21.y != 0) {
+  if (-0.0001f > diff21.y || diff21.y > 0.0001f) {
     float m = 1.f / diff21.y;
     float r = -P1.y * m;
 
-    float y_d;
-    uint32_t greater_t = 0;
-    for (y_d = bottom; y_d < top; y_d += 1.f) {
+    for (float y_d = bottom; y_d <= top; y_d += 1.f) {
       float t = std::fmaf (y_d, m, r);
-      uint32_t yi = std::min(std::lround (y_d), (long)bound.get_height() - 1);
-      uint32_t xi = std::min (
-        std::lround (std::fmaf(diff21.x, t, P1.x)), 
-        (long)bound.get_width() - 1
-      );
 
-      if (-0.001f < t && t < 1.001f) {
-        if (t > greater_t) { greater_t = t; ret_y = yi; }
-        if (yi != last_height) { bound.set (yi, xi); }
+      if (-0.0001f < t && t < 1.0001f) {
+        uint32_t y = std::min(std::lround (y_d), (long)bound.get_height() - 1);
+        uint32_t x = std::min (
+          std::lround (std::fmaf(diff21.x, t, P1.x)), 
+          (long)bound.get_width() - 1
+        );
+        if (diff21.x * diff21.y * prev_derivate < -0.0001f && bound(y, x))
+          bound.unset (y, x);
+        else
+          bound.set (y, x);
       }
     }
+    prev_derivate = diff21.y * diff21.x;
+  } else {
+    uint32_t y = std::min(std::lround (P1.y), (long)bound.get_height() - 1);
+    bound.set (y, std::min(std::lround (P1.x), (long)bound.get_width() - 1));
+    bound.set (y, std::min(std::lround (P2.x), (long)bound.get_width() - 1));
+    prev_derivate = 0.f;
   }
-
-  prev_derivate = (P2 - P1).y;
-  return ret_y;
 }
 
-static uint32_t draw_quad_bezier (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, Dir2& P3, uint32_t last_height, float& prev_derivate) {
+static void draw_quad_bezier (BoolMatrixS& bound, Dir2& P1, Dir2& P2, Dir2& P3, float& prev_derivate) {
   Dir2 av = P3 + P1 - P2 * 2.f;
   Dir2 bv = (P3 - P2).dir_mul(Dir2 {-2.f, 1.f});
   float rem_sqrt = P2.y * P2.y - P1.y * P3.y;
@@ -45,6 +46,16 @@ static uint32_t draw_quad_bezier (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, Dir2
 
   float t_bound = bv.y * iavy;
   uint32_t s_m, s_M, f_m, f_M;
+
+  /*
+  std::cout << "av: (" << av.x << "," << av.y << ")" << std::endl;
+  std::cout << "bv: (" << (P3 - P2).x << "," << (P3 - P2).y << ")" << std::endl;
+  std::cout << "bv cambio: (" << bv.x << "," << bv.y << ")" << std::endl;
+  std::cout << "P1: (" << P1.x << ", " << P1.y << ")" << std::endl;
+  std::cout << "P2: (" << P2.x << ", " << P2.y << ")" << std::endl;
+  std::cout << "P3: (" << P3.x << ", " << P3.y << ")" << std::endl;
+  std::cout << "t_bound: " << t_bound << std::endl;
+  */
   if (0.0001f < t_bound && t_bound < 0.9999f && !quad) {
     uint32_t yi = std::lround (std::fmaf (std::fmaf (av.y, t_bound, -2.f*bv.y), t_bound, P3.y));
     uint32_t y1 = std::lround (P1.y);
@@ -54,12 +65,20 @@ static uint32_t draw_quad_bezier (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, Dir2
     f_m = std::lround (std::max (yi, y3));
     s_M = std::lround (std::min (yi, y1));
     f_M = std::lround (std::max (yi, y1));
+    //std::cout << 1 << std::endl;
   } else {
     s_m = std::lround (_mm_cvtss_f32 (_mm_permute_ps (_mm_min_ps (P1.v, P3.v), 0b01010101)));
     f_m = std::lround (_mm_cvtss_f32 (_mm_permute_ps (_mm_max_ps (P1.v, P3.v), 0b01010101)));
     s_M = 1;
     f_M = 0;
+    //std::cout << 2 << std::endl;
   }
+  /*
+  std::cout << "s_m: " << s_m << std::endl;
+  std::cout << "f_m: " << f_m << std::endl;
+  std::cout << "s_M: " << s_M << std::endl;
+  std::cout << "f_M: " << f_M << std::endl;
+  */
 
   for (uint32_t yi = s_m; yi <= f_m; yi++) {
     float t;
@@ -67,11 +86,13 @@ static uint32_t draw_quad_bezier (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, Dir2
       t = 0.5f * (P3.y - static_cast<float>(yi)) / bv.y;
     else {
       t = std::fmaf (av.y, static_cast<float>(yi), rem_sqrt);
+      //std::cout << "--: " << t << std::endl;
       if (t < 0.f) continue;
       t = iavy * std::fmaf(dir, std::sqrt (t), bv.y);
     }
     if (-0.0001f < bv.y && bv.y < 0.0001f)
       t = std::abs (t);
+    //std::cout << "t obtenido: " << t << std::endl;
 
     if (-0.0001f < t && t < 1.0001f) {
       float y = std::min ((long)yi, (long)bound.get_height() - 1);
@@ -79,17 +100,23 @@ static uint32_t draw_quad_bezier (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, Dir2
         std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P3.x)), 
         (long)bound.get_width () - 1
       );
-      bound.set (y, x);
+      if (std::fmaf (-av.y, t, bv.y) * prev_derivate < -0.0001f && bound(y, x))
+        bound.unset (y, x);
+      else
+        bound.set (y, x);
     }
   }
 
+  //std::cout << "." << std::endl;
   for (uint32_t yi = s_M; yi <= f_M; yi++) {
     float t = std::fmaf (av.y, static_cast<float>(yi), rem_sqrt);
+    //std::cout << "--: " << t << std::endl;
     if (t < 0.f) continue;
-    t = iavy * std::fmaf(dir, std::sqrt (t), bv.y);
+    t = iavy * std::fmaf(-dir, std::sqrt (t), bv.y);
 
     if (-0.0001f < bv.y && bv.y < 0.0001f)
       t = std::abs (t);
+    //std::cout << "t obtenido: " << t << std::endl;
 
     if (-0.0001f < t && t < 1.0001f) {
       float y = std::min ((long)yi, (long)bound.get_height() - 1);
@@ -97,20 +124,21 @@ static uint32_t draw_quad_bezier (TTFBoolMatrix& bound, Dir2& P1, Dir2& P2, Dir2
         std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P3.x)), 
         (long)bound.get_width () - 1
       );
-      bound.set (y, x);
+      if (std::fmaf (-av.y, t, bv.y) * prev_derivate < -0.0001f && bound(y, x))
+        bound.unset (y, x);
+      else
+        bound.set (y, x);
     }
   }
-  
-  uint32_t yi = std::min(std::lround (P1.y), (long)bound.get_height() - 1);
-  float this_derivate = (P2 - P1).y;
-  if (this_derivate == 0.f)
-    this_derivate = (P3 - P1).y;
-  if (prev_derivate * this_derivate < 0.f)
-    bound.unset(yi, std::min(std::lround (P1.x), (long)bound.get_width() - 1));
 
-  prev_derivate = this_derivate;
-
-  return std::lround(f_M);
+  Dir2 this_derivate = P3 - P2;
+  this_derivate = (
+    -0.0001f < this_derivate.y && this_derivate.y < 0.0001f && 
+    -0.0001f < this_derivate.x && this_derivate.x < 0.0001f ? 
+    P3 - P1 : 
+    this_derivate
+  );
+  prev_derivate = this_derivate.y * this_derivate.x;
 }
 
 SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
@@ -138,10 +166,10 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
   //      |                   |
   //      ---------------------
   int32_t matrix_height = std::lround (dims.y);
-  int32_t matrix_width = std::lround (dims.y);
+  int32_t matrix_width = std::lround (dims.x);
   if (matrix_width <= 0 || matrix_height <= 0) 
     return nullptr;
-  TTFBoolMatrix B = TTFBoolMatrix (matrix_height, matrix_width);
+  BoolMatrixS B = BoolMatrixS (matrix_height, matrix_width);
 
   // generating array of the point of the scaled glyph.
   int32_t many_points = data.points.size();
@@ -166,23 +194,21 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
     Dir2 P3 = points[next_pos];
     Dir2 PA = Dir2 {};
 
-    uint32_t last_height = -1;
-
     while (pos < many) {
       switch ((data.flags[pos] & 0b1) << 1 | (data.flags[next_pos] & 0b1)) {
         case 0b00:
           PA = (P3 + P2) * 0.5f;
-          last_height = draw_quad_bezier (B, P1, P2, PA, last_height, derivate);
+          draw_quad_bezier (B, P1, P2, PA, derivate);
           P1 = PA;
           break;
         case 0b01:
-          last_height = draw_quad_bezier (B, P1, P2, P3, last_height, derivate);
+          draw_quad_bezier (B, P1, P2, P3, derivate);
           break;
         case 0b11:
-          last_height = draw_line (B, P2, P3, last_height, derivate);
+          draw_line (B, P2, P3, derivate);
         case 0b10:
+          derivate = 0.f;
           P1 = P2;
-          last_height = -1;
           break;
       }
       pos++; next_pos++;
@@ -196,11 +222,13 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
       case 0b00:
         P3 = (P3 + P2) * 0.5f;
       case 0b01:
-        last_height = draw_quad_bezier (B, P1, P2, P3, last_height, derivate);
+        draw_quad_bezier (B, P1, P2, P3, derivate);
         break;
       case 0b11:
         if (P2.y != P3.y)
-          last_height = draw_line (B, P2, P3, last_height, derivate);
+          draw_line (B, P2, P3, derivate);
+        else
+          derivate = 0.f;
         break;
     }
     pos++;
@@ -222,6 +250,21 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
       pixels[h * width + w] = 0xFFFFFF00 | std::min (num, (long)255);
     }
   }
+  /*
+  uint32_t height = B.get_height();
+  uint32_t width = B.get_width();
+  Uint32* pixels = new Uint32[height * width];
+  std::memset (pixels, 0, height * width * sizeof (Uint32));
+
+  B.fill_bounds();
+
+  for (uint32_t h = 0, h_2 = 0; h < height; h++, h_2+=2) {
+    for (uint32_t w = 0, w_2 = 0; w < width; w++, w_2+=2) {
+      if (B(h, w))
+        pixels[h * width + w] = 0xFFFFFFFF;
+    }
+  }
+  */
   
   SDL_Surface* surface = SDL_CreateRGBSurfaceFrom (
     pixels, (Uint32)width, (Uint32)height, 32, (Uint32)width * 4, 

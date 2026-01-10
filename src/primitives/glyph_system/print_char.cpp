@@ -1,11 +1,10 @@
-#include "../../../../headers/primitives/glyph_system.hpp"
-#include <cstdint>
+#include "../../../headers/primitives/glyph_system.hpp"
 
 void GlyphsSystem::print (char16_t character, uint32_t size, Dir2 position) {
   uint32_t w, h;
   SDL_Texture* tex;
 
-  uint32_t key = (size && character ? (size << 31) | character : 0);
+  uint32_t key = (size && character ? size << 15 | (uint32_t)character : 0);
   auto founded = this->cached_glyphs.find(key);
 
   if (founded != this->cached_glyphs.end()) {

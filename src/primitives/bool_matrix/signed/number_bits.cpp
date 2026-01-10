@@ -1,6 +1,6 @@
-#include "../../../../headers/primitives/glyph_system.hpp"
+#include "../../../../headers/primitives/bool_matrix.hpp"
 
-uint64_t TTFBoolMatrix::number_bits (uint64_t lenr, uint64_t lenc) {
+uint64_t BoolMatrixS::number_bits (uint64_t lenr, uint64_t lenc) {
   uint64_t ret = this->_data_[lenr * this->_lenc_ + lenc];
   ret = (ret & 0x5555555555555555) + ((ret & 0xAAAAAAAAAAAAAAAA) >> 1);
   ret = (ret & 0x3333333333333333) + ((ret & 0xCCCCCCCCCCCCCCCC) >> 2);

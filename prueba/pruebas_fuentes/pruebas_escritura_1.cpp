@@ -28,8 +28,13 @@ int main () {
     SDL_Delay(1);
     glb->begin_render();
       gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
-      gs.print (std::u16string(u"incluso con distintos tamanios."), 20, Dir2 {0.f, 80.f});
+      gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
       gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
+      //gs.print(u'd', 20, Dir2 {0.f, 0.f});
+      //gs.print(u'd', 10, Dir2 {0.f, 250.f});
+      //gs.print(u'd', 15, Dir2 {250.f, 0.f});
+      //gs.print(u'd', 30, Dir2 {220.f, 200.f});
+      //gs.print(u'd', 18, Dir2 {560.f, 200.f});
     glb->end_render();
     
     /* Evaluacion de perifericos. */

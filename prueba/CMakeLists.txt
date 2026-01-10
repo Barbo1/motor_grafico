@@ -1,4 +1,4 @@
-add_executable (fin ./pruebas_fuentes/pruebas_escritura_1.cpp)
+add_executable (fin ./pruebas_performance/poligonos_1.cpp)
 target_include_directories (fin PRIVATE ${CMAKE_SOURCE_DIR}/headers)
 target_link_libraries (fin PRIVATE 
   objsrc_concepts
