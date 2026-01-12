@@ -37,3 +37,11 @@ enum FanImpDir {
   FID_LEFT,
   FID_RIGHT
 };
+
+enum AntiAliasingType {
+  AAx1,
+  AAx2,
+  AAx4,
+  AAx8,
+  AAx16
+};

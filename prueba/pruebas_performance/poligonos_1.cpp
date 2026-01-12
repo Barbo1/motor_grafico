@@ -45,9 +45,8 @@ int main () {
   std::vector<Dir2> curr = poligon_4;
   uint32_t many = curr.size ();
   Dir2 mid = Dir2 {};
-  for (uint32_t i = 0; i < many; i++) {
+  for (uint32_t i = 0; i < many; i++)
     mid += curr[i];
-  }
   mid *= 1.f / static_cast<float>(many);
 
   auto rotate = [&] () {
@@ -57,6 +56,12 @@ int main () {
       dir = aux + mid;
     }
   };
+
+  for (Dir2& dir: curr) {
+    Dir2 aux = dir - mid;
+    aux.rotate(0.14f);
+    dir = aux + mid;
+  }
 
   while (cont) {
 
