@@ -41,8 +41,12 @@ int main () {
     Dir2 {300.f, 300.f}, Dir2 {400.f, 300.f}, Dir2 {450.0f, 350.0f},
     Dir2 {394.1f, 228.7f}, Dir2 {277.0f, 248.9f}
   };
+ 
+  std::vector<Dir2> triangle_1 = {
+    Dir2 {94.6f, 150.0f}, Dir2 {132.6f, 285.3f}, Dir2 {291.4f, 177.9f}
+  };
 
-  std::vector<Dir2> curr = poligon_4;
+  std::vector<Dir2> curr = poligon_2;
   uint32_t many = curr.size ();
   Dir2 mid = Dir2 {};
   for (uint32_t i = 0; i < many; i++)
