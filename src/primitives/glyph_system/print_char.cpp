@@ -21,7 +21,6 @@ void GlyphsSystem::print (char16_t character, uint32_t size, Dir2 position) {
     h = sur->h;
     this->cached_glyphs.insert ({key, TTFCachedGlyphInfo {tex, w, h}});
 
-    delete [] (Uint32*)sur->pixels;
     SDL_FreeSurface (sur);
   }
 

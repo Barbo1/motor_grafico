@@ -1,144 +1,318 @@
 #include "../../../headers/primitives/glyph_system.hpp"
 #include "../../../headers/primitives/bool_matrix.hpp"
+#include <SDL2/SDL_stdinc.h>
 #include <algorithm>
+#include <cstdint>
+#include <utility>
+#include <iostream>
 
-static void draw_line (BoolMatrixS& bound, Dir2& P1, Dir2& P2, float& prev_derivate) {
-  float bottom = _mm_cvtss_f32 (_mm_permute_ps (_mm_min_ps (P1.v, P2.v), 0b01010101));
-  float top = _mm_cvtss_f32 ( _mm_permute_ps (_mm_max_ps (P1.v, P2.v), 0b01010101));
+static void draw_line (BoolMatrixU& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction) {
   Dir2 diff21 = P2 - P1;
-
-  if (-0.0001f > diff21.y || diff21.y > 0.0001f) {
-    float m = 1.f / diff21.y;
-    float r = -P1.y * m;
-
-    for (float y_d = bottom; y_d <= top; y_d += 1.f) {
-      float t = std::fmaf (y_d, m, r);
-
-      if (-0.0001f < t && t < 1.0001f) {
-        uint32_t y = std::min(std::lround (y_d), (long)bound.get_height() - 1);
-        uint32_t x = std::min (
-          std::lround (std::fmaf(diff21.x, t, P1.x)), 
-          (long)bound.get_width() - 1
-        );
-        if (diff21.x * diff21.y * prev_derivate < -0.0001f && bound(y, x))
-          bound.unset (y, x);
-        else
-          bound.set (y, x);
-      }
-    }
-    prev_derivate = diff21.y * diff21.x;
+  std::cout << "nueva linea <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+  std::cout << "P1: (" << P1.x << ", " << P1.y << ")" << std::endl;
+  std::cout << "P2: (" << P2.x << ", " << P2.y << ")" << std::endl;
+  std::cout << "---------------------------------" << std::endl;
+  std::cout << "diff21: (" << diff21.x << ", " << diff21.y << ")" << std::endl;
+  std::cout << "prev_direction: " << prev_direction << std::endl;
+  std::cout << "next_direction: " << next_direction << std::endl;
+  if (-0.0001 < diff21.y && diff21.y < 0.0001) {
+    if (prev_direction * next_direction > 0.f)
+      bound.unset (std::lround (P1.y), std::lround (P1.x));
   } else {
-    uint32_t y = std::min(std::lround (P1.y), (long)bound.get_height() - 1);
-    bound.set (y, std::min(std::lround (P1.x), (long)bound.get_width() - 1));
-    bound.set (y, std::min(std::lround (P2.x), (long)bound.get_width() - 1));
-    prev_derivate = 0.f;
+    uint64_t prev_point_disapears = (diff21.y * prev_direction < 0.f ? 1ULL : 0ULL);
+    uint64_t next_point_disapears = (diff21.y * next_direction < 0.f ? 1ULL : 0ULL);
+
+    Dir2 PM = (P1 + P2) * 0.5f;
+    float x_diff = diff21.x / diff21.y;
+    if (P1.y > P2.y) {
+      std::swap (P1, P2);
+      std::swap (prev_point_disapears, next_point_disapears);
+    }
+
+    float x = P1.x;
+    for (uint64_t yi = std::lround (P1.y); yi <= static_cast<uint64_t>(std::lround(PM.y)); yi++) {
+      uint64_t xi = std::lround (x);
+      bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
+      x += x_diff;
+    }
+      
+    x = P2.x;
+    for (uint64_t yi = std::lround (P2.y); yi > static_cast<uint64_t>(std::lround(PM.y)); yi--) {
+      uint64_t xi = std::lround (x);
+      bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
+      x -= x_diff;
+    }
   }
 }
 
-static void draw_quad_bezier (BoolMatrixS& bound, Dir2& P1, Dir2& P2, Dir2& P3, float& prev_derivate) {
+static float get_directon_for_quad_next (const Dir2& curr, const std::pair<Dir2, uint8_t>& next, const std::pair<Dir2, uint8_t>& need) {
+  if (next.second == 1) {
+    return (next.first - curr).y;
+  } else {
+    if (need.second == 1)
+      return (need.first - curr).y;
+    else
+      return ((next.first + need.first) * 0.5f - curr).y;
+  }
+}
+
+static float get_directon_for_quad_prev (const Dir2& curr, const std::pair<Dir2, uint8_t>& next, const std::pair<Dir2, uint8_t>& need) {
+  if (next.second == 1) {
+    return (curr - next.first).y;
+  } else {
+    if (need.second == 1)
+      return (curr - need.first).y;
+    else
+      return (curr - (next.first + need.first) * 0.5f).y;
+  }
+}
+
+static inline bool float_is_zero (float a) {
+  return -0.0001f < a && a < 0.0001f;
+}
+
+enum BezierConfig {
+  PrintDIR = 0b1,       // 1 for up
+  TRule = 0b10,         // 1 for max
+};
+
+static void print_bezier_part (
+  BoolMatrixU& bound, 
+  const uint32_t bezier_config,
+  const Dir2& av,
+  const Dir2& bv,
+  const float& rem_sqrt,
+  const float& iavy,
+  const Dir2& P1,
+  const Dir2& first,
+  int64_t last_height,
+  float prev_direction,
+  float next_direction,
+  float curr_direction
+) {
+  float t = (bezier_config & BezierConfig::TRule ? 1.f : 0.f);
+  bool print = true;
+  uint64_t xi = std::lround(first.x);
+  const int64_t first_height = std::lround(first.y);
+  const int64_t middle_height = (first_height + last_height) >> 1;
+    
+  //std::cout << "prev_dis_cond: " << prev_direction << std::endl;
+  //std::cout << "next_dis_cond: " << next_direction << std::endl;
+  //std::cout << "curr_dis_cond: " << curr_direction << std::endl;
+  
+  uint64_t prev_disappearance_cond = (prev_direction * curr_direction) < 0.f ? 1ULL : 0ULL;
+  uint64_t next_disappearance_cond = (next_direction * curr_direction) < 0.f ? 1ULL : 0ULL;
+
+  auto print_points = [&] (uint64_t yi, uint64_t yin, uint64_t disappearance_cond) {
+    std::cout << "---------------------------------" << std::endl;
+    std::cout << "(xi, yi): (" << xi << ", " << yi << ")" << std::endl;
+    std::cout << "yin: " << yin << std::endl;
+    std::cout << "disappearance_cond: " << disappearance_cond << std::endl;
+    std::cout << "posicion: " << bound(yi, xi) << std::endl;
+    std::cout << "need: " << ((disappearance_cond & bound(yi, xi)) ^ 1ULL)<< std::endl;
+    std::cout << "t: " << t << std::endl;
+    std::cout << "print: " << print << std::endl;
+    if (print)
+      bound.change (yi, xi, (disappearance_cond & bound(yi, xi)) ^ 1ULL);
+    //std::cout << "posicion luego: " << bound(yi, xi) << std::endl;
+    
+    // test if there is a t for the height yi.
+    float sqrt_cond = std::fmaf (av.y, static_cast<float>(yin), rem_sqrt);
+    print = sqrt_cond >= 0.f;
+    if (!print) return;
+    sqrt_cond = std::sqrt (sqrt_cond);
+
+    // calculate the yi.
+    float t1 = iavy * (bv.y - sqrt_cond);
+    bool print1 = (0.f < t1) && (t1 < 1.f);
+
+    float t2 = iavy * (bv.y + sqrt_cond);
+    bool print2 = (0.f < t2) && (t2 < 1.f);
+
+    print = print1 || print2;
+    if (print1 && print2) {
+      if (bezier_config & BezierConfig::TRule)
+        t = std::max (t1, t2);
+      else
+        t = std::min (t1, t2);
+    } else if (print1)
+      t = t1;
+    else if (print2)
+      t = t2;
+
+    xi = std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P1.x));
+  };
+
+  //std::cout << "first height: " << first_height << std::endl;
+  //std::cout << "middle height: " << middle_height << std::endl;
+  //std::cout << "last height: " << last_height << std::endl;
+  int64_t yi = first_height;
+  if (bezier_config & BezierConfig::PrintDIR) {
+    for (; yi <= middle_height; yi++)
+      print_points (yi, yi + 1, prev_disappearance_cond);
+    //std::cout << "otra parte. "<<  std::endl;
+    for (; yi <= last_height; yi++)
+      print_points (yi, yi + 1, next_disappearance_cond);
+  } else {
+    for (; yi >= middle_height; yi--)
+      print_points (yi, yi - 1, prev_disappearance_cond);
+    //std::cout << "otra parte. "<<  std::endl;
+    for (; yi >= last_height; yi--)
+      print_points (yi, yi - 1, next_disappearance_cond);
+  }
+}
+/*
+  static void print_bezier_part (
+    BoolMatrixU& bound, 
+    BezierPrintDir direction, 
+    BezierTRule t_rule, 
+    const Dir2 av,
+    const Dir2 bv,
+    uint32_t first,
+    uint32_t last,
+    uint64_t disappearance_cond
+  )
+  donde:
+    + BezierPrintDir denota la direction hacia donde va la curva(arriba o abajo)
+    + BezierTRule denota si se toma el t maximo o minimo(dentro del rango [0, 1]).
+    + av y bv se definen como se calculan abajo
+    + first y last son las alturas
+    + disappearance_cond denota si desaparece o no
+
+  static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, float prev_direction, float next_direction);
+*/
+
+static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, float prev_direction, float next_direction) {
+  std::cout << "nueva quad <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+  std::cout << "P1 = (" << P1.x << ", " << P1.y << ")"<< std::endl;
+  std::cout << "P2 = (" << P2.x << ", " << P2.y << ")"<< std::endl;
+  std::cout << "P3 = (" << P3.x << ", " << P3.y << ")"<< std::endl;
+
   Dir2 av = P3 + P1 - P2 * 2.f;
-  Dir2 bv = (P3 - P2).dir_mul(Dir2 {-2.f, 1.f});
+  Dir2 bv = (P1 - P2).dir_mul(Dir2 {-2.f, 1.f});
   float rem_sqrt = P2.y * P2.y - P1.y * P3.y;
   float iavy = _mm_cvtss_f32 ( _mm_permute_ps (_mm_rcp_ps (av.v), 0b01010101));
 
-  float dir = bv.y < 0.0001f ? 1.f : -1.f;
-  bool quad = -0.0001f < av.y && av.y < 0.0001f;
+  float direction_calc_1 = (P2 - P1).y;
+  if (-0.0001f < direction_calc_1 && direction_calc_1 < 0.0001f) 
+    direction_calc_1 = (P3 - P1).y;
 
-  float t_bound = bv.y * iavy;
-  uint32_t s_m, s_M, f_m, f_M;
+  float direction_calc_3 = (P3 - P2).y;
+  if (-0.0001f < direction_calc_3 && direction_calc_3 < 0.0001f) 
+    direction_calc_3 = (P3 - P1).y;
 
-  /*
-  std::cout << "av: (" << av.x << "," << av.y << ")" << std::endl;
-  std::cout << "bv: (" << (P3 - P2).x << "," << (P3 - P2).y << ")" << std::endl;
-  std::cout << "bv cambio: (" << bv.x << "," << bv.y << ")" << std::endl;
-  std::cout << "P1: (" << P1.x << ", " << P1.y << ")" << std::endl;
-  std::cout << "P2: (" << P2.x << ", " << P2.y << ")" << std::endl;
-  std::cout << "P3: (" << P3.x << ", " << P3.y << ")" << std::endl;
-  std::cout << "t_bound: " << t_bound << std::endl;
-  */
-  if (0.0001f < t_bound && t_bound < 0.9999f && !quad) {
-    uint32_t yi = std::lround (std::fmaf (std::fmaf (av.y, t_bound, -2.f*bv.y), t_bound, P3.y));
-    uint32_t y1 = std::lround (P1.y);
-    uint32_t y3 = std::lround (P3.y);
-    
-    s_m = std::lround (std::min (yi, y3));
-    f_m = std::lround (std::max (yi, y3));
-    s_M = std::lround (std::min (yi, y1));
-    f_M = std::lround (std::max (yi, y1));
-    //std::cout << 1 << std::endl;
+  uint64_t prev_point_disapears = (direction_calc_1 * prev_direction < 0.f ? 1ULL : 0ULL);
+  uint64_t next_point_disapears = (direction_calc_3 * next_direction < 0.f ? 1ULL : 0ULL);
+
+  std::cout << "av.y :" << av.y << std::endl;
+  std::cout << "bv.y :" << bv.y << std::endl;
+  // cases.
+  if (float_is_zero (av.y)) {
+    std::cout << "1" << std::endl;
+    if (float_is_zero (bv.y)) {
+      draw_line (bound, P1, P3, prev_direction, next_direction);
+    } else {
+      int64_t mid = std::lround(((P1 + P3) * 0.5f).y);
+      Dir2 nP1 = P1;
+      Dir2 nP3 = P3;
+      if (P1.y > P3.y) {
+        std::swap (prev_point_disapears, next_point_disapears);
+        std::swap (nP1, nP3);
+      }
+
+      uint64_t xi = std::lround (nP1.x);
+      for (int64_t yi = std::lround(nP1.y); yi <= mid; yi++) {
+        std::cout << "(xi, yi): (" << xi << ", " << yi << ")" << std::endl;
+        bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
+        float t = 0.5f * (P1.y - static_cast<float>(yi + 1)) / bv.y;
+        std::cout << "t: " << t << std::endl;
+        xi = std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P1.x));
+      }
+
+      xi = std::lround (nP3.x);
+      for (int64_t yi = std::lround(nP3.y); yi > mid; yi--) {
+        std::cout << "(xi, yi): (" << xi << ", " << yi << ")" << std::endl;
+        bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
+        float t = 0.5f * (P1.y - static_cast<float>(yi - 1)) / bv.y;
+        std::cout << "t: " << t << std::endl;
+        xi = std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P1.x));
+      }
+    }
+
+    std::cout << "fin 1" << std::endl;
+  } else if (float_is_zero ((P1 - P2).y) && float_is_zero ((P3 - P2).y) && (P1 - P2).dir_mul(P3 - P2).y > 0.f) {
+    std::cout << "2" << std::endl;
+    float t_bound = bv.y * iavy;
+    uint64_t yim = std::lround (std::fmaf (std::fmaf (av.y, t_bound, -2.f*bv.y), t_bound, P1.y));
+
+    if (0.f < direction_calc_3) {
+      print_bezier_part (
+        bound, BezierConfig::PrintDIR, 
+        av, bv, rem_sqrt, iavy, P1, P1, yim, prev_direction, direction_calc_3, direction_calc_1
+      );
+      //std::cout << "-->>"<<  std::endl;
+      print_bezier_part (
+        bound, BezierConfig::TRule | BezierConfig::PrintDIR, 
+        av, bv, rem_sqrt, iavy, P1, P3, yim, next_direction, direction_calc_1, direction_calc_3
+      );
+    } else {
+      print_bezier_part (
+        bound, 0, 
+        av, bv, rem_sqrt, iavy, P1, P1, yim, prev_direction, direction_calc_3, direction_calc_1
+      );
+      //std::cout << "-->>"<<  std::endl;
+      print_bezier_part (
+        bound, BezierConfig::TRule, 
+        av, bv, rem_sqrt, iavy, P1, P3, yim, next_direction, direction_calc_1, direction_calc_3
+      );
+    }
+
+    std::cout << "fin 2" << std::endl;
+    return;
   } else {
-    s_m = std::lround (_mm_cvtss_f32 (_mm_permute_ps (_mm_min_ps (P1.v, P3.v), 0b01010101)));
-    f_m = std::lround (_mm_cvtss_f32 (_mm_permute_ps (_mm_max_ps (P1.v, P3.v), 0b01010101)));
-    s_M = 1;
-    f_M = 0;
-    //std::cout << 2 << std::endl;
-  }
-  /*
-  std::cout << "s_m: " << s_m << std::endl;
-  std::cout << "f_m: " << f_m << std::endl;
-  std::cout << "s_M: " << s_M << std::endl;
-  std::cout << "f_M: " << f_M << std::endl;
-  */
+    std::cout << "3" << std::endl;
 
-  for (uint32_t yi = s_m; yi <= f_m; yi++) {
-    float t;
-    if (quad)
-      t = 0.5f * (P3.y - static_cast<float>(yi)) / bv.y;
-    else {
-      t = std::fmaf (av.y, static_cast<float>(yi), rem_sqrt);
-      //std::cout << "--: " << t << std::endl;
-      if (t < 0.f) continue;
-      t = iavy * std::fmaf(dir, std::sqrt (t), bv.y);
-    }
-    if (-0.0001f < bv.y && bv.y < 0.0001f)
-      t = std::abs (t);
-    //std::cout << "t obtenido: " << t << std::endl;
+    std::cout << "esto tiene una diferencia de: " << std::round((P3 - P1).y) << std::endl;
+    uint64_t yim = std::lround (((P1 + P3) * 0.5f).y);
+    float cond = std::round(P3.y) - std::round(P1.y);
 
-    if (-0.0001f < t && t < 1.0001f) {
-      float y = std::min ((long)yi, (long)bound.get_height() - 1);
-      float x = std::min (
-        std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P3.x)), 
-        (long)bound.get_width () - 1
+    if (std::abs(cond) == 0.f) {
+      if (prev_direction * next_direction > 0.f)
+        bound.unset (std::lround (P1.y), std::lround (P1.x));
+    } else if (std::abs(cond) == 1.f) {
+      uint64_t rP1y = std::lround (P1.y);
+      uint64_t rP1x = std::lround (P1.x);
+      uint64_t rP3y = std::lround (P3.y);
+      uint64_t rP3x = std::lround (P3.x);
+      bound.change (rP1y, rP1x, (prev_point_disapears & bound(rP1y, rP1x)) ^ 1ULL);
+      bound.change (rP3y, rP3x, (next_point_disapears & bound(rP3y, rP3x)) ^ 1ULL);
+    } else if (0.f < cond) {
+      std::cout << "a" << std::endl;
+      print_bezier_part (
+        bound, BezierConfig::PrintDIR, 
+        av, bv, rem_sqrt, iavy, P1, P1, yim, prev_direction, direction_calc_3, direction_calc_1
       );
-      if (std::fmaf (-av.y, t, bv.y) * prev_derivate < -0.0001f && bound(y, x))
-        bound.unset (y, x);
-      else
-        bound.set (y, x);
-    }
-  }
-
-  //std::cout << "." << std::endl;
-  for (uint32_t yi = s_M; yi <= f_M; yi++) {
-    float t = std::fmaf (av.y, static_cast<float>(yi), rem_sqrt);
-    //std::cout << "--: " << t << std::endl;
-    if (t < 0.f) continue;
-    t = iavy * std::fmaf(-dir, std::sqrt (t), bv.y);
-
-    if (-0.0001f < bv.y && bv.y < 0.0001f)
-      t = std::abs (t);
-    //std::cout << "t obtenido: " << t << std::endl;
-
-    if (-0.0001f < t && t < 1.0001f) {
-      float y = std::min ((long)yi, (long)bound.get_height() - 1);
-      float x = std::min (
-        std::lround (std::fmaf (std::fmaf (av.x, t, bv.x), t, P3.x)), 
-        (long)bound.get_width () - 1
+      std::cout << "||||||||||||||||||||-->>"<<  std::endl;
+      print_bezier_part (
+        bound, BezierConfig::TRule, 
+        av, bv, rem_sqrt, iavy, P1, P3, yim+1, next_direction, direction_calc_1, direction_calc_3
       );
-      if (std::fmaf (-av.y, t, bv.y) * prev_derivate < -0.0001f && bound(y, x))
-        bound.unset (y, x);
-      else
-        bound.set (y, x);
+      std::cout << "<<--||||||||||||||||||||"<<  std::endl;
+    } else if (cond < 0.f) {
+      std::cout << "b" << std::endl;
+      print_bezier_part (
+        bound, 0, 
+        av, bv, rem_sqrt, iavy, P1, P1, yim, prev_direction, direction_calc_3, direction_calc_1
+      );
+      std::cout << "||||||||||||||||||||-->>"<<  std::endl;
+      print_bezier_part (
+        bound, BezierConfig::TRule | BezierConfig::PrintDIR, 
+        av, bv, rem_sqrt, iavy, P1, P3, yim-1, next_direction, direction_calc_1, direction_calc_3
+      );
+      std::cout << "<<--||||||||||||||||||||"<<  std::endl;
     }
+    std::cout << "fin 3" << std::endl;
   }
-
-  Dir2 this_derivate = P3 - P2;
-  this_derivate = (
-    -0.0001f < this_derivate.y && this_derivate.y < 0.0001f && 
-    -0.0001f < this_derivate.x && this_derivate.x < 0.0001f ? 
-    P3 - P1 : 
-    this_derivate
-  );
-  prev_derivate = this_derivate.y * this_derivate.x;
 }
 
 SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
@@ -147,129 +321,126 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
     return nullptr;
 
   uint32_t glyph_index = founded->second;
-  float sizef = static_cast<float>(s * 16);
-  ttf_glyph_simple_data& data = std::get<ttf_glyph_simple_data>(this->glyphs[glyph_index].raster_information);
+  float sizef = static_cast<float>(s);
+  const ttf_glyph_simple_data& data = std::get<ttf_glyph_simple_data>(this->glyphs[glyph_index].raster_information);
 
   Dir2 min = this->glyphs[glyph_index].bounding_box.first;
   Dir2 max = this->glyphs[glyph_index].bounding_box.second;
-  Dir2 dims = (max - min).madd(sizef, Dir2 {16.f, 16.f});
-
-  // Matrix of bits that stores a reduced image of the size 8 times the 
-  // image, so that an antialiasing can be applied after.
-  // 
-  //      ---------------------
-  //      |                   |
-  //   p1 *                   * p2
-  //      |                   |
-  //      |                   |
-  //      |                   |
-  //      |                   |
-  //      ---------------------
+  Dir2 dims_reposition = (max - min) * sizef;
+  Dir2 dims = dims_reposition + Dir2 {8.f, 8.f};
+  dims = Dir2 (std::round (dims.x), std::round (dims.y));
+ 
+  // dimentions of the bit matrix.
   int32_t matrix_height = std::lround (dims.y);
   int32_t matrix_width = std::lround (dims.x);
-  if (matrix_width <= 0 || matrix_height <= 0) 
+  if (matrix_width <= 0 || matrix_height <= 0)
     return nullptr;
-  BoolMatrixS B = BoolMatrixS (matrix_height, matrix_width);
+    
+  std::cout << "dims: (" << dims.x << ", " << dims.y << ")" << std::endl;
 
   // generating array of the point of the scaled glyph.
-  int32_t many_points = data.points.size();
-  std::vector<Dir2> points (many_points + 1);
-  for (int32_t i = 0; i < many_points; i++) {
-    points[i] = data.points[i].msub(sizef, min * sizef);
-    points[i].y = (dims - points[i]).y;
-    points[i] = points[i].max0();
+  std::vector<std::vector<std::pair<Dir2, uint8_t>>> points (data.offset.size ());
+  uint32_t curr_off = 0, pos = 0;
+  for (auto& off: data.offset) {
+    uint32_t many = off - curr_off;
+    points[pos].resize (many + 4);
+
+    // there are not two consecutive straight lines.
+    if ((data.flags[curr_off] & 1) && (data.flags[curr_off+1] & 1) && data.points[curr_off].y == data.points[curr_off+1].y) {
+      for (uint32_t i = 0; i < many; i++) {
+        Dir2 p = (data.points[i + 1 + curr_off] - min) * sizef;
+        p.y = (dims_reposition - p).y;
+        points[pos][i] = std::pair<Dir2, uint8_t> (p, data.flags[i + 1 + curr_off] & 1);
+      }
+      Dir2 p = (data.points[curr_off] - min) * sizef;
+      p.y = (dims_reposition - p).y;
+      points[pos][many] = std::pair<Dir2, uint8_t> (p, data.flags[curr_off] & 1);
+    } else {
+      for (uint32_t i = 0; i <= many; i++) {
+        Dir2 p = (data.points[i + curr_off] - min) * sizef;
+        p.y = (dims_reposition - p).y;
+        points[pos][i] = std::pair<Dir2, uint8_t> (p, data.flags[i + curr_off] & 1);
+      }
+    }
+
+    points[pos][many+1] = points[pos][0];
+    points[pos][many+2] = points[pos][1];
+    points[pos][many+3] = points[pos][2];
+
+    curr_off = off + 1;
+    pos++;
   }
 
-  float derivate = 0.f;
-  int32_t pos = 0, first_pos, next_pos;
-  for (auto& many: data.offset) {
-    first_pos = pos;
-    next_pos = pos + 1;
+  // creating matrix of bits.
+  BoolMatrixU B = BoolMatrixU (matrix_height, matrix_width);
 
-    Dir2 P1 = (data.flags[pos] & 0b1 ? 
+  for (const auto& vec: points) {
+    std::cout << std::endl << "-------------------------" << std::endl;
+    std::cout << "nueva componente" << std::endl;
+    std::cout << "-------------------------" << std::endl<< std::endl ;
+    uint32_t pos = 0, next_pos = 1;
+    uint32_t many = vec.size() - 4;
+
+    Dir2 P1 = (vec[pos].second ? 
       Dir2{} : 
-      (data.flags[many] & 0b1 ? points[many] : (points[many] + points[pos]) * 0.5f)
+      (vec[many].second ? vec[many].first : (vec[many].first + vec[pos].first) * 0.5f)
     );
-    Dir2 P2 = points[pos];
-    Dir2 P3 = points[next_pos];
+    std::pair<Dir2, uint8_t> P2 = vec[pos];
+    std::pair<Dir2, uint8_t> P3 = vec[next_pos];
     Dir2 PA = Dir2 {};
 
-    while (pos < many) {
-      switch ((data.flags[pos] & 0b1) << 1 | (data.flags[next_pos] & 0b1)) {
+    float next_direction, prev_direction;
+    if (vec[pos].second)
+      prev_direction = get_directon_for_quad_prev(P2.first, vec[many], vec[many-1]);
+    else if (vec[many].second)
+      prev_direction = get_directon_for_quad_prev(P1, vec[many-1], vec[many-2]);
+    else
+      prev_direction = get_directon_for_quad_prev(P1, vec[many], vec[many-1]);
+
+    while (pos <= many) {
+      switch ((vec[pos].second << 1) | vec[next_pos].second) {
         case 0b00:
-          PA = (P3 + P2) * 0.5f;
-          draw_quad_bezier (B, P1, P2, PA, derivate);
+          PA = (P3.first + P2.first) * 0.5f;
+          next_direction = get_directon_for_quad_next (PA, P3, vec[next_pos+1]);
+          draw_quad_bezier (B, P1, P2.first, PA, prev_direction, next_direction);
+          prev_direction = get_directon_for_quad_prev(PA, P2, std::pair<Dir2, uint8_t>({P1, 1}));
           P1 = PA;
           break;
         case 0b01:
-          draw_quad_bezier (B, P1, P2, P3, derivate);
+          next_direction = get_directon_for_quad_next (P3.first, vec[next_pos+1], vec[next_pos+2]);
+          draw_quad_bezier (B, P1, P2.first, P3.first, prev_direction, next_direction);
+          prev_direction = get_directon_for_quad_prev(P3.first, P2, std::pair<Dir2, uint8_t>({P1, 1}));
           break;
         case 0b11:
-          draw_line (B, P2, P3, derivate);
+          next_direction = get_directon_for_quad_next (P3.first, vec[next_pos+1], vec[next_pos+2]);
+          draw_line (B, P2.first, P3.first, prev_direction, next_direction);
+          prev_direction = (P3.first - P2.first).y;
         case 0b10:
-          derivate = 0.f;
-          P1 = P2;
+          P1 = P2.first;
           break;
       }
       pos++; next_pos++;
       P2 = P3;
-      P3 = points[next_pos];
+      P3 = vec[next_pos];
     }
-
-    P3 = points[first_pos];
-
-    switch ((data.flags[many] & 0b1) << 1 | (data.flags[first_pos] & 0b1)) {
-      case 0b00:
-        P3 = (P3 + P2) * 0.5f;
-      case 0b01:
-        draw_quad_bezier (B, P1, P2, P3, derivate);
-        break;
-      case 0b11:
-        if (P2.y != P3.y)
-          draw_line (B, P2, P3, derivate);
-        else
-          derivate = 0.f;
-        break;
-    }
-    pos++;
   }
 
-  Dir2 dims_l = (max - min) * s + Dir2{1.f, 1.f};
-  uint32_t height = std::lround(dims_l.y);
-  uint32_t width = std::lround(dims_l.x);
-  Uint32* pixels = new Uint32[height * width];
-  std::memset (pixels, 0, height * width * sizeof (Uint32));
+  Dir2 dims_l = (max - min).madd(s, Dir2{1.f, 1.f});
+  uint32_t height = std::lround (dims_l.y);
+  uint32_t width = std::lround (dims_l.x);
+  std::cout << "image height: " << height << std::endl;
+  std::cout << "image width: " << width << std::endl;
+  SDL_Surface* surface = SDL_CreateRGBSurface (0, width, height, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+  std::cout << "*_*__*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_**_*_*_**_esto 1." << std::endl;
+  Uint32* pixels = (Uint32*)surface->pixels;
 
   B.fill_bounds();
-
-  for (uint32_t h = 0, h_2 = 0; h < height; h++, h_2+=2) {
-    for (uint32_t w = 0, w_2 = 0; w < width; w++, w_2+=2) {
-      long num = 
-        B.number_bits(h_2, w_2) + B.number_bits(h_2+1, w_2) + 
-        B.number_bits(h_2, w_2+1) + B.number_bits(h_2+1, w_2+1);
-      pixels[h * width + w] = 0xFFFFFF00 | std::min (num, (long)255);
+  for (uint32_t h = 0; h < height; h++) {
+    for (uint32_t w = 0; w < width; w++) {
+      uint64_t elem = B(h, w);
+      *(pixels++) = 0xFFFFFF00 | static_cast<uint32_t>((elem << 8) - elem);
     }
   }
-  /*
-  uint32_t height = B.get_height();
-  uint32_t width = B.get_width();
-  Uint32* pixels = new Uint32[height * width];
-  std::memset (pixels, 0, height * width * sizeof (Uint32));
-
-  B.fill_bounds();
-
-  for (uint32_t h = 0, h_2 = 0; h < height; h++, h_2+=2) {
-    for (uint32_t w = 0, w_2 = 0; w < width; w++, w_2+=2) {
-      if (B(h, w))
-        pixels[h * width + w] = 0xFFFFFFFF;
-    }
-  }
-  */
-  
-  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom (
-    pixels, (Uint32)width, (Uint32)height, 32, (Uint32)width * 4, 
-    0xFF000000,0x00FF0000,0x0000FF00,0x000000FF
-  );
 
   return surface;
 }
