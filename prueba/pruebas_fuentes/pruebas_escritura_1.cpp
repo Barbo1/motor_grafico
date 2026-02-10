@@ -19,7 +19,7 @@ int main () {
   SDL_Event event;
 
   int error;
-  std::string path = "../fuentes_letras/Monas-BLBW8.ttf";
+  std::string path = "../fuentes_letras/Aloevera-OVoWO.ttf";
   GlyphsSystem gs (glb, path, &error);
   if (error != 0) {
     std::exit (-1);
@@ -32,19 +32,26 @@ int main () {
     u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9'
   };
 
-  uint32_t pos = 7;
+  uint32_t pos = 6;
   while (cont) {
     SDL_Delay(1);
     glb->begin_render();
       //gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
       //gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
       //gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
-      gs.print(letras[pos], 230, Dir2 {0.f, 0.f});
+      gs.print(letras[pos], 340, Dir2 {0.f, 0.f});
       //gs.print(letras[pos+1], 230, Dir2 {0.f, 250.f});
       //gs.print(letras[pos+2], 230, Dir2 {250.f, 0.f});
       //gs.print(letras[pos+3], 230, Dir2 {250.f, 250.f});
+      SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
+      SDL_RenderDrawPoint (glb->get_render(), std::lround(110.5), std::lround(243.1));
+      SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
+      SDL_RenderDrawPoint (glb->get_render(), std::lround(101.66), std::lround(235.28));
+      SDL_SetRenderDrawColor(glb->get_render(), 0, 0, 255, 255);
+      //SDL_RenderDrawPoint (glb->get_render(), std::lround(78.54), std::lround(236.64));
+
     glb->end_render();
-    
+
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
@@ -58,7 +65,7 @@ int main () {
               cont = false;
               break;
             case SDLK_SPACE:
-              pos = (pos + 1) % 33;
+              pos = (pos + 1) % 36;
               break;
           }
           break;
