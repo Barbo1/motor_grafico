@@ -3,6 +3,7 @@
 #include <SDL2/SDL_cpuinfo.h>
 #include <emmintrin.h>
 #include <immintrin.h>
+#include <smmintrin.h>
 #include <type_traits>
 #include <utility>
 #include <cmath>
@@ -47,12 +48,12 @@ class alignas(16) Dir2 {
     /* Comparations. */
     template<DirFin R>
     inline bool operator== (R&& dir) const {
-      return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0x0011) == 0x0011;
+      return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0b0011) == 0b0011;
     }
 
     template<DirFin R>
     inline bool operator!= (R&& dir) const {
-      return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0x0011) != 0x0011;
+      return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0b0011) != 0b0011;
     }
 
     /* Operators by overloading. */
@@ -272,6 +273,15 @@ class alignas(16) Dir2 {
         return std::forward<Self>(self);
       } else return Dir2 {opr};
     }
+
+    template<typename Self>
+    inline auto round (this Self&& self) {
+      __m128 opr = _mm_round_ps (self.v, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        self.v = opr;
+        return std::forward<Self>(self);
+      } else return Dir2 {opr};
+    }
 };
 
 
@@ -317,17 +327,17 @@ class alignas(16) AngDir2 {
     template<DirFin R>
     inline bool operator== (R&& adir) const {
       if constexpr (std::is_same_v<R, AngDir2>) 
-        return _mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) == 0x1111;
+        return _mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) == 0b1111;
       else 
-        return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) & 0x1100) == 0x1111;
+        return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) & 0b1100) == 0b1111;
     }
 
     template<DirFin R>
     inline bool operator!= (R&& adir) const {
       if constexpr (std::is_same_v<R, AngDir2>) 
-        return _mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) != 0x1111;
+        return _mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) != 0b1111;
       else 
-        return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) & 0x1100) != 0x1111;
+        return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) & 0b1100) != 0b1111;
     }
 
     /* Operators by overloading. */
@@ -566,11 +576,11 @@ class alignas(16) Dir3 {
 
     /* Comparations. */
     inline bool operator== (const Dir3& dir) const {
-      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) == 0x1111;
+      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) == 0b1111;
     }
 
     inline bool operator!= (const Dir3& dir) const {
-      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) != 0x1111;
+      return _mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) != 0b1111;
     }
 
     /* Operators by overloading. */

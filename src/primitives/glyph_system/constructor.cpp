@@ -6,7 +6,7 @@
 GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   SequentialFileReader file(path, error);
   if (*error != 0) {
-    std::cout << "Font Error: file not found" << std::endl;
+    std::cout << "Font Error: file '" << path << "'not found" << std::endl;
     return ;
   }
 

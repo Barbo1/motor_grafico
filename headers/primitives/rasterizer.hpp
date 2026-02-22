@@ -7,4 +7,11 @@
 
 SDL_Surface* raster_grade_1 (std::vector<Dir2>, SDL_Color, AntiAliasingType);
 
-SDL_Surface* raster_grade_2 (std::vector<Dir2>, std::vector<bool>, SDL_Color, AntiAliasingType);
+enum ComponentElementType { LINE, CURVE };
+
+struct ComponentElement {
+  Dir2 start, middle, end;
+  ComponentElementType t;
+};
+
+SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>&, SDL_Color, AntiAliasingType);

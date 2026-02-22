@@ -25,30 +25,32 @@ int main () {
     std::exit (-1);
   }
 
+  /*
   char16_t letras[36] = {
     u'a', u'b', u'c', u'd', u'e', u'f', u'g', u'h', u'i',
     u'j', u'k', u'l', u'm', u'n', u'o', u'p', u'q', u'r',
     u's', u't', u'u', u'v', u'w', u'x', u'y', u'z', u'0',
     u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9'
-  };
+  };*/
 
-  uint32_t pos = 6;
+  uint32_t pos = 15;
   while (cont) {
     SDL_Delay(1);
     glb->begin_render();
-      //gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
-      //gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
-      //gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
-      gs.print(letras[pos], 340, Dir2 {0.f, 0.f});
-      //gs.print(letras[pos+1], 230, Dir2 {0.f, 250.f});
-      //gs.print(letras[pos+2], 230, Dir2 {250.f, 0.f});
-      //gs.print(letras[pos+3], 230, Dir2 {250.f, 250.f});
-      SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
-      SDL_RenderDrawPoint (glb->get_render(), std::lround(110.5), std::lround(243.1));
-      SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
-      SDL_RenderDrawPoint (glb->get_render(), std::lround(101.66), std::lround(235.28));
-      SDL_SetRenderDrawColor(glb->get_render(), 0, 0, 255, 255);
-      //SDL_RenderDrawPoint (glb->get_render(), std::lround(78.54), std::lround(236.64));
+      gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
+      gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
+      gs.print (std::u16string(u"Jovencillo emponzoniado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
+      //gs.print(letras[pos], 20, Dir2 {0.f, 0.f});
+      //Dir2 res;
+      //res = Dir2(138.38, 76.5).round();
+      //SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
+      //SDL_RenderDrawPoint (glb->get_render(), static_cast<uint64_t>(res.x), static_cast<uint64_t>(res.y));
+      //res = Dir2(134.64, 75.14).round();
+      //SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
+      //SDL_RenderDrawPoint (glb->get_render(), static_cast<uint64_t>(res.x), static_cast<uint64_t>(res.y));
+      //res = Dir2(130.56, 75.14).round();
+      //SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 255, 255);
+      //SDL_RenderDrawPoint (glb->get_render(), static_cast<uint64_t>(res.x), static_cast<uint64_t>(res.y));
 
     glb->end_render();
 
