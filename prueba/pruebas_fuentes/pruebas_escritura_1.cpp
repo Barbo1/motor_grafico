@@ -19,7 +19,7 @@ int main () {
   SDL_Event event;
 
   int error;
-  std::string path = "../fuentes_letras/Aloevera-OVoWO.ttf";
+  std::string path = "../fuentes_letras/Monas-BLBW8.ttf";
   GlyphsSystem gs (glb, path, &error);
   if (error != 0) {
     std::exit (-1);
@@ -31,16 +31,17 @@ int main () {
     u'j', u'k', u'l', u'm', u'n', u'o', u'p', u'q', u'r',
     u's', u't', u'u', u'v', u'w', u'x', u'y', u'z', u'0',
     u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9'
-  };*/
+  };
+  */
 
   uint32_t pos = 15;
   while (cont) {
     SDL_Delay(1);
     glb->begin_render();
-      gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
-      gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
-      gs.print (std::u16string(u"Jovencillo emponzoniado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
-      //gs.print(letras[pos], 20, Dir2 {0.f, 0.f});
+      //gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
+      //gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
+      //gs.print (std::u16string(u"Jovencillo emponzoniado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
+      gs.print(u'a', 320, Dir2 {0.f, 0.f});
       //Dir2 res;
       //res = Dir2(138.38, 76.5).round();
       //SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);

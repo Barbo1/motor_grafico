@@ -14,9 +14,7 @@ static inline float get_direction_line (const Dir2& curr, const Dir2& next) {
 
 static inline float get_direction_quad (const Dir2& curr, const Dir2& next, const Dir2& need) {
   float ret = (curr - next).y;
-  if (ret == 0.f)
-    ret = (curr - need).y;
-  return ret;
+  return (ret == 0.f ? (curr - need).y : ret);
 }
 
 static inline float get_prev_direction (ComponentElement elem) {
@@ -25,8 +23,9 @@ static inline float get_prev_direction (ComponentElement elem) {
       return get_direction_quad (elem.end, elem.middle, elem.start);
     case ComponentElementType::LINE:
       return get_direction_line (elem.end, elem.start);
+    default:
+      return 0.f;
   }
-  return 0.f;
 }
 
 static inline float get_next_direction (ComponentElement elem) {
@@ -35,8 +34,9 @@ static inline float get_next_direction (ComponentElement elem) {
       return -get_direction_quad (elem.start, elem.middle, elem.end);
     case ComponentElementType::LINE:
       return get_direction_line (elem.end, elem.start);
+    default:
+      return 0.f;
   }
-  return 0.f;
 }
 
 static inline bool float_is_zero (float a) {
@@ -47,59 +47,60 @@ static void draw_line (BoolMatrixU& bound, Dir2 P1, Dir2 P2, const float& prev_d
   Dir2 P1r = P1.round();
   Dir2 P2r = P2.round();
   Dir2 diff21 = P2 - P1;
-  int64_t P2ry = static_cast<int64_t>(P2r.y);
-  int64_t P1ry = static_cast<int64_t>(P1r.y);
-  int64_t P2rx = static_cast<int64_t>(P2r.x);
-  int64_t P1rx = static_cast<int64_t>(P1r.x);
-  int64_t yidiff = P2ry - P1ry;
+  int32_t P2ry = static_cast<int32_t>(P2r.y);
+  int32_t P1ry = static_cast<int32_t>(P1r.y);
+  int32_t P2rx = static_cast<int32_t>(P2r.x);
+  int32_t P1rx = static_cast<int32_t>(P1r.x);
   uint64_t prev_point_disapears = (diff21.y * prev_direction < 0.f ? 1ULL : 0ULL);
   uint64_t next_point_disapears = (diff21.y * next_direction < 0.f ? 1ULL : 0ULL);
 
-  /*
-  std::cout << "nueva linea <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
-  std::cout << "P1: (" << P1.x << ", " << P1.y << ")" << std::endl;
-  std::cout << "P2: (" << P2.x << ", " << P2.y << ")" << std::endl;
-  std::cout << "---------------------------------" << std::endl;
-  std::cout << "diff21: (" << diff21.x << ", " << diff21.y << ")" << std::endl;
-  std::cout << "prev_direction: " << prev_direction << std::endl;
-  std::cout << "next_direction: " << next_direction << std::endl;
-  */
-  if (yidiff == 0) {
-    float dir = prev_direction * next_direction;
-    if (P1rx != P2rx && !float_is_zero (prev_direction) && !float_is_zero (next_direction) && dir > 0.f)
-      bound.unset (P1ry, P1rx);
-  } else if (std::abs(yidiff) == 1) {
-    bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
-    bound.change (P2ry, P2rx, (next_point_disapears & bound(P2ry, P2rx)) ^ 1ULL);
-  } else {
-    Dir2 x_diff = Dir2 (diff21.x / diff21.y, 0.f);
-    if (P1.y > P2.y) {
-      std::swap (P1r, P2r);
-      std::swap (P1ry, P2ry);
-      std::swap (P1rx, P2rx);
-      std::swap (prev_point_disapears, next_point_disapears);
-    }
+  switch (std::abs(P2ry - P1ry)) {
+    case 0:
+      if (P1rx != P2rx && !float_is_zero (prev_direction) && 
+        !float_is_zero (next_direction) && prev_direction * next_direction > 0.f)
+        bound.unset (P1ry, P1rx);
+      break;
+    case 1:
+      bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
+      bound.change (P2ry, P2rx, (next_point_disapears & bound(P2ry, P2rx)) ^ 1ULL);
+      break;
+    default: {
+        Dir2 x_diff = Dir2 (diff21.x / diff21.y, 0.f);
+        if (P1.y > P2.y) {
+          std::swap (P1r, P2r);
+          std::swap (P1ry, P2ry);
+          std::swap (P1rx, P2rx);
+          std::swap (prev_point_disapears, next_point_disapears);
+        }
 
-    const uint64_t mid = (P2ry + P1ry) >> 1;
-    Dir2 x = P1r;
-    for (uint64_t yi = P1ry; yi <= mid; yi++) {
-      uint64_t xi = static_cast<int64_t>(x.round().x);
-      bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
-      x += x_diff;
-    }
-      
-    x = P2r;
-    for (uint64_t yi = P2ry; yi > mid; yi--) {
-      uint64_t xi = static_cast<int64_t>(x.round().x);
-      bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
-      x -= x_diff;
-    }
+        const uint64_t mid = (P2ry + P1ry) >> 1;
+        Dir2 x = P1r;
+        for (uint64_t yi = P1ry; yi <= mid; yi++) {
+          uint64_t xi = static_cast<int64_t>(x.round().x);
+          bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
+          x += x_diff;
+        }
+          
+        x = P2r;
+        for (uint64_t yi = P2ry; yi > mid; yi--) {
+          uint64_t xi = static_cast<int64_t>(x.round().x);
+          bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
+          x -= x_diff;
+        }
+      }
+      break;
   }
 }
 
+ /* this function print a part of the bezier curve formed by av*t**2 + bv*t + cv, where:
+ *   + bezier_config tell the configuration for the printing, where the bits are set with BezierConfig,
+ *   + first is the first point of the part,
+ *   + last_height is until where the curve part will be printed,
+ *   + rem_sqrt is a reminder of an operation needed below.
+ * */
 enum BezierConfig {
-  PrintDIR = 0b1,  // 1 for up
-  TRule = 0b10,    // 1 for max
+  TRule = 0b1,  // 1 for up
+  PrintDIR = 0b10,    // 1 for max
 };
 
 static void print_bezier_part (
@@ -108,161 +109,98 @@ static void print_bezier_part (
   const Dir2& av,
   const Dir2& bv,
   const Dir2& cv,
-  const float& rem_sqrt,
-  const float& iavy,
+  const Dir2& rem_sqrt,
   const Dir2& first,
   int64_t last_height,
-  float prev_direction,
-  float next_direction,
-  float curr_direction
+  uint64_t prev_direction,
+  uint64_t next_direction
 ) {
-  float t = (bezier_config & BezierConfig::TRule ? 1.f : 0.f);
+  float t = bezier_config & BezierConfig::TRule;
   uint64_t xi = static_cast<uint64_t> (first.round().x);
   const int64_t first_height = static_cast<int64_t> (first.round().y);
   const int64_t middle_height = (first_height + last_height) >> 1;
-  
-  /*
-  std::cout << "prev_dis_cond: " << prev_direction << std::endl;
-  std::cout << "next_dis_cond: " << next_direction << std::endl;
-  std::cout << "curr_dis_cond: " << curr_direction << std::endl;
-  */
-  
-  uint64_t prev_disappearance_cond = (prev_direction * curr_direction) < 0.f ? 1ULL : 0ULL;
-  uint64_t next_disappearance_cond = (next_direction * curr_direction) < 0.f ? 1ULL : 0ULL;
+  const float& iavy = 1.f / av.y;
 
   auto print_points = [&] (uint64_t yi, uint64_t yin, uint64_t disappearance_cond) {
-    /*
-    std::cout << "---------------------------------" << std::endl;
-    std::cout << "(xi, yi): (" << xi << ", " << yi << ")" << std::endl;
-    std::cout << "yin: " << yin << std::endl;
-    std::cout << "disappearance_cond: " << disappearance_cond << std::endl;
-    std::cout << "posicion: " << bound(yi, xi) << std::endl;
-    std::cout << "need: " << ((disappearance_cond & bound(yi, xi)) ^ 1ULL)<< std::endl;
-    std::cout << "t: " << t << std::endl;
-    */
     bound.change (yi, xi, (disappearance_cond & bound(yi, xi)) ^ 1ULL);
-    //std::cout << "posicion luego: " << bound(yi, xi) << std::endl;
-    
-    // test if there is a t for the height yi.
-    float sqrt_cond = std::max (std::fmaf (av.y, static_cast<float>(yin), rem_sqrt), 0.f);
-    sqrt_cond = std::sqrt (sqrt_cond);
+    float sqrt_cond = std::sqrt (av.madd(static_cast<float>(yin), rem_sqrt).max0().y);
 
-    // calculate the yi.
+    // founding t(could be better?).
     float t1 = iavy * (bv.y - sqrt_cond);
-    bool print1 = (0.f < t1) && (t1 < 1.f);
-
     float t2 = iavy * (bv.y + sqrt_cond);
-    bool print2 = (0.f < t2) && (t2 < 1.f);
-
-    if (print1 && print2) {
+    bool print1 = (0.f < t1) && (t1 < 1.f);
+    if (print1 && (0.f < t2) && (t2 < 1.f)) {
       if (bezier_config & BezierConfig::TRule)
         t = std::max (t1, t2);
       else
         t = std::min (t1, t2);
     } else if (print1)
       t = t1;
-    else if (print2)
+    else
       t = t2;
 
+    // founding x.
     xi = std::lround (av.madd(t, bv).madd(t, cv).x);
   };
 
-  //std::cout << "first height: " << first_height << std::endl;
-  //std::cout << "middle height: " << middle_height << std::endl;
-  //std::cout << "last height: " << last_height << std::endl;
 
-  if (std::abs(first_height - last_height) == 0) {
-    print_points (first_height, 0, prev_disappearance_cond);
-  } else if (std::abs(first_height - last_height) == 1) {
-    print_points (first_height, last_height, prev_disappearance_cond);
-    print_points (last_height, 0, next_disappearance_cond);
-  } else {
-    int64_t yi = first_height;
-    if (bezier_config & BezierConfig::PrintDIR) {
-      for (; yi <= middle_height; yi++)
-        print_points (yi, yi + 1, prev_disappearance_cond);
-      //std::cout << "otra parte. "<<  std::endl;
-      for (; yi <= last_height; yi++)
-        print_points (yi, yi + 1, next_disappearance_cond);
-    } else {
-      for (; yi >= middle_height; yi--)
-        print_points (yi, yi - 1, prev_disappearance_cond);
-      //std::cout << "otra parte. "<<  std::endl;
-      for (; yi >= last_height; yi--)
-        print_points (yi, yi - 1, next_disappearance_cond);
-    }
+  int64_t yi = first_height;
+  switch (std::abs(first_height - last_height)) {
+    case 0: 
+      bound.change (yi, xi, (prev_direction & bound(yi, xi)) ^ 1ULL);
+      break;
+    case 1:
+      print_points (first_height, last_height, prev_direction);
+      print_points (last_height, 0, next_direction);
+      break;
+   default: 
+      if (bezier_config & BezierConfig::PrintDIR) {
+        for (; yi <= middle_height; yi++)
+          print_points (yi, yi + 1, prev_direction);
+        for (; yi <= last_height; yi++)
+          print_points (yi, yi + 1, next_direction);
+      } else {
+        for (; yi >= middle_height; yi--)
+          print_points (yi, yi - 1, prev_direction);
+        for (; yi >= last_height; yi--)
+          print_points (yi, yi - 1, next_direction);
+      }
+      break;
   }
 }
-/*
-  static void print_bezier_part (
-    BoolMatrixU& bound, 
-    BezierPrintDir direction, 
-    BezierTRule t_rule, 
-    const Dir2 av,
-    const Dir2 bv,
-    uint32_t first,
-    uint32_t last,
-    uint64_t disappearance_cond
-  )
-  donde:
-    + BezierPrintDir denota la direction hacia donde va la curva(arriba o abajo)
-    + BezierTRule denota si se toma el t maximo o minimo(dentro del rango [0, 1]).
-    + av y bv se definen como se calculan abajo
-    + first y last son las alturas
-    + disappearance_cond denota si desaparece o no
 
-  static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, float prev_direction, float next_direction);
-*/
+static inline void get_directions_for_quad (const Dir2& P1, const Dir2& P2, const Dir2& P3, const float prev_direction, const float next_direction, uint64_t& ret1, uint64_t& ret2, uint64_t& ret3) {
+  float direction_calc_3, direction_calc_1;
+  direction_calc_1 = (P2 - P1).y;
+  direction_calc_1 = (float_is_zero (direction_calc_1) ? (P3 - P1).y : direction_calc_1);
+  direction_calc_3 = (P3 - P2).y;
+  direction_calc_3 = (float_is_zero (direction_calc_3) ? (P3 - P1).y : direction_calc_3);
+  ret1 = (direction_calc_1 * prev_direction < 0.f ? 1ULL : 0ULL);
+  ret2 = (direction_calc_3 * next_direction < 0.f ? 1ULL : 0ULL);
+  ret3 = (direction_calc_3 * direction_calc_1 < 0.f ? 1ULL : 0ULL);
+}
 
 static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, float prev_direction, float next_direction) {
-  /*
-  std::cout << "nueva quad <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
-  std::cout << "P1 = (" << P1.x << ", " << P1.y << ")"<< std::endl;
-  std::cout << "P2 = (" << P2.x << ", " << P2.y << ")"<< std::endl;
-  std::cout << "P3 = (" << P3.x << ", " << P3.y << ")"<< std::endl;
-  */
-
   Dir2 P3r = P3.round();
   Dir2 P1r = P1.round();
+  Dir2 cond = P3r - P1r;
   int64_t P3ry = static_cast<int64_t>(P3r.y);
   int64_t P1ry = static_cast<int64_t>(P1r.y);
   int64_t P3rx = static_cast<int64_t>(P3r.x);
   int64_t P1rx = static_cast<int64_t>(P1r.x);
   Dir2 av = P3 + P1 - P2 * 2.f;
   Dir2 bv = (P1 - P2).dir_mul(Dir2 {-2.f, 1.f});
-  float rem_sqrt = P2.y * P2.y - P1.y * P3.y;
-  float iavy = _mm_cvtss_f32 (_mm_permute_ps (_mm_rcp_ps (av.v), 0b01010101));
 
-  float direction_calc_1 = P2.y - P1.y;
-  if (float_is_zero (direction_calc_1))
-    direction_calc_1 = P3.y - P1.y;
+  uint64_t prev_point_disapears, next_point_disapears, mid_point_dissapears;
+  get_directions_for_quad (
+    P1, P2, P3, 
+    prev_direction, next_direction, 
+    prev_point_disapears, next_point_disapears, mid_point_dissapears
+  );
 
-  float direction_calc_3 = P3.y - P2.y;
-  if (float_is_zero (direction_calc_3)) 
-    direction_calc_3 = P3.y - P1.y;
- 
-  /*
-  std::cout << "prev_direction:" << prev_direction << std::endl;
-  std::cout << "next_direction:" << next_direction << std::endl;
-  std::cout << "direction_calc_1 :" << direction_calc_1 << std::endl;
-  std::cout << "direction_calc_3 :" << direction_calc_3 << std::endl;
-  */
-
-  uint64_t prev_point_disapears = (direction_calc_1 * prev_direction < 0.f ? 1ULL : 0ULL);
-  uint64_t next_point_disapears = (direction_calc_3 * next_direction < 0.f ? 1ULL : 0ULL);
-
-  /*
-  std::cout << "av.y :" << av.y << std::endl;
-  std::cout << "bv.y :" << bv.y << std::endl;
-
-  std::cout << "f1: " << float_is_zero ((P1 - P2).y) << std::endl; 
-  std::cout << "f2: " << float_is_zero ((P3 - P1).y) << std::endl; 
-  std::cout << "f3: " << ((P1 - P2).dir_mul(P3 - P2).y > 0.f) << std::endl; 
-  */
-
-  // cases.
+  // cases of .
   if (float_is_zero (av.y)) {
-    if (float_is_zero (bv.y) || (P1.round() - P3.round()).y == 0.f) {
+    if (float_is_zero (bv.y) || cond.y == 0.f) {
       draw_line (bound, P1, P3, prev_direction, next_direction);
     } else {
       if (P1.y > P3.y) {
@@ -273,94 +211,60 @@ static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, flo
 
       int64_t mid = (P1ry + P3ry) >> 1;
       uint64_t xi = P1rx;
+      float const_t = 0.5f / bv.y;
       for (int64_t yi = P1ry; yi <= mid; yi++) {
-        /*
-        std::cout << "(xi, yi): (" << xi << ", " << yi << ")" << std::endl;
-        std::cout << "prev_point_disapears: " << prev_point_disapears << std::endl;
-        std::cout << "bound(yi, xi): " << bound(yi, xi) << std::endl;
-        */
         bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
-        float t = 0.5f * (P1.y - static_cast<float>(yi + 1)) / bv.y;
-        //std::cout << "t: " << t << std::endl;
+        float t = (P1.y - static_cast<float>(yi + 1)) * const_t;
         xi = static_cast<uint64_t>(av.madd(t, bv).madd(t, P1).round().x);
       }
 
       xi = P3rx;
       for (int64_t yi = P3ry; yi > mid; yi--) {
-        /*
-        std::cout << "(xi, yi): (" << xi << ", " << yi << ")" << std::endl;
-        std::cout << "next_point_disapears: " << next_point_disapears << std::endl;
-        std::cout << "bound(yi, xi): " << bound(yi, xi) << std::endl;
-        */
         bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
-        float t = 0.5f * (P1.y - static_cast<float>(yi - 1)) / bv.y;
-        //std::cout << "t: " << t << std::endl;
+        float t = (P1.y - static_cast<float>(yi - 1)) * const_t;
         xi = static_cast<uint64_t>(av.madd(t, bv).madd(t, P1).round().x);
       }
     }
 
-  } else if (!float_is_zero ((P1 - P2).y) && !float_is_zero ((P3 - P2).y) && (P1 - P2).dir_mul(P3 - P2).y > 0.f) {
-    float t_bound = bv.y * iavy;
-    uint64_t yim = static_cast<uint64_t>(av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y);
-    uint64_t bc1 = 0, bc2 = BezierConfig::TRule;
-
-    if ((P3 - P2).y < 0.f) {
-      bc1 |= BezierConfig::PrintDIR;
-      bc2 |= BezierConfig::PrintDIR;
-    }
-    print_bezier_part (
-      bound, bc1, av, bv, P1, rem_sqrt, iavy, P1, yim, prev_direction, direction_calc_3, direction_calc_1
-    );
-    //std::cout << "||||||||||||||||||||-->>"<<  std::endl;
-    print_bezier_part (
-      bound, bc2, av, bv, P1, rem_sqrt, iavy, P3, yim, next_direction, direction_calc_1, direction_calc_3
-    );
-
-    //std::cout << "fin 2" << std::endl;
-    return;
   } else {
-    //std::cout << "3" << std::endl;
-
     uint64_t yim = (P1ry + P3ry) >> 1;
-    Dir2 cond = P3.round() - P1.round();
-    /*
-    std::cout << "redondeo de p3y: " << P3.round().y << std::endl;
-    std::cout << "redondeo de p1y: " << P1.round().y << std::endl;
-    std::cout << "esto tiene una diferencia de: " << cond.y << std::endl;
-    */
-
-    if (cond.y == 0.f) {
-      if (cond.x != 0.f && prev_direction * next_direction > 0.f)
-        bound.unset (P1ry, P1rx);
-    } else if (cond.abs().y == 1.f) {
-      bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
-      bound.change (P3ry, P3rx, (next_point_disapears & bound(P3ry, P3rx)) ^ 1ULL);
-    } else if (0.f < cond.y) {
-      //std::cout << "a" << std::endl;
-      print_bezier_part (
-        bound, BezierConfig::PrintDIR, 
-        av, bv, P1, rem_sqrt, iavy, P1, yim, prev_direction, direction_calc_3, direction_calc_1
-      );
-      //std::cout << "||||||||||||||||||||-->>"<<  std::endl;
-      print_bezier_part (
-        bound, BezierConfig::TRule, 
-        av, bv, P1, rem_sqrt, iavy, P3, yim+1, next_direction, direction_calc_1, direction_calc_3
-      );
-      //std::cout << "<<--||||||||||||||||||||"<<  std::endl;
-    } else if (cond.y < 0.f) {
-      //std::cout << "b" << std::endl;
-      print_bezier_part (
-        bound, 0, 
-        av, bv, P1, rem_sqrt, iavy, P1, yim, prev_direction, direction_calc_3, direction_calc_1
-      );
-      //std::cout << "||||||||||||||||||||-->>"<<  std::endl;
-      print_bezier_part (
-        bound, BezierConfig::TRule | BezierConfig::PrintDIR, 
-        av, bv, P1, rem_sqrt, iavy, P3, yim-1, next_direction, direction_calc_1, direction_calc_3
-      );
-      //std::cout << "<<--||||||||||||||||||||"<<  std::endl;
+    uint64_t bzc1 = 0, bzc2 = BezierConfig::TRule, yim2 = yim;
+    if (!float_is_zero ((P1 - P2).y) && !float_is_zero ((P3 - P2).y) && (P1 - P2).dir_mul(P3 - P2).y > 0.f) {
+      float t_bound = bv.y / av.y;
+      yim = static_cast<uint64_t>(av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y);
+      yim2 = yim;
+      if ((P3 - P2).y < 0.f) {
+        bzc1 |= BezierConfig::PrintDIR;
+        bzc2 |= BezierConfig::PrintDIR;
+      }
+    } else {
+      if (cond.y == 0.f) {
+        if (cond.x != 0.f && prev_direction * next_direction > 0.f)
+          bound.unset (P1ry, P1rx);
+        return;
+      } else if (cond.abs().y == 1.f) {
+        bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
+        bound.change (P3ry, P3rx, (next_point_disapears & bound(P3ry, P3rx)) ^ 1ULL);
+        return;
+      } else if (0.f < cond.y) {
+        bzc1 |= BezierConfig::PrintDIR;
+        yim = (P1ry + P3ry) >> 1;
+        yim2 = yim + 1;
+      } else if (cond.y < 0.f) {
+        bzc2 |= BezierConfig::PrintDIR;
+        yim = (P1ry + P3ry) >> 1;
+        yim2 = yim - 1;
+      }
     }
-    //std::cout << "fin 3" << std::endl;
+    Dir2 rem_sqrt = (P2.dir_mul(P2) - P1.dir_mul(P3));
+    print_bezier_part (
+      bound, bzc1, av, bv, P1, rem_sqrt, P1, yim, 
+      prev_point_disapears, mid_point_dissapears
+    );
+    print_bezier_part (
+      bound, bzc2, av, bv, P1, rem_sqrt, P3, yim2, 
+      next_point_disapears, mid_point_dissapears
+    );
   }
 }
 
@@ -380,10 +284,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     for (const auto& elems: comp) {
       min.v = _mm_min_ps (min.v, elems.start.v);
       max.v = _mm_max_ps (max.v, elems.start.v);
-
       min.v = _mm_min_ps (min.v, elems.end.v);
       max.v = _mm_max_ps (max.v, elems.end.v);
-
       if (elems.t == ComponentElementType::CURVE) {
         min.v = _mm_min_ps (min.v, elems.middle.v);
         max.v = _mm_max_ps (max.v, elems.middle.v);
@@ -431,7 +333,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       if (elem.t == ComponentElementType::CURVE) {
         Dir2 av = P3 + P1 - P2 * 2.f;
         Dir2 bv = P1 - P2;
-        float t_bound = bv.y * _mm_cvtss_f32 (_mm_permute_ps (_mm_rcp_ps (av.v), 0b01010101));
+        float t_bound = bv.y / av.y;
         float yim = av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y;
         this_component_is_hl = P1.round().y == yim && P3.round().y == yim;
       }
@@ -502,8 +404,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
   }
 
   // creating the image filled with the data.
-  const uint32_t height = std::lround(dims_l.y) + 1;
-  const uint32_t width = std::lround(dims_l.x) + 1;
+  const uint32_t height = std::lround (dims_l.y) + 1;
+  const uint32_t width = std::lround (dims_l.x) + 1;
   SDL_Surface* surface = SDL_CreateRGBSurface (0, width, height, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
   Uint32* pixels = (Uint32*)(surface->pixels), pixel_color;
   uint32_t pos = 0;

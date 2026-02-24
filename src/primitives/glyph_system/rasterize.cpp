@@ -1,22 +1,23 @@
 #include "../../../headers/primitives/glyph_system.hpp"
 #include "../../../headers/primitives/types_definition.hpp"
-#include "../../../headers/primitives/rasterizer.hpp"
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 #include <utility>
+#include <variant>
 
 SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
   auto founded = this->mapping.find (character);
   if (founded == this->mapping.end())
     return nullptr;
 
-  uint32_t glyph_index = founded->second;
   float sizef = static_cast<float>(s);
-  const ttf_glyph_simple_data& data = std::get<ttf_glyph_simple_data>(this->glyphs[glyph_index].raster_information);
+  uint32_t glyph_index = founded->second;
 
   Dir2 min = this->glyphs[glyph_index].bounding_box.first;
   Dir2 max = this->glyphs[glyph_index].bounding_box.second;
   Dir2 dims_reposition = (max - min) * sizef;
+
+  const ttf_glyph_simple_data& data = std::get<ttf_glyph_simple_data>(this->glyphs[glyph_index].raster_information);
 
   // generating array of the point of the scaled glyph.
   std::vector<std::vector<std::pair<Dir2, uint8_t>>> points (data.offset.size ());
@@ -101,7 +102,7 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
   }
 
   if (elem_count != 0)
-    return raster_grade_2(components, SDL_Color {.r=255, .g=255, .b=255, .a=255}, AntiAliasingType::AAx16);
+    return raster_grade_2(components, SDL_Color {.r=255, .g=255, .b=255, .a=255}, AntiAliasingType::AAx1);
   else {
     Dir2 dims = dims_reposition.round();
     return SDL_CreateRGBSurface (

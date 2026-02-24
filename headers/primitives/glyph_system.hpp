@@ -1,4 +1,5 @@
 #include "../../headers/primitives/global.hpp"
+#include "../../headers/primitives/rasterizer.hpp"
 
 #include <SDL2/SDL.h>
 #include <cmath>
@@ -18,13 +19,23 @@ struct ttf_table_info {
   uint32_t length;
 };
     
-struct ttf_glyph_compound_data { std::vector<char16_t> components; std::vector<float[6]> tranformation; };
-struct ttf_glyph_simple_data { std::vector<Dir2> points; std::vector<uint8_t> flags; std::vector<uint16_t> offset; };
+struct ttf_glyph_compound_data { 
+  std::vector<char16_t> components; 
+  std::vector<uint16_t> flags; 
+  std::vector<std::pair<uint16_t[2], float[4]>> tranformation; 
+};
+
+struct ttf_glyph_simple_data { 
+  std::vector<Dir2> points; 
+  std::vector<uint8_t> flags; 
+  std::vector<uint16_t> offset; 
+};
+
 struct ttf_glyph_data {
   std::variant <ttf_glyph_simple_data, ttf_glyph_compound_data> raster_information;
   std::pair<Dir2, Dir2> bounding_box;
   float left_bearing;
-  uint32_t contours;
+  uint32_t many;
 };
 
 class GlyphsSystem {
@@ -61,6 +72,8 @@ class GlyphsSystem {
     std::map<uint32_t, TTFCachedGlyphInfo> cached_glyphs;
     std::vector<ttf_glyph_data> glyphs;
     std::vector<float> advance_widths;
+
+    std::vector<std::vector<std::vector<ComponentElement>>> deduce_glyph (uint32_t glyph_index, float sizef);
     
   public:
     GlyphsSystem (Global* glb, std::string path, int* error);
