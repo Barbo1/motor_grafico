@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/bool_matrix.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 #include <cstdint>
 
 void BoolMatrixU::change (uint64_t row, uint64_t column, uint64_t bit) {

@@ -1,11 +1,12 @@
 #include "../../../headers/primitives/glyph_system.hpp"
+#include <cstdint>
 
 void GlyphsSystem::print (std::u16string str, uint32_t size, Dir2 position) {
   uint32_t w, h;
   SDL_Texture* tex;
   float sizef = static_cast<float>(size);
   for (const char16_t& character: str) {
-    uint32_t key = (size && character ? size << 15 | (uint32_t)character : 0);
+    uint32_t key = (size && character ? (uint32_t)size << 16 | (uint32_t)character : 0);
     auto founded = this->cached_glyphs.find(key);
 
     if (founded != this->cached_glyphs.end()) {
@@ -14,8 +15,6 @@ void GlyphsSystem::print (std::u16string str, uint32_t size, Dir2 position) {
       h = founded->second.h;
     } else {
       SDL_Surface* sur = this->raster (character, size);
-      if (sur == nullptr)
-        continue;
 
       tex = SDL_CreateTextureFromSurface(glb->get_render(), sur);
       w = sur->w;

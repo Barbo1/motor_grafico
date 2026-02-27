@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/bool_matrix.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 #include <cstdint>
 
 uint64_t BoolMatrixU::operator() (unsigned row, unsigned column) {

@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/bool_matrix.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 #include <cstdint>
 
 void BoolMatrixU::fill_bounds () {

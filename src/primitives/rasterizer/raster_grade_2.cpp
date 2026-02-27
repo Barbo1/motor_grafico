@@ -143,7 +143,6 @@ static void print_bezier_part (
     xi = std::lround (av.madd(t, bv).madd(t, cv).x);
   };
 
-
   int64_t yi = first_height;
   switch (std::abs(first_height - last_height)) {
     case 0: 
@@ -269,7 +268,7 @@ static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, flo
 }
 
 
-SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& components, SDL_Color color, AntiAliasingType antialias) {
+SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& components, const Dir2& min, const Dir2& max, SDL_Color color, AntiAliasingType antialias) {
   float antialias_multiplier;
   switch (antialias) {
     case AAx2: antialias_multiplier = 2.f; break;
@@ -277,20 +276,6 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     case AAx8: antialias_multiplier = 8.f; break;
     case AAx16: antialias_multiplier = 16.f; break;
     default: antialias_multiplier = 1.f;
-  }
-
-  Dir2 min = components[0][0].start, max = components[0][0].start;
-  for (const auto& comp: components) {
-    for (const auto& elems: comp) {
-      min.v = _mm_min_ps (min.v, elems.start.v);
-      max.v = _mm_max_ps (max.v, elems.start.v);
-      min.v = _mm_min_ps (min.v, elems.end.v);
-      max.v = _mm_max_ps (max.v, elems.end.v);
-      if (elems.t == ComponentElementType::CURVE) {
-        min.v = _mm_min_ps (min.v, elems.middle.v);
-        max.v = _mm_max_ps (max.v, elems.middle.v);
-      }
-    }
   }
 
   // calculating dimensions of the image and matrix.
@@ -304,7 +289,6 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
 
   // drawing.
   for (const auto& elements: components) {
-
     /* filtering problematic forms. The cases considering for evaluation are:
      *  1 - the first and last elements round to the same pixel 
      *        -> the curve will be eliminated.

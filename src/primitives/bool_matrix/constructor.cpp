@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/bool_matrix.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 
 BoolMatrixU::BoolMatrixU (unsigned rows, unsigned columns) noexcept {
   this->_columns_ = columns;

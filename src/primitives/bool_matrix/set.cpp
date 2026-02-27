@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/bool_matrix.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 
 void BoolMatrixU::set (uint64_t row, uint64_t column) {
   int r = (row & 7) << 3;

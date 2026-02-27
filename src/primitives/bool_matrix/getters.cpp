@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/bool_matrix.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 
 uint64_t BoolMatrixU::get_width () {
   return this->_columns_;

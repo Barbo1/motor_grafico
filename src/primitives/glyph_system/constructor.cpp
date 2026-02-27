@@ -4,16 +4,11 @@
 #include <cstdint>
 #include <iostream>
 
-float u16tof (uint16_t a) {
+static float u16tof (uint16_t a) {
   return static_cast<float>(std::bit_cast<int16_t>(a));
 }
 
-float u8tof (uint8_t a) {
-  return static_cast<float>(std::bit_cast<int8_t>(a));
-}
-
-
-float f2d14tof (uint16_t a) {
+static float f2d14tof (uint16_t a) {
   return std::bit_cast<int16_t> (a) / 16384.f;
 }
 
@@ -100,6 +95,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
 
   uint16_t units_per_em = file.read16();
   float inv_units_per_em_f = 1.f / static_cast<float>(units_per_em);
+  this->inv_units_per_em_f = inv_units_per_em_f;
   file.read64(); file.read64();
   uint16_t x_min = file.read16 ();
   uint16_t y_min = file.read16 ();
@@ -160,7 +156,8 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
       return;
     }
 
-    file.read32 ();
+    uint16_t length_subtable = file.read16();
+    file.read16 ();
     uint16_t seg_count_2 = file.read16 ();
     uint32_t seg_count = seg_count_2 >> 1;
     file.read32 (); file.read16 ();
@@ -179,33 +176,34 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     for (uint32_t i = 0; i < seg_count; i++)
       id_delta[i] = std::bit_cast<int16_t>(file.read16 ());
     for (uint32_t i = 0; i < seg_count; i++)
-      id_range_offset[i] = file.read16 ();
+      id_range_offset[i] = file.read16();
 
     if (start_code[seg_count - 1] != end_code[seg_count - 1] || start_code[seg_count - 1] != 0xFFFF) {
       std::cout << "Font Error: there is no consistency in subtable inforamtion." << std::endl;
       return;
     }
 
-    while (file.get_file_position() < tables_info[2].length + tables_info[2].offset) {
+    uint16_t glyph_index_array_size = (length_subtable - (16 + 8 * seg_count)) >> 1;
+    for (uint16_t nose = 0; nose < glyph_index_array_size; nose++)
       glyph_index_array.push_back (file.read16());
-    }
 
     for (uint32_t i = 0; i < seg_count - 1; i++) {
       if (id_range_offset[i] == 0)
         for (uint16_t j = start_code[i]; j <= end_code[i]; j++)
           this->mapping.insert ({j, j + id_delta[i] + 1});
-      else
+      else { 
         for (uint16_t j = start_code[i], dev = 0; j <= end_code[i]; j++, dev++) {
-          uint16_t pos = id_range_offset [i] + dev + i - seg_count;
+          uint16_t pos = (id_range_offset [i] >> 1) + dev + i - seg_count;
           if (glyph_index_array.size() <= pos) {
-            std::cout << "Font Error: glyphIndexAddress pass the allowed." << std::endl;
+            std::cout << "Font Error: glyphIndexAddress position overpass the allowed." << std::endl;
             return;
           }
 
           uint16_t elem = glyph_index_array[pos];
-          elem = elem != 0 ? (elem + id_delta[i]) % 65536 : 0;
+          elem = elem != 0 ? elem + id_delta[i] : 0;
           this->mapping.insert ({j, elem + 1});
         }
+      }
     }
   } else {
     std::cout << "Font Error: not founded a subtable of format 4." << std::endl;
@@ -219,16 +217,14 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   
   
   file.set_file_position (tables_info[3].offset);
-  std::vector<uint32_t> loca_offsets (number_glyphs);
+  std::vector<uint32_t> loca_offsets (number_glyphs + 1);
 
   if (index_to_loc_format == 0) {
-    for (uint32_t i = 0; i < (uint32_t)(number_glyphs + 1); i++) {
+    for (uint16_t i = 0; i <= number_glyphs; i++)
       loca_offsets[i] = 2 * file.read16();
-    }
   } else {
-    for (uint32_t i = 0; i < (uint32_t)(number_glyphs + 1); i++) {
+    for (uint16_t i = 0; i <= number_glyphs; i++)
       loca_offsets[i] = file.read32();
-    }
   }
 
 
@@ -258,151 +254,150 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     .left_bearing = 1.f,
     .many = 0
   };
- 
+
   for (uint32_t loff = 0; loff < loca_offsets.size () - 1; loff++) {
+    if (loca_offsets[loff] == loca_offsets[loff+1])
+      continue;
+
     file.set_file_position (tables_info[4].offset + loca_offsets[loff]);
 
-    uint32_t length_glyph = loca_offsets[loff+1] != loca_offsets[loff];
-    if (length_glyph > 0) {
-      int16_t num_contours = std::bit_cast<int16_t>(file.read16());
+    int16_t num_contours = std::bit_cast<int16_t>(file.read16());
 
-      Dir2 min, max;
-      min.x = u16tof(file.read16()) * inv_units_per_em_f;
-      min.y = u16tof(file.read16()) * inv_units_per_em_f;
+    Dir2 min, max;
+    min.x = u16tof(file.read16()) * inv_units_per_em_f;
+    min.y = u16tof(file.read16()) * inv_units_per_em_f;
 
-      max.x = u16tof(file.read16()) * inv_units_per_em_f;
-      max.y = u16tof(file.read16()) * inv_units_per_em_f;
+    max.x = u16tof(file.read16()) * inv_units_per_em_f;
+    max.y = u16tof(file.read16()) * inv_units_per_em_f;
 
-      /******************/
-      /*  simple glyph  */
-      /******************/
+    /******************/
+    /*  simple glyph  */
+    /******************/
 
-      if (num_contours >= 0) {
-        std::vector<uint16_t> end_contours = std::vector<uint16_t>(num_contours);
-        std::cout << num_contours << std::endl;
-        for (uint16_t i = 0; i < num_contours; i++) {
-          end_contours[i] = file.read16();
-        }
-
-        uint16_t num_points = end_contours.back() + 1;
-        this->glyphs[loff + 1] = ttf_glyph_data {
-          .raster_information = ttf_glyph_simple_data { 
-            .points = std::vector<Dir2>(num_points), 
-            .flags = std::vector<uint8_t> (num_points),
-            .offset = end_contours
-          }, 
-          .bounding_box = {min, max},
-          .left_bearing = 0.f,
-          .many = static_cast<uint16_t>(num_contours)
-        };
-
-        uint16_t int_len = file.read16();
-        file.skip (int_len);
-       
-        ttf_glyph_simple_data& data_ri = std::get<ttf_glyph_simple_data>(this->glyphs[loff + 1].raster_information);
-
-        uint32_t i = 0;
-        while (i < num_points) {
-          uint8_t flag = file.read8 ();
-          int32_t many = flag & 0b1000 ? file.read8() + 1 : 1;
-          while (many > 0 && i < num_points) {
-            data_ri.flags[i++] = flag;
-            many--;
-          }
-        }
-
-        // x coordenates.
-        data_ri.points[0].x = inv_units_per_em_f * (
-          data_ri.flags[0] & 0b10 ?
-            (data_ri.flags[0] & 0b10000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
-            (data_ri.flags[0] & 0b10000 ? 0.f: u16tof(file.read16()))
-        );
-        for (uint32_t i = 1; i < num_points; i++) {
-          uint32_t flag = data_ri.flags[i];
-          float coord = (
-            flag & 0b10 ?
-              (flag & 0b10000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
-              (flag & 0b10000 ? 0.f: u16tof(file.read16()))
-          );
-          data_ri.points[i].x = std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].x);
-        }
-
-        // y coordenates.
-        data_ri.points[0].y = (
-          data_ri.flags[0] & 0b100 ?
-            (data_ri.flags[0] & 0b100000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
-            (data_ri.flags[0] & 0b100000 ? 0.f: u16tof(file.read16()))
-        ) * inv_units_per_em_f;
-        for (uint32_t i = 1; i < num_points; i++) {
-          uint32_t flag = data_ri.flags[i];
-          float coord = (
-            flag & 0b100 ?
-              (flag & 0b100000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
-              (flag & 0b100000 ? 0.f: u16tof(file.read16()))
-          );
-          data_ri.points[i].y = std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].y);
-        }
-
-      /********************/
-      /*  compound glyph  */
-      /********************/
-
-      } else {
-        this->glyphs[loff + 1] = ttf_glyph_data {
-          .raster_information = ttf_glyph_compound_data { 
-            .components = std::vector<char16_t>(),
-            .flags = std::vector<uint16_t>(),
-            .tranformation = std::vector<std::pair<uint16_t[2], float[4]>>(),
-          }, 
-          .bounding_box = {min, max},
-          .left_bearing = 0.f,
-          .many = 0
-        };
-
-        ttf_glyph_compound_data& data = std::get<ttf_glyph_compound_data>(this->glyphs[loff + 1].raster_information);
-        bool continuing = true;
-        uint32_t number_of_components = 0;
-        std::cout << num_contours << std::endl;
-        while (continuing) {
-          number_of_components++;
-
-          uint16_t flag = file.read16();
-          data.flags.push_back(flag);
-          data.components.push_back(file.read16());
-
-          std::pair<uint16_t[2], float[4]> transformation_data = {};
-          if (flag & 0b1) {
-            transformation_data.first[0] = file.read8();
-            transformation_data.first[1] = file.read8();
-          } else {
-            transformation_data.first[0] = file.read16();
-            transformation_data.first[1] = file.read16();
-          }
-          float a = 1.f, b = 0.f, c = 0.f, d = 1.f;
-          if (flag & 0b1000) {
-            d = a = f2d14tof(file.read16());
-          } else if (flag & 0b1000000) {
-            a = f2d14tof(file.read16());
-            d = f2d14tof(file.read16());
-          } else if (flag & 0b10000000) {
-            a = f2d14tof(file.read16());
-            b = f2d14tof(file.read16());
-            c = f2d14tof(file.read16());
-            d = f2d14tof(file.read16());
-          }
-          transformation_data.second[0] = a;
-          transformation_data.second[1] = b;
-          transformation_data.second[2] = c;
-          transformation_data.second[3] = d;
-
-          data.tranformation.push_back (transformation_data);
-
-          continuing = flag & 0b100000;
-        }
-
-        this->glyphs[loff + 1].many = number_of_components;
-        std::cout << "cuantos: " << number_of_components << std::endl;
+    if (num_contours >= 0) {
+      std::vector<uint16_t> end_contours = std::vector<uint16_t>(num_contours);
+      for (uint16_t i = 0; i < num_contours; i++) {
+        end_contours[i] = file.read16();
       }
+
+      uint16_t num_points = end_contours.back() + 1;
+      this->glyphs[loff + 1] = ttf_glyph_data {
+        .raster_information = ttf_glyph_simple_data { 
+          .points = std::vector<Dir2>(num_points), 
+          .flags = std::vector<uint8_t> (num_points),
+          .offset = end_contours
+        }, 
+        .bounding_box = {min, max},
+        .left_bearing = 0.f,
+        .many = static_cast<uint16_t>(num_contours)
+      };
+
+      uint16_t int_len = file.read16();
+      file.skip (int_len);
+     
+      ttf_glyph_simple_data& data_ri = std::get<ttf_glyph_simple_data>(this->glyphs[loff + 1].raster_information);
+
+      uint32_t i = 0;
+      while (i < num_points) {
+        uint8_t flag = file.read8 ();
+        int32_t many = flag & 0b1000 ? file.read8() + 1 : 1;
+        while (many > 0 && i < num_points) {
+          data_ri.flags[i++] = flag;
+          many--;
+        }
+      }
+
+      // x coordenates.
+      data_ri.points[0].x = inv_units_per_em_f * (
+        data_ri.flags[0] & 0b10 ?
+          (data_ri.flags[0] & 0b10000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
+          (data_ri.flags[0] & 0b10000 ? 0.f: u16tof(file.read16()))
+      );
+      for (uint32_t i = 1; i < num_points; i++) {
+        uint32_t flag = data_ri.flags[i];
+        float coord = (
+          flag & 0b10 ?
+            (flag & 0b10000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
+            (flag & 0b10000 ? 0.f: u16tof(file.read16()))
+        );
+        data_ri.points[i].x = std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].x);
+      }
+
+      // y coordenates.
+      data_ri.points[0].y = (
+        data_ri.flags[0] & 0b100 ?
+          (data_ri.flags[0] & 0b100000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
+          (data_ri.flags[0] & 0b100000 ? 0.f: u16tof(file.read16()))
+      ) * inv_units_per_em_f;
+      for (uint32_t i = 1; i < num_points; i++) {
+        uint32_t flag = data_ri.flags[i];
+        float coord = (
+          flag & 0b100 ?
+            (flag & 0b100000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
+            (flag & 0b100000 ? 0.f: u16tof(file.read16()))
+        );
+        data_ri.points[i].y = std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].y);
+      }
+
+    /********************/
+    /*  compound glyph  */
+    /********************/
+
+    } else {
+      this->glyphs[loff + 1] = ttf_glyph_data {
+        .raster_information = ttf_glyph_compound_data { 
+          .components = std::vector<uint16_t>(),
+          .flags = std::vector<uint16_t>(),
+          .tranformation = std::vector<std::pair<uint16_t[2], float[4]>>(),
+        }, 
+        .bounding_box = {min, max},
+        .left_bearing = 0.f,
+        .many = 0
+      };
+
+      ttf_glyph_compound_data& data = std::get<ttf_glyph_compound_data>(this->glyphs[loff + 1].raster_information);
+      bool continuing = true;
+      uint32_t number_of_components = 0;
+      std::cout << "  compuesto de: " << std::endl;
+      while (continuing) {
+        number_of_components++;
+
+        uint16_t flag = file.read16();
+        data.flags.push_back(flag);
+        data.components.push_back(file.read16() + 1);
+
+        std::pair<uint16_t[2], float[4]> transformation_data = {};
+        if (flag & 0b1) {
+          transformation_data.first[0] = file.read16();
+          transformation_data.first[1] = file.read16();
+        } else {
+          transformation_data.first[0] = file.read8();
+          transformation_data.first[1] = file.read8();
+        }
+
+        float a = 1.f, b = 0.f, c = 0.f, d = 1.f;
+        if (flag & 0b1000) {
+          d = a = f2d14tof(file.read16());
+        } else if (flag & 0b1000000) {
+          a = f2d14tof(file.read16());
+          d = f2d14tof(file.read16());
+        } else if (flag & 0b10000000) {
+          a = f2d14tof(file.read16());
+          b = f2d14tof(file.read16());
+          c = f2d14tof(file.read16());
+          d = f2d14tof(file.read16());
+        }
+        transformation_data.second[0] = a;
+        transformation_data.second[1] = b;
+        transformation_data.second[2] = c;
+        transformation_data.second[3] = d;
+
+        data.tranformation.push_back (transformation_data);
+
+        continuing = flag & 0b100000;
+      }
+
+      this->glyphs[loff + 1].many = number_of_components;
     }
   }
 

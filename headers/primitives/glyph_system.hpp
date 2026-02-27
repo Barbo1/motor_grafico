@@ -11,7 +11,6 @@
 #include <variant>
 #include <cstring>
 
-
 struct ttf_table_info {
   uint32_t tag;
   uint32_t checksum;
@@ -20,7 +19,7 @@ struct ttf_table_info {
 };
     
 struct ttf_glyph_compound_data { 
-  std::vector<char16_t> components; 
+  std::vector<uint16_t> components; 
   std::vector<uint16_t> flags; 
   std::vector<std::pair<uint16_t[2], float[4]>> tranformation; 
 };
@@ -45,20 +44,16 @@ class GlyphsSystem {
       0x6C6F6361, 0x6D617870, 0x6E616D65, 0x706F7374
     };
 
-    /* tables order:
-     *  - head
-     *  - maxp
-     *  - cmap
-     *  - loca
-     *  - glyf
-     *  - hhea
-     *  - hmtx
-     *  - post
-     *  - name
-     * */
     static constexpr std::array<uint32_t, 9> tags_order = {
-      0x68656164, 0x6D617870, 0x636D6170, 0x6C6F6361, 0x676C7966, 
-      0x68686561, 0x686D7478, 0x706F7374, 0x6E616D65
+      0x68656164, // head
+      0x6D617870, // maxp
+      0x636D6170, // cmap
+      0x6C6F6361, // loca
+      0x676C7966, // glyf
+      0x68686561, // hhea
+      0x686D7478, // hmtx
+      0x706F7374, // post
+      0x6E616D65  // name
     };
 
     struct TTFCachedGlyphInfo {
@@ -68,12 +63,11 @@ class GlyphsSystem {
     };
 
     Global* glb;
+    float inv_units_per_em_f;
     std::map<char16_t, uint16_t> mapping;
     std::map<uint32_t, TTFCachedGlyphInfo> cached_glyphs;
     std::vector<ttf_glyph_data> glyphs;
     std::vector<float> advance_widths;
-
-    std::vector<std::vector<std::vector<ComponentElement>>> deduce_glyph (uint32_t glyph_index, float sizef);
     
   public:
     GlyphsSystem (Global* glb, std::string path, int* error);
