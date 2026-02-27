@@ -50,7 +50,6 @@
         |V| + dibujo de mascara uniforme,
         |V| + dibujo de mascara de vista direccional y lineas de bloqueo,
         |V| + superposicion de mascaras,
- |T| - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  |T| - agregar soporte a fuentes de letras(lo puedo dejar para las vacaciones):
         + https://learn.microsoft.com/en-us/typography/opentype/spec/
         + https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6.html
@@ -58,6 +57,12 @@
  |T| - probar cambios en performance con algoritmos de dibujado:
         + mismo algoritmo pero ordenando las lineas,
         + rasterizador como en el printeo de los glyphs.
+ | | - mejoras a ttf:
+        |V| + mejorar muestreo de glyphs.
+        | | + mayor seguridad y eficiencia
+        |V| + soporte a grafos compuestos
+        | | + capacidad de eliminacion de metadata para ser capaz de muestrear solo los glyphs necesarios.
+ | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
@@ -100,4 +105,3 @@
  | | - mejorar eficiencia de figures_constructors:
         | | + cambiar algoritmo de dibujo de un circulo,
         | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.
- |T| - mejorar muestreo de glyphs.
