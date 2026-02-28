@@ -37,10 +37,17 @@ static pointSet get_points_set (
   uint16_t glyph_index,
   const std::vector<ttf_glyph_data>& glyphs, 
   std::vector<uint16_t>& index_acc,
-  float inv_units_per_em_f
+  float inv_units_per_em_f,
+  uint32_t max_points,
+  int32_t depth
 ) {
   if (glyphs.size() <= glyph_index) {
     std::cout << "Font Error: the index '" << glyph_index << "' of the glyph is out of the table." << std::endl; 
+    std::exit (-1);
+  }
+
+  if (depth < 0) {
+    std::cout << "Font Error: the needed recursion level form compound glyph overpass the permited." << std::endl; 
     std::exit (-1);
   }
 
@@ -48,8 +55,20 @@ static pointSet get_points_set (
   if (std::holds_alternative<ttf_glyph_simple_data>(glyphs[glyph_index].raster_information)) {
     const ttf_glyph_simple_data& data = std::get<ttf_glyph_simple_data>(glyphs[glyph_index].raster_information);
 
-    // generating array of the point of the scaled glyph.
+    if (data.offset.size() == 0) {
+      return points_set;
+    } else if (data.offset.back() > max_points) {
+      std::cout 
+        << "Font Error: the number of points in the simple glyph are greater than '" 
+        << max_points 
+        << "'." 
+        << std::endl; 
+      std::exit (-1);
+    }
+
     std::vector<std::vector<std::pair<Dir2, uint8_t>>> points (data.offset.size ());
+
+    // generating array of the point of the scaled glyph.
     uint32_t curr_off = 0, pos = 0;
     for (auto& off: data.offset) {
       uint32_t many = off - curr_off;
@@ -83,7 +102,7 @@ static pointSet get_points_set (
       }
       index_acc.push_back(index);
 
-      pointSet aux = get_points_set (index, glyphs, index_acc, inv_units_per_em_f);
+      pointSet aux = get_points_set (index, glyphs, index_acc, inv_units_per_em_f, max_points, depth-1);
       points_set.insert (points_set.end(), aux.cbegin(), aux.cend());
     }
     
@@ -124,7 +143,7 @@ static pointSet get_points_set (
         }
 
         if (off_pos == points_set.size()) {
-          std::cout << "Font Error: font metadata ill-formed for a compound glyph giving ill-formed index." << std::endl; 
+          std::cout << "Font Error: font metadata ill-formed for a compound glyph giving ill-formed index(1)." << std::endl; 
           std::exit (-1);
         }
 
@@ -133,7 +152,7 @@ static pointSet get_points_set (
         uint32_t i = 0;
         while (i < offs.size() && index2 < offs[i]) { i++; }
         if (i == offs.size()) {
-          std::cout << "Font Error: font metadata ill-formed for a compound glyph giving ill-formed index." << std::endl; 
+          std::cout << "Font Error: font metadata ill-formed for a compound glyph giving ill-formed index(2)." << std::endl; 
           std::exit (-1);
         } else {
           pc = std::get<0>(glyph)[off_pos][i].first;
@@ -183,7 +202,14 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
   {
     std::vector<uint16_t> index_acc;
     index_acc.push_back (glyph_index);
-    pointSet point_set = get_points_set (glyph_index, this->glyphs, index_acc, this->inv_units_per_em_f);
+    pointSet point_set = get_points_set (
+      glyph_index, 
+      this->glyphs, 
+      index_acc, 
+      this->inv_units_per_em_f,
+      this->max_points,
+      this->max_component_depth
+    );
 
     if (point_set.size() == 0) {
       return SDL_CreateRGBSurface (

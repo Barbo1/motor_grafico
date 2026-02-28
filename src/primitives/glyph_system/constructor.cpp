@@ -22,7 +22,8 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   uint32_t value = file.read32();
   if (value != 0x00010000 && value != 0x74727565) {
     std::cout << "Font Error: scaler mismatch" << std::endl;
-    return ;
+    *error = -3;
+    return;
   }
 
   uint16_t number_tables = file.read16();
@@ -55,6 +56,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     std::cout << "Font Error: required tag " << *requiredit
       << " not found or the tags are not in the proper order." 
       << std::endl;
+    *error = -3;
     return;
   }
 
@@ -78,18 +80,21 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   file.set_file_position (tables_info[0].offset);
   if (file.read32 () != 0x00010000) {
     std::cout << "Font Error: head version not correct." << std::endl;
+    *error = -3;
     return;
   }
   file.read32 ();
   file.read32 (); // checksum.
   if (file.read32 () != 0x5F0F3CF5) {
     std::cout << "Font Error: magic number not correct." << std::endl;
+    *error = -3;
     return;
   }
 
   uint16_t head_flags = file.read16 ();
   if (head_flags & 0x0040) {
     std::cout << "Font Error: bit must be 0, but 1 found." << std::endl;
+    *error = -3;
     return;
   }
 
@@ -108,6 +113,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
 
   if (std::bit_cast<int16_t> (file.read16 ()) != 0) {
     std::cout << "Font Error: glyphDataFromat is not 0." << std::endl;
+    *error = -3;
     return;
   }
 
@@ -123,9 +129,16 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   file.set_file_position (tables_info[1].offset);
   if (file.read32 () != 0x00010000) {
     std::cout << "Font Error: maxp version not correct." << std::endl;
+    *error = -3;
     return;
   }
   uint16_t number_glyphs = file.read16 ();
+  this->max_points = file.read16();
+  file.read64();
+  file.read64();
+  file.read32();
+  file.read16();
+  this->max_component_depth = file.read16();
 
 
   /*****************/
@@ -136,6 +149,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   file.set_file_position (tables_info[2].offset);
   if (file.read16 () != 0) {
     std::cout << "Font Error: version not matching required." << std::endl;
+    *error = -3;
     return;
   }
 
@@ -153,6 +167,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     file.set_file_position (tables_info[2].offset + offset);
     if (file.read16() != 4) {
       std::cout << "Font Error: not founded a subtable of format 4." << std::endl;
+      *error = -4;
       return;
     }
 
@@ -180,6 +195,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
 
     if (start_code[seg_count - 1] != end_code[seg_count - 1] || start_code[seg_count - 1] != 0xFFFF) {
       std::cout << "Font Error: there is no consistency in subtable inforamtion." << std::endl;
+      *error = -5;
       return;
     }
 
@@ -196,6 +212,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
           uint16_t pos = (id_range_offset [i] >> 1) + dev + i - seg_count;
           if (glyph_index_array.size() <= pos) {
             std::cout << "Font Error: glyphIndexAddress position overpass the allowed." << std::endl;
+            *error = -5;
             return;
           }
 
@@ -207,6 +224,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     }
   } else {
     std::cout << "Font Error: not founded a subtable of format 4." << std::endl;
+    *error = -4;
     return;
   }
 
@@ -233,6 +251,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   /*****************/
  
 
+  this->is_meta = true;
   this->mapping.insert ({0, 0});
   this->cached_glyphs.insert ({0, TTFCachedGlyphInfo {
     SDL_CreateTexture (
@@ -358,7 +377,6 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
       ttf_glyph_compound_data& data = std::get<ttf_glyph_compound_data>(this->glyphs[loff + 1].raster_information);
       bool continuing = true;
       uint32_t number_of_components = 0;
-      std::cout << "  compuesto de: " << std::endl;
       while (continuing) {
         number_of_components++;
 
@@ -410,6 +428,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   file.set_file_position (tables_info[5].offset);
   if (file.read32 () != 0x00010000) {
     std::cout << "Font Error: hhea version not correct." << std::endl;
+    *error = -3;
     return;
   }
   file.read32 (); file.read16 ();
@@ -420,11 +439,11 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
   min_right_side_bearing += min_right_side_bearing + min_left_side_bearing + advance_width_max;
 
   file.read64 ();
-  if (file.read64 () != 0) {
+  if (file.read64 () != 0 || file.read16 () != 0) {
     std::cout << "Font Error: value founded must be 0." << std::endl;
+    *error = -3;
     return;
   }
-  file.read16 ();
 
   uint16_t many_advance_widths = file.read16 ();
 
@@ -435,12 +454,14 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
 
   
   file.set_file_position (tables_info[6].offset);
-  int32_t i = 1;
-  this->advance_widths = std::vector<float> (many_advance_widths);
-  while (i < many_advance_widths && i < static_cast<int32_t>(this->glyphs.size () - 1)) {
+  this->advance_widths = std::vector<float> (many_advance_widths+1);
+
+  uint32_t i = 1;
+  for (; i < std::min (this->advance_widths.size(), this->glyphs.size ()); i++) {
     this->advance_widths[i] = static_cast<float>(file.read16 ()) * inv_units_per_em_f;
-    this->glyphs[i++].left_bearing = static_cast<float>(std::bit_cast<int16_t>(file.read16 ())) * inv_units_per_em_f;
+    this->glyphs[i].left_bearing = static_cast<float>(std::bit_cast<int16_t>(file.read16 ())) * inv_units_per_em_f;
   }
-  for (; i < (int32_t)this->glyphs.size() - 1; i++)
+
+  for (; i < this->glyphs.size(); i++)
     this->glyphs[i].left_bearing = static_cast<float>(std::bit_cast<int16_t>(file.read16 ())) * inv_units_per_em_f;
 }

@@ -19,7 +19,13 @@ int main () {
   SDL_Event event;
 
   int error;
-  std::string path = "../fuentes_letras/ArianaVioleta-dz2K.ttf";
+  /*
+    ArianaVioleta-dz2K
+    Nostard-Medium
+    Aloevera-OVoWO
+    TrenchThin-aZ1J
+  */
+  std::string path = "../fuentes_letras/TrenchThin-aZ1J.ttf";
   GlyphsSystem gs (glb, path, &error);
   if (error != 0) {
     std::exit (-1);
@@ -39,7 +45,7 @@ int main () {
     SDL_Delay(1);
     glb->begin_render();
       gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
-      gs.print (std::u16string(u"incluso con distintos tamanios."), 30, Dir2 {0.f, 80.f});
+      gs.print (std::u16string(u"incluso con distintos tamaños."), 30, Dir2 {0.f, 80.f});
       gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
       //gs.print(letras[pos], 320, Dir2 {0.f, 0.f});
       //gs.print(u'ä', 320, Dir2 {0.f, 0.f});

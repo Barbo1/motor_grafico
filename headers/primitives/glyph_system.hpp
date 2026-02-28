@@ -63,22 +63,50 @@ class GlyphsSystem {
     };
 
     Global* glb;
-    float inv_units_per_em_f;
-    std::map<char16_t, uint16_t> mapping;
+
+    // already cached glyphs.
     std::map<uint32_t, TTFCachedGlyphInfo> cached_glyphs;
-    std::vector<ttf_glyph_data> glyphs;
     std::vector<float> advance_widths;
+
+    // glyphs metadata.
+    std::map<char16_t, uint16_t> mapping;
+    std::vector<ttf_glyph_data> glyphs;
+    uint32_t max_points, max_component_depth;
+    float inv_units_per_em_f;
+
+    // state of the metadata.
+    bool is_meta;
+
+    SDL_Surface* raster (char16_t, uint32_t);
+    static uint32_t get_key(char16_t, uint32_t);
     
   public:
+    /* the contructor receives the Global state and the path to the ttf file. 
+     * The returning parameter 'error' could be:
+     *  + -1 or -2 for sequential file reader errors,
+     *  + -3 for present information missmatching whats expected,
+     *  + -4 for information not present in the file,
+     *  + -5 inconsistencies between inner information,.
+     * */
     GlyphsSystem (Global* glb, std::string path, int* error);
     ~GlyphsSystem () = default;
 
+    /* functions meant to print a letter or string, in the screen, on a specified 
+     * position. 
+     * */
     void print (char16_t, uint32_t, Dir2);
     void print (std::u16string, uint32_t, Dir2);
 
+    /* completely clears the cached glyphs(already rasterized characters) from 
+     * memory. 
+     * */
     void clear_cache ();
-    void clear_glyph (char16_t, uint32_t);
-    void clear_sequence (uint32_t);
 
-    SDL_Surface* raster (char16_t, uint32_t);
+    /* erase a specified character of a specified size from the cached glyphs. */
+    void clear_glyph (char16_t, uint32_t);
+
+    /* clears the metadata of the characters, leaving more space but making 
+     * impossible to raster new ones. 
+     * */
+    void clear_meta ();
 };

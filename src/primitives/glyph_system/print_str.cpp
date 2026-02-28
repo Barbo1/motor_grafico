@@ -3,17 +3,17 @@
 
 void GlyphsSystem::print (std::u16string str, uint32_t size, Dir2 position) {
   uint32_t w, h;
-  SDL_Texture* tex;
   float sizef = static_cast<float>(size);
   for (const char16_t& character: str) {
-    uint32_t key = (size && character ? (uint32_t)size << 16 | (uint32_t)character : 0);
+    uint32_t key = GlyphsSystem::get_key(character, size);
     auto founded = this->cached_glyphs.find(key);
+    SDL_Texture* tex = nullptr;
 
     if (founded != this->cached_glyphs.end()) {
       tex = founded->second.tex;
       w = founded->second.w;
       h = founded->second.h;
-    } else {
+    } else if (this->is_meta) {
       SDL_Surface* sur = this->raster (character, size);
 
       tex = SDL_CreateTextureFromSurface(glb->get_render(), sur);
@@ -23,19 +23,21 @@ void GlyphsSystem::print (std::u16string str, uint32_t size, Dir2 position) {
 
       SDL_FreeSurface (sur);
     }
-    
-    uint16_t pos = this->mapping[character];
-    const ttf_glyph_data& data = this->glyphs[pos];
-    SDL_Rect dst;
-    dst.x = std::fmaf (data.left_bearing, sizef, position.x);
-    dst.y = std::lround(data.bounding_box.second.nmadd(sizef, position).y); 
-    dst.w = w;
-    dst.h = h;
-    SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);
 
-    position += Dir2 {
-      (pos < this->advance_widths.size () ? this->advance_widths[pos] : this->advance_widths.back()) * sizef, 
-      0.f
-    };
+    if (tex != nullptr) {
+      uint16_t pos = this->mapping[character];
+      const ttf_glyph_data& data = this->glyphs[pos];
+      SDL_Rect dst;
+      dst.x = std::fmaf (data.left_bearing, sizef, position.x);
+      dst.y = std::lround(data.bounding_box.second.nmadd(sizef, position).y); 
+      dst.w = w;
+      dst.h = h;
+      SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);
+
+      position += Dir2 {
+        (pos < this->advance_widths.size () ? this->advance_widths[pos] : this->advance_widths.back()) * sizef, 
+        0.f
+      };
+    }
   }
 }
