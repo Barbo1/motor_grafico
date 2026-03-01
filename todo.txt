@@ -58,6 +58,8 @@
         |V| + mayor seguridad y eficiencia
         |V| + soporte a grafos compuestos
         |V| + capacidad de eliminacion de metadata para ser capaz de muestrear solo los glyphs necesarios.
+        |V| + soporte para colores de letras
+        |V| + soporte para reescalado
  |T| - probar cambios en performance con algoritmos de dibujado:
         + mismo algoritmo pero ordenando las lineas,
         + rasterizador como en el printeo de los glyphs.
@@ -65,6 +67,9 @@
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
+ | | - hacer una mezcla de movimiento y colision, que calcule el movimiento y 
+        verifique que en la linea de movimiento no hubo ninguna colision(
+        computacionalmente mas complejo seguramente mas exacto).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.
  | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 

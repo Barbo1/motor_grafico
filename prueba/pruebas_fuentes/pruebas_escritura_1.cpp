@@ -41,12 +41,18 @@ int main () {
   */
 
   uint32_t pos = 0;
+  SDL_Color color_1 = SDL_Color {.r = 255, .g = 0, .b = 255, .a = 255};
+  SDL_Color color_2 = SDL_Color {.r = 255, .g = 255, .b = 255, .a = 255};
+  gs.cache(u'a', 40, color_1);
+  gs.cache(u'b', 40, color_1);
+  gs.cache(u'o', 40, color_1);
+  std::cout << "uno" << std::endl;
   while (cont) {
     SDL_Delay(1);
     glb->begin_render();
-      gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, Dir2 {0.f, 40.f});
-      gs.print (std::u16string(u"incluso con distintos tamaños."), 30, Dir2 {0.f, 80.f});
-      gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, Dir2 {0.f, 120.f});
+      gs.print (std::u16string(u"ahora se ve mucho mejor."), 40, color_1, Dir2 {0.f, 40.f});
+      gs.print (std::u16string(u"incluso con distintos tamaños."), 30, color_2, Dir2 {0.f, 80.f});
+      gs.print (std::u16string(u"Jovencillo emponzoñado de whisky: ¡que figurota exhibe!"), 20, color_1, Dir2 {0.f, 120.f});
       //gs.print(letras[pos], 320, Dir2 {0.f, 0.f});
       //gs.print(u'ä', 320, Dir2 {0.f, 0.f});
       //Dir2 res;

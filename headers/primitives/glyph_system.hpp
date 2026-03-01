@@ -2,6 +2,7 @@
 #include "../../headers/primitives/rasterizer.hpp"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_stdinc.h>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -77,8 +78,8 @@ class GlyphsSystem {
     // state of the metadata.
     bool is_meta;
 
-    SDL_Surface* raster (char16_t, uint32_t);
-    static uint32_t get_key(char16_t, uint32_t);
+    SDL_Surface* raster(char16_t, uint16_t, SDL_Color);
+    static uint64_t get_key(char16_t, uint16_t, Uint32);
     
   public:
     /* the contructor receives the Global state and the path to the ttf file. 
@@ -94,8 +95,14 @@ class GlyphsSystem {
     /* functions meant to print a letter or string, in the screen, on a specified 
      * position. 
      * */
-    void print (char16_t, uint32_t, Dir2);
-    void print (std::u16string, uint32_t, Dir2);
+    void print (char16_t, uint16_t, SDL_Color, Dir2);
+    void print (std::u16string, uint16_t, SDL_Color, Dir2);
+
+    /* test if a glyph is rasterized. */
+    bool is_cached (char16_t, uint16_t, SDL_Color);
+    
+    /* raster a particular letter. */
+    void cache (char16_t, uint16_t, SDL_Color);
 
     /* completely clears the cached glyphs(already rasterized characters) from 
      * memory. 
@@ -103,7 +110,7 @@ class GlyphsSystem {
     void clear_cache ();
 
     /* erase a specified character of a specified size from the cached glyphs. */
-    void clear_glyph (char16_t, uint32_t);
+    void clear_glyph (char16_t, uint16_t, SDL_Color);
 
     /* clears the metadata of the characters, leaving more space but making 
      * impossible to raster new ones. 

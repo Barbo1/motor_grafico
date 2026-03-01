@@ -184,7 +184,7 @@ static pointSet get_points_set (
   }
 }
 
-SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
+SDL_Surface* GlyphsSystem::raster (char16_t character, uint16_t s, SDL_Color color) {
   auto founded = this->mapping.find (character);
   if (founded == this->mapping.end())
     return SDL_CreateRGBSurface (
@@ -299,7 +299,7 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint32_t s) {
     SDL_Surface* aux = raster_grade_2(
       components, 
       min * sizef, max * sizef, 
-      SDL_Color {.r=255, .g=255, .b=255, .a=255}, 
+      color, 
       AntiAliasingType::AAx16
     );
 
