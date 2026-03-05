@@ -15,7 +15,7 @@ static int col_increment[7] = { 8, 8, 4, 4, 2, 2, 1 };
 static int row_increment_sh[7] = { 3, 3, 3, 2, 2, 1, 1 };
 static int col_increment_sh[7] = { 3, 3, 2, 2, 1, 1, 0 };
 
-uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
+static uint8_t paeth_predictor (int16_t left, int16_t above, int16_t diagonal) {
   int16_t p = left + above - diagonal;
   int16_t pa = std::abs (p - left);
   int16_t pb = std::abs (p - above);

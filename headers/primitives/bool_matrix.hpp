@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstring>
 
-class BoolMatrixU {
+class BoolMatrix {
   private:
     uint64_t * _data_;
     uint64_t * _parity_;
@@ -12,16 +12,14 @@ class BoolMatrixU {
     uint64_t _columns_;
 
   public:
-    BoolMatrixU (unsigned rows, unsigned columns) noexcept ;
-    ~BoolMatrixU ();
+    BoolMatrix (unsigned rows, unsigned columns) noexcept ;
+    ~BoolMatrix ();
 
     uint64_t get_width();
     uint64_t get_height();
     uint64_t get_lenc();
     uint64_t get_lenr();
 
-    void set (uint64_t row, uint64_t column);
-    void unset (uint64_t row, uint64_t column);
     void change (uint64_t row, uint64_t column, uint64_t bit);
     uint64_t operator() (unsigned row, unsigned column);
 

@@ -1,5 +1,5 @@
 #include "../../../headers/primitives/bool_matrix.hpp"
 
-BoolMatrixU::~BoolMatrixU () {
+BoolMatrix::~BoolMatrix () {
   delete [] this->_data_;
 }

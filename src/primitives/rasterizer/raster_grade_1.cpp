@@ -2,7 +2,7 @@
 #include <cmath>
 #include <algorithm>
 
-static void draw_line (BoolMatrixU& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction) {
+static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction) {
   Dir2 diff21 = P2 - P1;
   if (diff21.y != 0.f) {
     uint64_t prev_point_disapears = (diff21.y * prev_direction < 0.f ? 1ULL : 0ULL);
@@ -33,7 +33,7 @@ static void draw_line (BoolMatrixU& bound, Dir2 P1, Dir2 P2, float& prev_directi
 
   } else
     if (prev_direction * next_direction > 0.f)
-      bound.unset (std::lround (P1.y), std::lround (P1.x));
+      bound.change (std::lround (P1.y), std::lround (P1.x), 0ULL);
 }
 
 SDL_Surface* raster_grade_1 (std::vector<Dir2> points, SDL_Color color, AntiAliasingType antialias) {
@@ -65,7 +65,7 @@ SDL_Surface* raster_grade_1 (std::vector<Dir2> points, SDL_Color color, AntiAlia
   // creating the matrix for the bounds.
   int32_t matrix_height = std::lround (dims.y) + 2;
   int32_t matrix_width = std::lround (dims.x) + 2;
-  BoolMatrixU bound = BoolMatrixU (matrix_height, matrix_width);
+  BoolMatrix bound = BoolMatrix (matrix_height, matrix_width);
 
   // generating array of the point of the scaled image.
   std::vector<Dir2> _points (many_points+2);

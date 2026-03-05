@@ -1,6 +1,6 @@
 #include "../../../headers/primitives/bool_matrix.hpp"
 
-BoolMatrixU::BoolMatrixU (unsigned rows, unsigned columns) noexcept {
+BoolMatrix::BoolMatrix (unsigned rows, unsigned columns) noexcept {
   this->_columns_ = columns;
   this->_rows_ = rows;
   this->_lenr_ = (rows + 7) >> 3;

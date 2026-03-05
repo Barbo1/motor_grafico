@@ -1,7 +1,7 @@
 #include "../../../headers/primitives/bool_matrix.hpp"
 #include <cstdint>
 
-void BoolMatrixU::fill_bounds () {
+void BoolMatrix::fill_bounds () {
   for (uint64_t r = 0; r < this->_lenr_; r++) {
     uint64_t curr_vec = 0;
     for (uint64_t c = 0; c < this->_lenc_; c++) {

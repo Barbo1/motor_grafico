@@ -1,17 +1,17 @@
 #include "../../../headers/primitives/bool_matrix.hpp"
 
-uint64_t BoolMatrixU::get_width () {
+uint64_t BoolMatrix::get_width () {
   return this->_columns_;
 }
 
-uint64_t BoolMatrixU::get_height() {
+uint64_t BoolMatrix::get_height() {
   return this->_rows_;
 }
 
-uint64_t BoolMatrixU::get_lenc () {
+uint64_t BoolMatrix::get_lenc () {
   return this->_lenc_;
 }
 
-uint64_t BoolMatrixU::get_lenr () {
+uint64_t BoolMatrix::get_lenr () {
   return this->_lenr_;
 }

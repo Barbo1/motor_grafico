@@ -43,7 +43,7 @@ static inline bool float_is_zero (float a) {
   return -0.0001f < a && a < 0.0001f;
 }
 
-static void draw_line (BoolMatrixU& bound, Dir2 P1, Dir2 P2, const float& prev_direction, const float& next_direction) {
+static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, const float& prev_direction, const float& next_direction) {
   Dir2 P1r = P1.round();
   Dir2 P2r = P2.round();
   Dir2 diff21 = P2 - P1;
@@ -58,7 +58,7 @@ static void draw_line (BoolMatrixU& bound, Dir2 P1, Dir2 P2, const float& prev_d
     case 0:
       if (P1rx != P2rx && !float_is_zero (prev_direction) && 
         !float_is_zero (next_direction) && prev_direction * next_direction > 0.f)
-        bound.unset (P1ry, P1rx);
+        bound.change (P1ry, P1rx, 0ULL);
       break;
     case 1:
       bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
@@ -104,7 +104,7 @@ enum BezierConfig {
 };
 
 static void print_bezier_part (
-  BoolMatrixU& bound, 
+  BoolMatrix& bound, 
   const uint32_t bezier_config,
   const Dir2& av,
   const Dir2& bv,
@@ -179,7 +179,7 @@ static inline void get_directions_for_quad (const Dir2& P1, const Dir2& P2, cons
   ret3 = (direction_calc_3 * direction_calc_1 < 0.f ? 1ULL : 0ULL);
 }
 
-static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, float prev_direction, float next_direction) {
+static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, float prev_direction, float next_direction) {
   Dir2 P3r = P3.round();
   Dir2 P1r = P1.round();
   Dir2 cond = P3r - P1r;
@@ -239,7 +239,7 @@ static void draw_quad_bezier (BoolMatrixU& bound, Dir2 P1, Dir2 P2, Dir2 P3, flo
     } else {
       if (cond.y == 0.f) {
         if (cond.x != 0.f && prev_direction * next_direction > 0.f)
-          bound.unset (P1ry, P1rx);
+          bound.change (P1ry, P1rx, 0ULL);
         return;
       } else if (cond.abs().y == 1.f) {
         bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
@@ -285,7 +285,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
   // creating the matrix for the bounds.
   int32_t matrix_height = std::lround (dims.y) + 2;
   int32_t matrix_width = std::lround (dims.x) + 2;
-  BoolMatrixU bound = BoolMatrixU (matrix_height, matrix_width);
+  BoolMatrix bound = BoolMatrix (matrix_height, matrix_width);
 
   // drawing.
   for (const auto& elements: components) {

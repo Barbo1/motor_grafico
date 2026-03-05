@@ -63,15 +63,18 @@
  |T| - probar cambios en performance con algoritmos de dibujado:
         + mismo algoritmo pero ordenando las lineas,
         + rasterizador como en el printeo de los glyphs.
+ | | - usar SIMD para las image_modifiers.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
- | | - hacer una mezcla de movimiento y colision, que calcule el movimiento y 
-        verifique que en la linea de movimiento no hubo ninguna colision(
-        computacionalmente mas complejo seguramente mas exacto).
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - colisiones de poligonos con poligonos.
+ | | - cambios en las colisiones:
+      | | + hacer una mezcla de movimiento y colision, que calcule el movimiento y 
+              verifique que en la linea de movimiento no hubo ninguna colision(
+              computacionalmente mas complejo seguramente mas exacto).
+      | | + hacer test_and_resolve_collition para ahorrar operaciones.
  | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
         mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
         | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
@@ -97,13 +100,14 @@
  | | - agregar soporte a gifs para importar imagenes movibles:
         + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
         + https://en.wikipedia.org/wiki/GIF
- | | - hacer tempalte las lineas para poder contemplar las lineas verticales.
- | | - hacer test_and_resolve_collition para ahorrar operaciones.
+ | | - cambiar el formato de las lineas para que queden definidas por:
+        + un punto(por el que pasa),
+        + un vector(que apunta a su direccion).
  | | - clase para manejo de:
         + sequencias de imagenes(Visualizer<D2SEQ>),
         + imagenes continuas(Visualizer<D2CON>) y,
         + imagenes continuas con mapeo(Visualizer<D2MAP>).
- | | - usar SIMD para las image_modifiers.
+ | | - agregar capacidad de printear letras en los visualizers 2D.
  | | - implementar gear.
  | | - agregar utilizacion de audios.
  | | - mejorar eficiencia de figures_constructors:
