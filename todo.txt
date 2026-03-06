@@ -63,7 +63,7 @@
  |T| - probar cambios en performance con algoritmos de dibujado:
         + mismo algoritmo pero ordenando las lineas,
         + rasterizador como en el printeo de los glyphs.
- | | - usar SIMD para las image_modifiers.
+ |V| - usar SIMD para las image_modifiers.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.

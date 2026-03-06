@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include <cstdint>
 
 bool GlyphsSystem::is_cached (char16_t character, uint16_t size, SDL_Color color) {

@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include <cstdint>
 
 void GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Dir2 position) {

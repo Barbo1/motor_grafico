@@ -29,6 +29,9 @@ class ImageModifier {
     ImageModifier & operator= (ImageModifier && texture) noexcept;
     ~ImageModifier ();
 
+    uint32_t height ();
+    uint32_t width ();
+
     Visualizer<D2FIG> cast (Global*);
     SDL_Color operator() (uint32_t, uint32_t);
 

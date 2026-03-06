@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include <cstdint>
 
 void GlyphsSystem::clear_glyph (char16_t character, uint16_t size, SDL_Color color) {

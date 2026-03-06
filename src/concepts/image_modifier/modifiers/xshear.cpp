@@ -1,23 +1,21 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
+#include <SDL2/SDL_stdinc.h>
+#include <cstdint>
 
 ImageModifier& ImageModifier::xshear (float angle) {
   float m = 1 / std::tan (angle);
 
   SDL_Surface* sur = SDL_CreateRGBSurface(
-    0, this->texture->w + this->texture->h * m, this->texture->h, 32, 
+    0, this->texture->w + static_cast<uint32_t>(this->texture->h * m), this->texture->h, 32, 
     0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
   );
 
   Uint32* fin = (Uint32*)sur->pixels;
   Uint32* arr = (Uint32*)this->texture->pixels;
-  uint32_t i = 0, rowf = 0, rowa = 0, j = 0;
-  for (; i < static_cast<uint32_t>(this->texture->h); i++, rowf += sur->w, rowa += this->texture->w) {
-    for (; j < rowf + i * m; j++)
-      fin[j] = 0;
-    for (uint32_t k = rowa; k < rowa + this->texture->w; k++, j++)
-      fin[j] = arr[k];
-    for (; j < sur->w + rowf; j++)
-      fin[j] = 0;
+  float i = 0.f, top = static_cast<float>(this->texture->h);
+  for (uint32_t rowa = 0, j = 0; i < top; i+=1.f, rowa += this->texture->w, j += sur->w) {
+    uint32_t n = j + static_cast<uint32_t>(i * m);
+    memcpy (fin + n, arr + rowa, this->texture->w * sizeof(Uint32));
   }
 
   if (this->aquired)

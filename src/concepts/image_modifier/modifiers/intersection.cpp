@@ -14,9 +14,8 @@ ImageModifier& ImageModifier::operator& (const ImageModifier& img) {
     uint32_t i = 0;
     uint32_t calc_w = std::min(img.texture->w, this->texture->w);
     uint32_t calc_h = std::min(img.texture->h, this->texture->h);
-    for (; i < calc_h; i++) {
+    for (; i < calc_h; i++)
       memcpy (fin + i * this->texture->w, arr + i * img.texture->w, calc_w * sizeof(Uint32));
-    }
 
     arr = (Uint32*)this->texture->pixels;
 

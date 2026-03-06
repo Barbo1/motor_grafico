@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include <cstdint>
 
 uint64_t GlyphsSystem::get_key(char16_t character, uint16_t size, Uint32 color) {

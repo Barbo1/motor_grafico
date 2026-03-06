@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include "../../../headers/primitives/file_processing.hpp"
 #include <bit>
 #include <cstdint>

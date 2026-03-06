@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 

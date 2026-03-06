@@ -1,4 +1,5 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
+#include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 
 ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
@@ -10,37 +11,26 @@ ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
   if (sur != nullptr) {
     uint32_t h = this->texture->h;
     uint32_t w = this->texture->w;
-
-    Uint32* fin = (Uint32*)sur->pixels;
     Uint32* arr = (Uint32*)this->texture->pixels;
-
-    uint32_t i = 0;
-    Uint32* res = fin;
-    for (; i < h; i++) {
-      uint32_t j = 0;
-      for (; j < w; j++)
-        *(res++) = arr[i * w + j];
-      for (; j < static_cast<uint32_t>(sur->w); j++)
-        *(res++) = 0;
-    }
-    for (; i < static_cast<uint32_t>(sur->h); i++) {
-      for (uint32_t j = 0; j < static_cast<uint32_t>(sur->w); j++)
-        *(res++) = 0;
+    Uint32* res = (Uint32*)sur->pixels;
+    for (uint32_t i = 0; i < h; i++) {
+      memcpy (res, arr, sizeof(Uint32) * w);
+      arr += w;
+      res += sur->w;
     }
 
     arr = (Uint32*)img.texture->pixels;
-    w = img.texture->w;
 
-    float coef_1, coef_2;
-    SDL_Color color1, color2;
     for (uint32_t i = 0; i < static_cast<uint32_t>(img.texture->h); i++) {
-      Uint32* res = fin + (i * sur->w);
-      for (uint32_t j = 0; j < w; j++) {
+      Uint32* res = (Uint32*)sur->pixels + i * sur->w;
+      for (uint32_t j = 0; j < static_cast<uint32_t>(img.texture->w); j++) {
+        SDL_Color color1, color2;
         SDL_GetRGBA (*res, this->texture->format, &color1.r, &color1.g, &color1.b, &color1.a);
-        SDL_GetRGBA (arr[i * w + j], this->texture->format, &color2.r, &color2.g, &color2.b, &color2.a);
+        SDL_GetRGBA (*arr, this->texture->format, &color2.r, &color2.g, &color2.b, &color2.a);
         float alpha1 = color1.a;
         float alpha2 = color2.a;
         float alpham = std::max (alpha1, alpha2);
+        float coef_1, coef_2;
         if (alpha2 == alpham) {
           coef_1 = alpha1 / alpham;
           coef_2 = 1.f - coef_1;
@@ -49,12 +39,12 @@ ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
           coef_1 = 1.f - coef_2;
         }
 
-        *(res++) = SDL_MapRGBA (this->texture->format, 
-          std::min ((uint32_t)255, static_cast<uint32_t>(coef_1*color1.r + coef_2*color2.r)),
-          std::min ((uint32_t)255, static_cast<uint32_t>(coef_1*color1.g + coef_2*color2.g)),
-          std::min ((uint32_t)255, static_cast<uint32_t>(coef_1*color1.b + coef_2*color2.b)),
-          static_cast<uint32_t>(alpham)
-        );
+        *(res++) =  
+          (std::min ((uint32_t)255, static_cast<uint32_t>(coef_1*color1.r + coef_2*color2.r)) << 24) |
+          (std::min ((uint32_t)255, static_cast<uint32_t>(coef_1*color1.g + coef_2*color2.g)) << 16) |
+          (std::min ((uint32_t)255, static_cast<uint32_t>(coef_1*color1.b + coef_2*color2.b)) << 8) |
+          static_cast<uint32_t>(alpham);
+        arr++;
       }
     }
 

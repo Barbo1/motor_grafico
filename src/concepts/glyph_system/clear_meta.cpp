@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 
 void GlyphsSystem::clear_meta () {
   if (this->is_meta) {

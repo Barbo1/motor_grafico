@@ -1,4 +1,4 @@
-#include "../../../headers/primitives/glyph_system.hpp"
+#include "../../../headers/concepts/glyph_system.hpp"
 #include "../../../headers/primitives/types_definition.hpp"
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
