@@ -4,15 +4,11 @@
 #include <cmath>
 
 void correct_collition (Square& sq, Line& line) {
-  float h = sq.height * std::copysignf(1.f, line.slope), 
-        a = (std::fmaf(line.slope, sq.position.x, line.deviation) - sq.position.y) / 
-            std::fmaf(line.slope, sq.width, h);
-  AngDir2 t = AngDir2 {line.slope, -1.f, 0}.normalize();
-  t *= t * (AngDir2 {sq.width, -h, 0} * (std::copysignf(1.f, a) - a));
+  Dir2 r = Dir2 (-sq.width, std::copysign(1.f, line.v.x * line.v.y) * sq.height);
+  float coef = line.v.pLd(line.p - sq.position, r);
 
-  sq.position += t;
-
-  sq._collition_normal = t.normalize();
+  sq.position += r * (coef - std::copysign(1.f, coef));
+  sq._collition_normal = line.v.percan().normalize();
   sq._acc_f_k = 1.f;
   sq._normal_presence = true;
 }

@@ -2,7 +2,7 @@
 #include <utility>
 
 Line & Line::operator= (Line && line) noexcept {
-  this->slope = std::exchange (line.slope, 0);
-  this->deviation = std::exchange (line.deviation, 0);
+  this->v = std::exchange (line.v, Dir2 (1.f, 0.f));
+  this->p = std::exchange (line.p, Dir2 (0.f, 0.f));
   return *this;
 }

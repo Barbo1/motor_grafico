@@ -59,14 +59,10 @@ int main () {
   /* Creacion de lineas de colision. */
 
   std::vector<Line> lines = std::vector<Line>();
-  lines.push_back(Line (Dir2 {(float)width, 0.f}, Dir2 {0.0f, 0.0f}));
-  lines.push_back(Line (Dir2 {(float)width, (float)height}, Dir2 {0.f, (float)height}));
-
-  lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, 0.0f}));
-  lines.push_back(Line (Dir2 {0.f, height/2.f}, Dir2 {20.0f, (float)height}));
-
-  lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, 0.0f}));
-  lines.push_back(Line (Dir2 {(float)width, height/2.f}, Dir2 {(float)width - 20, (float)height}));
+  lines.push_back(Line (Dir2 (0.f, 0.f), Dir2 ((float)width, 0.f)));
+  lines.push_back(Line (Dir2 (0.f, 0.f), Dir2 (0.f, (float)height)));
+  lines.push_back(Line (Dir2 ((float)width, (float)height), Dir2 ((float)width, 0.f)));
+  lines.push_back(Line (Dir2 ((float)width, (float)height), Dir2 (0.f, (float)height)));
 
   AngDir2 g = AngDir2 {0, 9.8f, 0};
   AngDir2 g_p = AngDir2 {0, 0.2f, 0};

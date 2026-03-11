@@ -1,6 +1,6 @@
 #include "../../../../headers/pr_objects/line.hpp"
 
 Line::Line (const Line & line) noexcept {
-  this->slope = line.slope;
-  this->deviation = line.deviation;
+  this->v = line.v;
+  this->p = line.p;
 }

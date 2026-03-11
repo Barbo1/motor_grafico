@@ -9,8 +9,8 @@ class Square;
 
 class Line {
   private:
-    float slope;
-    float deviation;
+    Dir2 v;
+    Dir2 p;
 
   public: 
     Line () noexcept;
@@ -21,11 +21,13 @@ class Line {
     Line & operator= (const Line &) noexcept;
     Line & operator= (Line &&) noexcept;
 
+    void set_v (Dir2);
+    void set_p (Dir2);
+
     float get_slope () const;
     float get_deviation () const;
-
-    void set_slope (float);
-    void set_deviation (float);
+    Dir2 get_v () const;
+    Dir2 get_p () const;
 
     friend bool test_collition (Physical &, Line &);
     friend bool test_collition (Circle&, Line&);

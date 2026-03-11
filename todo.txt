@@ -64,6 +64,17 @@
         + mismo algoritmo pero ordenando las lineas,
         + rasterizador como en el printeo de los glyphs.
  |V| - usar SIMD para las image_modifiers.
+ |V| - cambiar el formato de las lineas para que queden definidas por:
+        + un punto(por el que pasa),
+        + un vector(que apunta a su direccion).
+ | | - falta implementar: 
+        | | + la funcion project de image_modifier, y la function de print polygon,
+        | | + rounded_square dentro de los constructores de figuras,
+        | | + collition_point sq_sq,
+ | | - agregar soporte a gifs para importar imagenes movibles:
+        + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+        + https://en.wikipedia.org/wiki/GIF
+ | | - agregar capacidad de printear letras en los visualizers 2D.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.
@@ -75,6 +86,11 @@
               verifique que en la linea de movimiento no hubo ninguna colision(
               computacionalmente mas complejo seguramente mas exacto).
       | | + hacer test_and_resolve_collition para ahorrar operaciones.
+ | | - clase para manejo de:
+        + sequencias de imagenes(Visualizer<D2SEQ>),
+        + imagenes continuas(Visualizer<D2CON>) y,
+        + imagenes continuas con mapeo(Visualizer<D2MAP>).
+ | | - agregar utilizacion de audios.
  | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
         mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
         | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
@@ -88,28 +104,12 @@
         Cambiar luces para que sean objetos, que cuando se inicializan calculen la distancia
         maxima hasta la que llega la luz, que abarca todas las funcionalidades.
         | | + ,
- | | - falta implementar: 
-        | | + la funcion project de image_modifier, y la function de print polygon,
-        | | + rounded_square dentro de los constructores de figuras,
-        | | + collition_point sq_sq,
  | | - mejora del modelo de luz:
         | | + view covering para un circulo, linea y square,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square),
         | | + alguna forma de iluminacion ambiental?
- | | - agregar soporte a gifs para importar imagenes movibles:
-        + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
-        + https://en.wikipedia.org/wiki/GIF
- | | - cambiar el formato de las lineas para que queden definidas por:
-        + un punto(por el que pasa),
-        + un vector(que apunta a su direccion).
- | | - clase para manejo de:
-        + sequencias de imagenes(Visualizer<D2SEQ>),
-        + imagenes continuas(Visualizer<D2CON>) y,
-        + imagenes continuas con mapeo(Visualizer<D2MAP>).
- | | - agregar capacidad de printear letras en los visualizers 2D.
  | | - implementar gear.
- | | - agregar utilizacion de audios.
  | | - mejorar eficiencia de figures_constructors:
         | | + cambiar algoritmo de dibujo de un circulo,
         | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.
