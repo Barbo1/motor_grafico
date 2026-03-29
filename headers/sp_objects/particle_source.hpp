@@ -68,17 +68,17 @@ class ParticleSource {
     bool test_collition (Physical&);
     bool test_collition (Circle&);
     bool test_collition (Square&);
-    bool test_collition (NEdge&);
+    template<std::size_t M> bool test_collition (NEdge<M>&);
 
     void correct_collition (Physical&);
     void correct_collition (Square&);
     void correct_collition (Circle&);
-    void correct_collition (NEdge&);
+    template<std::size_t M> void correct_collition (NEdge<M>&);
 
     void resolve_collition (Physical&);
     void resolve_collition (Square&);
     void resolve_collition (Circle&);
-    void resolve_collition (NEdge&);
+    template<std::size_t M> void resolve_collition (NEdge<M>&);
 
     void draw ();
 
@@ -130,17 +130,17 @@ class ParticleSource<PS_EXPLOSION, N, F, T> {
     bool test_collition (Physical&);
     bool test_collition (Circle&);
     bool test_collition (Square&);
-    bool test_collition (NEdge&);
+    template<std::size_t M> bool test_collition (NEdge<M>&);
 
     void correct_collition (Physical&);
     void correct_collition (Square&);
     void correct_collition (Circle&);
-    void correct_collition (NEdge&);
+    template<std::size_t M> void correct_collition (NEdge<M>&);
 
     void resolve_collition (Physical&);
     void resolve_collition (Square&);
     void resolve_collition (Circle&);
-    void resolve_collition (NEdge&);
+    template<std::size_t M> void resolve_collition (NEdge<M>&);
 
     void draw ();
 

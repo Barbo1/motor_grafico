@@ -3,7 +3,7 @@
 #include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/concepts/collition.hpp"
 
-void correct_collition (Physical & ob, Line& line) {
+void correct_collition (Physical& ob, Line& line) {
   Square * sq;
   Circle * cir;
 

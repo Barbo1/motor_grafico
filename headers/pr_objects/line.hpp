@@ -1,6 +1,12 @@
 #pragma once
 
 #include "../concepts/physical.hpp"
+#include "nedge.hpp"
+
+class Circle;
+class Particle;
+class Square;
+template<std::size_t N> class NEdge;
 
 #include <SDL2/SDL.h>
 
@@ -29,15 +35,21 @@ class Line {
     Dir2 get_v () const;
     Dir2 get_p () const;
 
-    friend bool test_collition (Physical &, Line &);
-    friend bool test_collition (Circle&, Line&);
-    friend bool test_collition (Square&, Line&);
+    friend bool test_collition (const Line&, Physical&);
+    friend bool test_collition (const Line&, const Particle&);
+    friend bool test_collition (const Line&, const Circle&);
+    friend bool test_collition (const Line&, const Square&);
+    template<std::size_t N> friend bool test_collition (const Line&, const NEdge<N>&);
 
-    friend void resolve_collition (Physical &, Line &);
+    friend void resolve_collition (Physical&, Line&);
+    friend void resolve_collition (Particle&, Line&);
     friend void resolve_collition (Circle&, Line&);
     friend void resolve_collition (Square&, Line&);
+    template<std::size_t N> friend void resolve_collition (NEdge<N>&, Line&);
 
     friend void correct_collition (Physical&, Line&);
-    friend void correct_collition (Circle&, Line&);
+    friend void correct_collition (Particle&, Line&);
     friend void correct_collition (Square&, Line&);
+    friend void correct_collition (Circle&, Line&);
+    template<std::size_t N> friend void correct_collition (Line&, NEdge<N>&);
 };

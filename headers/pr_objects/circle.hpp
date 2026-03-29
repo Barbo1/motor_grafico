@@ -4,6 +4,11 @@
 #include "../concepts/visualizer.hpp"
 #include "../primitives/global.hpp"
 
+class Line;
+class Particle;
+class Square;
+template<std::size_t N> class NEdge;
+
 #include <SDL2/SDL.h>
 #include <cstdint>
 
@@ -35,23 +40,25 @@ class Circle: public Physical {
 
     void draw ();
 
-    friend Physical;
+    friend bool test_collition (const Line&, const Circle&);
+    friend bool test_collition (const Particle&, const Circle&);
+    friend bool test_collition (const Circle&, const Circle&);
+    friend bool test_collition (const Circle&, const Square&);
+    template<std::size_t N> friend bool test_collition (const Circle&, const NEdge<N>&);
 
-    friend bool test_collition (Physical &, Physical &);
-    friend bool test_collition (Circle&, Circle&);
-    friend bool test_collition (Circle&, Square&);
-    friend bool test_collition (Square&, Circle&);
-    friend bool test_collition (Circle&, Line&);
-
-    friend void resolve_collition (Physical &, Physical &);
+    friend void resolve_collition (Circle&, Line&);
+    friend void resolve_collition (Particle&, Circle&);
     friend void resolve_collition (Circle&, Circle&);
     friend void resolve_collition (Circle&, Square&);
     friend void resolve_collition (Square&, Circle&);
-    friend void resolve_collition (Circle&, Line&);
+    template<std::size_t N> friend void resolve_collition (Circle&, NEdge<N>&);
+    template<std::size_t N> friend void resolve_collition (NEdge<N>&, Circle&);
 
-    friend void correct_collition (Physical&, Physical&);
-    friend void correct_collition (Circle&, Circle&);
-    friend void correct_collition (Square&, Circle&);
-    friend void correct_collition (Circle&, Square&);
     friend void correct_collition (Circle&, Line&);
+    friend void correct_collition (Particle&, Circle&);
+    friend void correct_collition (Circle&, Circle&);
+    friend void correct_collition (Circle&, Square&);
+    friend void correct_collition (Square&, Circle&);
+    template<std::size_t N> friend void correct_collition (Circle&, NEdge<N>&);
+    template<std::size_t N> friend void correct_collition (NEdge<N>&, Circle&);
 };

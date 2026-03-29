@@ -181,10 +181,9 @@ int main () {
 
     if (test_collition(c1, c2)) 
       resolve_collition(c1, c2);
-    for (Line& line: lines) {
+    for (Line& line: lines)
       if (test_collition(c1, line))
         resolve_collition(c1, line);
-    }
     
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

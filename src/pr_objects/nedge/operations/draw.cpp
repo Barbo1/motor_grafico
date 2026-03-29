@@ -1,5 +1,6 @@
 #include "../../../../headers/pr_objects/nedge.hpp"
 
-void NEdge::draw () {
+template<std::size_t N>
+void NEdge<N>::draw () {
   this->texture.draw(glb, this->position);
 }

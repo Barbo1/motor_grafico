@@ -67,20 +67,18 @@
  |V| - cambiar el formato de las lineas para que queden definidas por:
         + un punto(por el que pasa),
         + un vector(que apunta a su direccion).
+ | | - implementar los poligonos con colisiones.
+ | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - falta implementar: 
         | | + la funcion project de image_modifier, y la function de print polygon,
         | | + rounded_square dentro de los constructores de figuras,
         | | + collition_point sq_sq,
- | | - agregar soporte a gifs para importar imagenes movibles:
-        + https://www.w3.org/Graphics/GIF/spec-gif89a.txt
-        + https://en.wikipedia.org/wiki/GIF
  | | - agregar capacidad de printear letras en los visualizers 2D.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
+ | | - mejorar el manejo de la memoria de la rasterizacion de letras.
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
- | | - colisiones de poligonos con circulos, cuadrados y lineas.
- | | - colisiones de poligonos con poligonos.
  | | - cambios en las colisiones:
       | | + hacer una mezcla de movimiento y colision, que calcule el movimiento y 
               verifique que en la linea de movimiento no hubo ninguna colision(

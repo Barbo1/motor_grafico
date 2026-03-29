@@ -6,10 +6,10 @@ void resolve_collition (Circle& cir, Square& sq) {
   AngDir2 diff = sq.position - cir.position;
   AngDir2 b = diff.bound(AngDir2 {sq.width, sq.height, 0.f}) - diff;
   AngDir2 n = b.normalize(); 
-  float p = n * (sq._velocity - cir._velocity) * 2.f / (mass_1 + mass_2);
+  float p = n * (sq._velocity - cir._velocity) * 2.f * ENERGY_DISIPATION / (mass_1 + mass_2);
 
-  sq._velocity = n.nmadd (p * mass_2 * sq._movible * ENERGY_DISIPATION, sq._velocity);
-  cir._velocity = n.madd (p * mass_1 * cir._movible * ENERGY_DISIPATION, cir._velocity);
+  sq._velocity = n.nmadd (p * mass_2 * sq._movible, sq._velocity);
+  cir._velocity = n.madd (p * mass_1 * cir._movible, cir._velocity);
 
   cir.position += n.msub(cir.radio, b);
 

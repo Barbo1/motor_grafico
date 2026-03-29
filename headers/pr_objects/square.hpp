@@ -7,6 +7,8 @@
 
 class Circle;
 class Line;
+class Particle;
+template<std::size_t N> class NEdge;
 
 class Square: public Physical {
   private:
@@ -37,23 +39,25 @@ class Square: public Physical {
 
     void draw ();
 
-    friend Physical;
+    friend bool test_collition (const Line&, const Square&);
+    friend bool test_collition (const Particle&, const Square&);
+    friend bool test_collition (const Circle&, const Square&);
+    friend bool test_collition (const Square&, const Square&);
+    template<std::size_t N> friend bool test_collition (const Square&, const NEdge<N>&);
 
-    friend bool test_collition (Physical &, Physical &);
-    friend bool test_collition (Square&, Square&);
-    friend bool test_collition (Circle&, Square&);
-    friend bool test_collition (Square&, Circle&);
-    friend bool test_collition (Square&, Line&);
-
-    friend void resolve_collition (Physical &, Physical &);
-    friend void resolve_collition (Square&, Square&);
-    friend void resolve_collition (Square&, Circle&);
-    friend void resolve_collition (Circle&, Square&);
     friend void resolve_collition (Square&, Line&);
+    friend void resolve_collition (Particle&, Square&);
+    friend void resolve_collition (Circle&, Square&);
+    friend void resolve_collition (Square&, Circle&);
+    friend void resolve_collition (Square&, Square&);
+    template<std::size_t N> friend void resolve_collition (Square&, NEdge<N>&);
+    template<std::size_t N> friend void resolve_collition (NEdge<N>&, Square&);
 
-    friend void correct_collition (Physical&, Physical&);
-    friend void correct_collition (Square&, Square&);
-    friend void correct_collition (Square&, Circle&);
-    friend void correct_collition (Circle&, Square&);
     friend void correct_collition (Square&, Line&);
+    friend void correct_collition (Particle&, Square&);
+    friend void correct_collition (Circle&, Square&);
+    friend void correct_collition (Square&, Circle&);
+    friend void correct_collition (Square&, Square&);
+    template<std::size_t N> friend void correct_collition (Square&, NEdge<N>&);
+    template<std::size_t N> friend void correct_collition (NEdge<N>&, Square&);
 };

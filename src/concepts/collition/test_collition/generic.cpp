@@ -17,8 +17,7 @@ bool test_collition (Physical & obj1, Physical & obj2) {
     return test_collition (*cir1, *sq1);
   
   } else if ((cir1 = dynamic_cast<Circle *>(&obj2)) && (sq1 = dynamic_cast<Square *>(&obj1))) {
-    return test_collition (*sq1, *cir1);
-
+    return test_collition (*cir1, *sq1);
   }
 
   return false;
