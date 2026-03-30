@@ -5,7 +5,6 @@
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <cstdint>
-#include <vector>
 #include <string>
 
 #include "../primitives/vectors.hpp"
@@ -61,7 +60,7 @@ class ImageModifier {
     static ImageModifier circle (int radio, SDL_Color color);
     static ImageModifier circunference (int radio, int width, SDL_Color color);
     static ImageModifier oval (int height, int base, SDL_Color color);
-    static ImageModifier polygon (std::vector<Dir2> points, SDL_Color color);
+    static ImageModifier polygon (const Dir2* points, std::size_t size, SDL_Color color);
 
     static ImageModifier chargePNG (const std::string& path);
 

@@ -5,11 +5,7 @@
 #include <vector>
 #include <SDL2/SDL_render.h>
 
-SDL_Surface* raster_grade_1 (
-  std::vector<Dir2>, 
-  SDL_Color, 
-  AntiAliasingType
-);
+SDL_Surface* raster_grade_1 (const Dir2*, std::size_t, SDL_Color, AntiAliasingType);
 
 enum ComponentElementType { LINE, CURVE };
 

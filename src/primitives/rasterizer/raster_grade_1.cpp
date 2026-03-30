@@ -1,6 +1,7 @@
 #include "../../../headers/primitives/rasterizer.hpp"
 #include <cmath>
 #include <algorithm>
+#include <cstdint>
 
 static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction) {
   Dir2 diff21 = P2 - P1;
@@ -36,7 +37,7 @@ static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_directio
       bound.change (std::lround (P1.y), std::lround (P1.x), 0ULL);
 }
 
-SDL_Surface* raster_grade_1 (std::vector<Dir2> points, SDL_Color color, AntiAliasingType antialias) {
+SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, AntiAliasingType antialias) {
   float antialias_multiplier;
   switch (antialias) {
     case AAx2: antialias_multiplier = 2.f; break;
@@ -46,9 +47,13 @@ SDL_Surface* raster_grade_1 (std::vector<Dir2> points, SDL_Color color, AntiAlia
     default: antialias_multiplier = 1.f;
   }
 
-  std::size_t many_points = points.size();
-  for (Dir2& point: points)
-    point = Dir2 (std::round (point.x), std::round (point.y));
+  std::vector<Dir2> points;
+  points.resize(size);
+  std::size_t many_points = size;
+  for (uint32_t i = 0; i < size; i++) {
+    Dir2 point = ps[i];
+    points[i] = Dir2 (std::round (point.x), std::round (point.y));
+  }
 
   // Searching maximum and minimum coordenates.
   Dir2 min = points[0], max = points[0];
