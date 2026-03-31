@@ -286,14 +286,25 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
       parts_indexes_last += 2;
       total_parts++;
     }
+
+    // proving there are only triangles(for cases with less than 3 points).
+    for (uint32_t i = 0; i < parts_bounds_size; i++) {
+      uint32_t first = parts_bounds[i].first;
+      uint32_t last = parts_bounds[i].second;
+      if (last - first != 2) {
+        *error = -1;
+        return;
+      }
+    }
   }
 
   // creating the triangles.
+  uint32_t* parts_indexes_pointer = parts_indexes.data();
   for (uint32_t i = 0; i < total_parts; i++) {
-    Dir2 point1 = points[parts_indexes[3*i]];
-    Dir2 point2 = points[parts_indexes[3*i + 1]];
-    Dir2 point3 = points[parts_indexes[3*i + 2]];
-    this->triangles[i] = {point1, point2 - point1, point3 - point1};
+    Dir2 p = points[*(parts_indexes_pointer++)];
+    Dir2 v1 = points[*(parts_indexes_pointer++)] - p;
+    Dir2 v2 = points[*(parts_indexes_pointer++)] - p;
+    this->triangles[i] = {p, v1, v2};
   }
 
   if (color != nullptr) {
@@ -348,7 +359,7 @@ Visualizer<D2FIG> NEdge<N>::get_texture () const {
 template<std::size_t N>
 void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
   for (uint32_t i = 0; i < N-2; i++) {
-    Dir2 point1 = this->triangles[i][0];
+    Dir2 point1 = this->triangles[i][0] + this->position;
     Dir2 point2 = this->triangles[i][1] + point1;
     Dir2 point3 = this->triangles[i][2] + point1;
     SDL_SetRenderDrawColor (glb->get_render(), 255, 0, 0, 255);
@@ -377,7 +388,7 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
 
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
   for (uint32_t i = 0; i < points.size(); i++) {
-    const Dir2& point = points[i];
+    const Dir2& point = points[i] + this->position;
     gs->print(
       conv.from_bytes(std::to_string(i)), 
       20, 

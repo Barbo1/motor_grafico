@@ -1,6 +1,8 @@
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
+#include "../../headers/pr_objects/circle.hpp"
+#include "../../headers/concepts/collition.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -9,20 +11,6 @@
 #include <array>
 #include <iostream>
 #include <cmath>
-
-bool test_collition_triangle_line (Dir2 A, Dir2 v_b, Dir2 v_c, Dir2 D, Dir2 v_e) {
-  bool c1 = v_b.pLd (v_e, v_c) > 0.f;
-  bool c2 = v_c.pLd (v_e, v_b) > 0.f;
-  bool c3 = c1 + c2 < 0.f;
-  float v1 = v_b.pLd(A - D, v_e);
-  float v2 = v_c.pLd(A - D, v_e);
-  float v3 = (v_c - v_b).pLd(v_b - (A - D), v_e);
-
-  float c_I = std::max (c1 ? v1 : 0.f, std::max (c2 ? v2 : 0.f, c3 ? v3 : 0.f));
-  float c_S = std::min (!c1 ? v1 : 1.f, std::min (!c2 ? v2 : 1.f, !c3 ? v3 : 1.f));
-
-  return c_S > c_I;
-}
 
 std::array<Dir2, 7> set_points_1 () {
   return std::array<Dir2, 7> {
@@ -52,6 +40,15 @@ std::array<Dir2, 17> set_points_3 () {
   };
 }
 
+std::array<Dir2, 10> set_points_4 () {
+  return std::array<Dir2, 10> {
+    Dir2 (-26.1f, 39.0f), Dir2 (22.3f, 36.5f), Dir2 (50.8f, -6.4f),
+    Dir2 (22.7f, -9.f), Dir2 (27.8f, -26.8), Dir2 (-23.5f, -37.0f),
+    Dir2 (-11.6f, -23.0f), Dir2 (-14.6f, 3.8f), Dir2 (-6.0f, 6.3f),
+    Dir2 (-57.1f, 18.6f)
+  };
+}
+
 
 int main () {
   std::string name = "Ventana";
@@ -65,18 +62,33 @@ int main () {
     std::exit(-1);
   }
 
-  std::array<Dir2, 7> points = set_points_1();
-  NEdge<7> poly(glb, points.data(), points.size(), nullptr, &error);
+  std::array<Dir2, 10> points = set_points_4();
+  NEdge<10> poly(glb, points.data(), points.size(), nullptr, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
+  poly.set_position(Dir2 (100.f, 100.f));
+
+  SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
+  Circle cir = Circle (glb, 20, Dir2 {0, 0}, 0, 0, true, true, &color);
 
   bool cont = true;
   while (cont) {
     glb->begin_render();
 
     poly.print(glb, &gs);
+    std::string dial = "false";
+    if (test_collition(cir, poly)) {
+      dial = "true";
+    }
+    std::cout << dial << std::endl;
+    
+    int mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+    cir.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
+
+    cir.draw();
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

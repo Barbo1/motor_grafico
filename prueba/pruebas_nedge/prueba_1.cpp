@@ -61,20 +61,6 @@ std::vector<std::array<Dir2, 3>> get_partitions (std::vector<Dir2> points) {
   return parts;
 }
 
-bool test_collition_triangle_line (Dir2 A, Dir2 v_b, Dir2 v_c, Dir2 D, Dir2 v_e) {
-  bool c1 = v_b.pLd (v_e, v_c) > 0.f;
-  bool c2 = v_c.pLd (v_e, v_b) > 0.f;
-  bool c3 = c1 + c2 < 0.f;
-  float v1 = v_b.pLd(A - D, v_e);
-  float v2 = v_c.pLd(A - D, v_e);
-  float v3 = (v_c - v_b).pLd(v_b - (A - D), v_e);
-
-  float c_I = std::max (c1 ? v1 : 0.f, std::max (c2 ? v2 : 0.f, c3 ? v3 : 0.f));
-  float c_S = std::min (!c1 ? v1 : 1.f, std::min (!c2 ? v2 : 1.f, !c3 ? v3 : 1.f));
-
-  return c_S > c_I;
-}
-
 std::array<Dir2, 7> set_points_1 () {
   return std::array<Dir2, 7> {
     Dir2 (219.4f, 404.2f), Dir2 (394.0f, 361.3f), Dir2 (522.9f, 441.6f), 

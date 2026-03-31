@@ -101,3 +101,81 @@ Dir2 collition_point (Square&, Square&);
 template<std::size_t N> Dir2 collition_point (Circle&, NEdge<N>&);
 template<std::size_t N> Dir2 collition_point (Square&, NEdge<N>&);
 template<std::size_t N, std::size_t M> Dir2 collition_point (NEdge<N>&, NEdge<M>&);
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * 
+ *  Implementation needed for template arguments  *
+ * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos, float crad) {
+  const Dir2 vCB = vC - vB;
+  const Dir2 vDA = cpos - A;
+  const Dir2 vDB = cpos - (vB + A);
+  const Dir3 aux = Dir3 (
+    (vB * vDA) / vB.modulo2(), 
+    (vC * vDA) / vC.modulo2(), 
+    (vCB * vDB) / vCB.modulo2()
+  ).bound01();
+
+  float minim = std::min (
+    vB.msub(aux.x, vDA).modulo2(), 
+    std::min (
+      vC.msub(aux.y, vDA).modulo2(), 
+      vCB.msub(aux.z, vDB).modulo2()
+    )
+  );
+
+  float c1 = vC.pLd(vDA, vB);
+  float c2 = vB.pLd(vDA, vC);
+
+  return minim < crad * crad || (0.f < c1 && 0.f < c2 && c1 + c2 < 1.f);
+}
+
+inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE) {
+  bool c1 = vB.pLd (vE, vC) > 0.f;
+  bool c2 = vC.pLd (vE, vB) > 0.f;
+  bool c3 = c1 + c2 < 0.f;
+  Dir2 vAD = A - D;
+  float v1 = vB.pLd(vAD, vE);
+  float v2 = vC.pLd(vAD, vE);
+  float v3 = (vC - vB).pLd(vB - vAD, vE);
+
+  float c_I = std::max (c1 ? v1 : 0.f, std::max (c2 ? v2 : 0.f, c3 ? v3 : 0.f));
+  float c_S = std::min (!c1 ? v1 : 1.f, std::min (!c2 ? v2 : 1.f, !c3 ? v3 : 1.f));
+
+  return c_S > c_I;
+}
+
+template<std::size_t N> 
+bool test_collition (const Circle& cir, const NEdge<N>& poly) {
+  for (const auto& [A, vB, vC]: poly.triangles) {
+    if (test_collition_triangle_circle(A + poly.position, vB, vC, cir.position, cir.radio)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<std::size_t N> bool test_collition (const Line& line, const NEdge<N>& poly) {
+  for (auto [A, vB, vC]: poly.triangles) {
+    A += poly.position;
+    const Dir2 vL = line.v.percan();
+    const float cond1 = vL * A;
+    const float cond2 = vL * (A + vB);
+    const float cond3 = vL * (A + vC);
+    if (cond1*cond2 < 0.f || cond1*cond3 < 0.f) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<std::size_t N> 
+bool test_collition (const Particle& par, const NEdge<N>& poly) {
+  for (const auto& [A, vB, vC]: poly.triangles) {
+    if (test_collition_triangle_circle(A + poly.position, vB, vC, par._position, par._radio)) {
+      return true;
+    }
+  }
+  return false;
+}

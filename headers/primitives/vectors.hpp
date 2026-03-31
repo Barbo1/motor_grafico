@@ -702,6 +702,15 @@ class alignas(16) Dir3 {
       } else return Dir3 {opr};
     }
 
+    template<typename Self>
+    inline auto bound01 (this Self&& self) {
+      __m128 opr = _mm_max_ps (_mm_min_ps (self.v, _mm_set1_ps(1.f)), _mm_set1_ps(0.f));
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
+        self.v = opr;
+        return std::forward<Self>(self);
+      } else return Dir3 {opr};
+    }
+
     inline void rotate_x (const float& angle) {
       float sina = std::sin (angle);
       float cosa = std::cos (angle);
