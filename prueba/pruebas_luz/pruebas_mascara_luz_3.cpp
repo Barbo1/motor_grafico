@@ -1,5 +1,5 @@
-#include "../headers/concepts/lights.hpp"
-#include "../headers/primitives/global.hpp"
+#include "../../headers/concepts/lights.hpp"
+#include "../../headers/primitives/global.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>

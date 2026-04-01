@@ -42,15 +42,9 @@ class ViewMask {
     /* mask drawing. */
     ViewMask& draw_color_uniform_mask (const Uint32 color);
     ViewMask& draw_light_uniform_mask (const Light& light);
-    ViewMask& draw_color_view_mask (
-      const Dir2& position, const std::vector<MaskObject>& segments, const Uint32 shadow_color
-    );
-    ViewMask& draw_light_view_mask (
-      const Light& light, const std::vector<MaskObject>& segments, const Uint32 shadow_color
-    );
-    ViewMask& draw_color_directional_mask (
-      const Dir2& direction, const std::vector<MaskObject>& segments, const Uint32 shadow_color
-    );
+    ViewMask& draw_color_view_mask (const Dir2& position, const std::vector<MaskObject>& segments);
+    ViewMask& draw_light_view_mask (const Light& light, const std::vector<MaskObject>& segments);
+    ViewMask& draw_color_directional_mask (const Dir2& direction, const std::vector<MaskObject>& segments);
 
     /* mask fusion. */
     ViewMask& operator| (const ViewMask&);
@@ -76,8 +70,7 @@ void cast_shadow (
   int32_t width, 
   int32_t height, 
   const std::array<Dir2, 8>& points,
-  uint32_t many_points,
-  Uint32 color
+  uint32_t many_points
 );
 
 /* This function uses cast_shadow to create the shadows for a view in the 
@@ -86,8 +79,7 @@ void cast_shadow (
 void fill_view_with_shadows (
   SDL_Surface*& img, 
   const Dir2& position, 
-  const std::vector<MaskObject>& segments, 
-  const Uint32 color
+  const std::vector<MaskObject>& segments
 );
 
 /* This function uses cast_shadow to create the shadows for a directional 
@@ -96,8 +88,7 @@ void fill_view_with_shadows (
 void fill_directional_with_shadows (
   SDL_Surface*& img, 
   const Dir2& direction, 
-  const std::vector<MaskObject>& segments, 
-  const Uint32 color
+  const std::vector<MaskObject>& segments
 );
 
 /* This function fill the remaining space of a view with light from the 

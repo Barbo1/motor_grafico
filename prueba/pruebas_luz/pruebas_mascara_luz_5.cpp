@@ -1,13 +1,18 @@
 #include "../../headers/concepts/lights.hpp"
+#include "../../headers/concepts/image_modifier.hpp"
 #include "../../headers/primitives/global.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <vector>
 #include <cmath>
 #include <iostream>
+
+const int SCREEN_FPS = 60;
+const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 std::vector<MaskObject> get_segments_1 () {
   return {
@@ -72,36 +77,65 @@ std::vector<MaskObject> get_segments_2 () {
   };
 }
 
+std::vector<MaskObject> get_segments_3 () {
+  return {
+    MaskObject {.point1 = Dir2 {134.f, 114.f}, .point2 = Dir2 {52.f, 274.f}, .circle = false},
+  };
+}
+
 int main () {
   std::string name = "Ventana";
-  Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create(name, 786, 1280, SDL_Color {30, 30, 30, 0});
 
-  Dir2 direction = {518.f, 334.f};
+  Light light_0 = {
+    .intensity = 70.f,
+    .attenuation = 0.02f,
+    .position = {518.f, 334.f},
+    .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+  }; 
+
+  Light light_1 = {
+    .intensity = 150.f,
+    .attenuation = 0.01f,
+    .position = {318.f, 337.f},
+    .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
+  };
+
+  Light light_2 = {
+    .intensity = 150.f,
+    .attenuation = 0.01f,
+    .position = {400.f, 400.f},
+    .color = {.r = 1.0f, .g = 1.0f, .b = 0.1f},
+  };
+
   const std::vector<MaskObject> segments = get_segments_2();
 
   bool cont = true;
   SDL_Event event;
-
-  ViewMask view (glb->get_width(), glb->get_height());
+  
+  Visualizer<D2FIG> img_mod = ImageModifier::chargePNG("../images/psic2.png").resize(200, 200).cast(glb);
+  
+  ViewMask view_0 (glb->get_width(), glb->get_height());
+  ViewMask view_1 (glb->get_width(), glb->get_height());
   float aux_time_1 = 0.f, avg_time_1 = 0.f;
+  view_1.draw_light_view_mask (light_1, segments);
+  view_1 | view_0.draw_light_view_mask (light_2, segments);
 
   while (cont) {
-    int mouse_x, mouse_y;
-    SDL_GetMouseState(&mouse_x, &mouse_y);
-    const Dir2 dims2 = Dir2 {static_cast<float>(glb->get_width()) * 0.5f, static_cast<float>(glb->get_height()) * 0.5f};
-    direction = Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)} - dims2;
+    std::cout << "light_0: (" << light_0.position.x << ", " << light_0.position.y << ")" << std::endl;
+    std::cout << "light_1: (" << light_1.position.x << ", " << light_1.position.y << ")" << std::endl;
 
     glb->begin_render();
-
-    /* The delay must be inside. */
-    SDL_Delay(1);
-
-      std::cout << "position: (" << direction.x << ", " << direction.y << ")";
+      img_mod.draw (glb, Dir2 {200.f, 200.f});
 
       aux_time_1 += 1;
 
-      view.draw_color_directional_mask (direction, segments);
-      glb->apply_mask(view);
+      view_0.draw_light_view_mask (light_0, segments);
+      glb->apply_mask (view_0 | view_1);
+
+      float a = glb->get_time();
+      avg_time_1 += (a - avg_time_1) / aux_time_1;
+      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
       for (const auto& segment: segments) {
@@ -109,17 +143,9 @@ int main () {
       }
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
-      SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
-      SDL_RenderDrawPoint(glb->get_render(), mouse_x, mouse_y);
-      SDL_RenderDrawPoint(glb->get_render(), dims2.x, dims2.y);
-
-      float a = glb->get_time();
-      avg_time_1 += (a - avg_time_1) / aux_time_1;
-      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
-
+      SDL_RenderDrawPoint(glb->get_render(), light_0.position.x, light_0.position.y);
     glb->end_render();
     
-    /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
         case SDL_QUIT:
@@ -133,7 +159,17 @@ int main () {
               break;
           }
           break;
+        
+        case SDL_MOUSEMOTION:
+          light_0.position.x = event.motion.x;
+          light_0.position.y = event.motion.y;
+          break;
       }
+    }
+
+    uint32_t delta = glb->get_ticks();
+    if (delta < SCREEN_TICKS_PER_FRAME) {
+      SDL_Delay (SCREEN_TICKS_PER_FRAME - delta);
     }
   } 
 }

@@ -3,12 +3,12 @@
 #include <SDL2/SDL_surface.h>
 #include <cstdlib>
 
-ViewMask& ViewMask::draw_color_view_mask (const Dir2& position, const std::vector<MaskObject>& segments, const Uint32 color) {
+ViewMask& ViewMask::draw_color_view_mask (const Dir2& position, const std::vector<MaskObject>& segments) {
   Uint32* buffer = (Uint32*)img->pixels;
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;
 
-  fill_view_with_shadows (this->img, position, segments, color);
+  fill_view_with_shadows (this->img, position, segments);
 
   return *this;
 }

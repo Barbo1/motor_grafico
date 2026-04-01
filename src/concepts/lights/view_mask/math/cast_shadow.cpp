@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <optional>
 
-void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, uint32_t many_points, Uint32 color) {
+void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, uint32_t many_points) {
 
   /* Searching maximum and minimum coordenates. */
   float maxy = Dir2 {_mm_max_ps (points[0].v, _mm_max_ps (points[1].v, _mm_max_ps(points[2].v,
@@ -21,8 +21,8 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
     return std::max<int32_t> (std::min<int32_t> (num, up), 0);
   };
 
-  int32_t top = bound_inside (std::ceil(maxy), height) * width;
-  int32_t bot = bound_inside (std::floor(miny), height);
+  int32_t top = bound_inside (std::lround(maxy), height) * width;
+  int32_t bot = bound_inside (std::lround(miny), height);
 
   // Calculating coefitients.
   alignas(16) std::array<std::array<float, 4>, 6> coef = std::array<std::array<float, 4>, 6>();
@@ -42,7 +42,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   }
 
   // Filling the shadows.
-  __m128i color_mm = _mm_set1_epi32 (color);
+  __m128i color_mm = _mm_set_epi32 (255, 255, 255, 255);
   alignas(8) std::array<std::optional<int32_t>, 2> bounds = std::array<std::optional<int32_t>, 2>();
   
   auto is_value = [&] (int32_t inter) {
@@ -58,8 +58,9 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
       auto& [dev, elem, p, q] = coef[i];
       if (-0.00001 < q && q < 1.00001) {
         int32_t inter = std::lround(elem);
-        if (!is_value(inter)) 
+        if (!is_value(inter)) {
           bounds[founded++] = inter;
+        }
       }
       q += p; elem += dev;
     }
@@ -76,7 +77,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
 
       Uint32* position_32 = (Uint32*)position_128;
       for (uint32_t i = 0; i < many%4; position_32++, i++) {
-        *position_32 = color;
+        *position_32 = 255;
       }
     }
   }

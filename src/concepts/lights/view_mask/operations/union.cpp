@@ -1,6 +1,7 @@
 #include "../../../../../headers/concepts/lights.hpp"
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
+#include <emmintrin.h>
 #include <immintrin.h>
 
 /* Given the colors c1 = (r1, g1, b1, a1) and c2 = (r2, g2, b2, a2), this functions
@@ -18,6 +19,7 @@ ViewMask& ViewMask::operator| (const ViewMask& mask) {
     __m128i* buffer_this = (__m128i*)this->img->pixels;
     __m128i* buffer_mask = (__m128i*)mask.img->pixels;
 
+#if __AVX2__
     __m256 coefs_2 = _mm256_set_ps (0.f, 0.f, 0.f, 255.f, 0.f, 0.f, 0.f, 255.f);
     __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
 
@@ -80,6 +82,55 @@ ViewMask& ViewMask::operator| (const ViewMask& mask) {
       buffer_this++;
       buffer_mask++;
     }
+
+#else
+    __m128 alpha_coefs = _mm_set1_ps (255.f);
+    __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
+
+    for (uint32_t i = 0; i < (uint32_t)this->img->h * this->img->w / 4; i++) {
+
+      /* first iteration. */
+      __m128i charged_t = _mm_stream_load_si128 ((__m128i*)buffer_this);
+      __m128i charged_m = _mm_stream_load_si128 ((__m128i*)buffer_mask);
+      __m128 ready = _mm_undefined_ps();
+
+      for (uint32_t j = 0; j < 4; j++) {
+        __m128i oprti = _mm_cvtepu8_epi32 (charged_t);
+        __m128i oprmi = _mm_cvtepu8_epi32 (charged_m);
+        __m128 oprt = _mm_cvtepi32_ps (oprti);
+        __m128 oprm = _mm_cvtepi32_ps (oprmi);
+       
+        // calculating q.
+        __m128 rest = _mm_sub_ps(alpha_coefs, oprt);
+        __m128 resm = _mm_sub_ps(alpha_coefs, oprm);
+        __m128 opq = _mm_rcp_ps (_mm_add_ps (rest, resm));
+        __m128 opq_m = _mm_mul_ps (resm, opq);
+        __m128 opq_t = _mm_mul_ps (rest, opq);
+
+        // constructing pixel.
+        __m128 pixel_color = _mm_castsi128_ps(_mm_cvtps_epi32 (_mm_add_ps (
+          _mm_mul_ps (_mm_shuffle_ps (opq_t, opq_t, 0), oprt), 
+          _mm_mul_ps (_mm_shuffle_ps (opq_m, opq_m, 0), oprm)
+        )));
+        __m128 pixel_alpha = _mm_castsi128_ps(_mm_min_epi32 (oprti, oprmi));
+        __m128 pixel = _mm_castsi128_ps(_mm_shuffle_epi8 (
+          _mm_castps_si128 (_mm_move_ss (pixel_color, pixel_alpha)),
+          mm_opr_mask
+        ));
+
+        // putting pixel in ready vector.
+        ready = _mm_move_ss(ready, pixel);
+        ready = _mm_shuffle_ps(ready, ready, 0b10010011);
+        charged_m = _mm_shuffle_epi32(charged_m, 0b10010011);
+        charged_t = _mm_shuffle_epi32(charged_t, 0b10010011);
+      }
+
+      _mm_stream_si128 (buffer_this, _mm_castps_si128(ready));
+
+      buffer_this++;
+      buffer_mask++;
+    }
+#endif
   }
 
   return *this;

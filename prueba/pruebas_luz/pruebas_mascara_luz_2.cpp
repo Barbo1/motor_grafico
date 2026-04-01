@@ -1,6 +1,6 @@
-#include "../headers/concepts/lights.hpp"
-#include "../headers/concepts/image_modifier.hpp"
-#include "../headers/primitives/global.hpp"
+#include "../../headers/concepts/lights.hpp"
+#include "../../headers/concepts/image_modifier.hpp"
+#include "../../headers/primitives/global.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -88,7 +88,7 @@ int main () {
   Global* glb = Global::create(name, 786, 1280, SDL_Color {30, 30, 30, 0});
 
   Light light_0 = {
-    .intensity = 120.f,
+    .intensity = 220.f,
     .attenuation = 0.02f,
     .position = {518.f, 334.f},
     .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
@@ -126,7 +126,7 @@ int main () {
       aux_time_1 += 1;
 
       view_0.draw_light_uniform_mask (light_0);
-      glb->apply_mask (view_0);
+      glb->apply_mask (view_0 | view_1.draw_light_uniform_mask (light_1));
 
       float a = glb->get_time();
       avg_time_1 += (a - avg_time_1) / aux_time_1;
