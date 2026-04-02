@@ -21,16 +21,20 @@ void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
     for (uint32_t j = 0; j < (uint32_t)img->w; j++) {
       if (*buffer == 0) {
         __m128 opr = _mm_fmadd_ps (pos.v, pos.v, inv_intensity);
-        opr = _mm_rcp_ps (_mm_add_ps (
-          _mm_shuffle_ps (opr, opr, 0b00000000), 
-          _mm_shuffle_ps (opr, opr, 0b01010101)
-        ));
+        opr = _mm_rcp_ss (
+          _mm_add_ss (
+            opr, 
+            _mm_shuffle_ps (opr, opr, 0b01010101)
+          )
+        );
+        opr = _mm_shuffle_ps (opr, opr, 0b00000000);
         _mm_storeu_si32 (buffer, _mm_shuffle_epi8 (
-          _mm_cvtps_epi32 (_mm_blend_ps (
-            _mm_mul_ps (mm_color, opr), 
-            _mm_sub_ps (mm_alpha, opr), 
-            0b0001
-          )), 
+          _mm_cvtps_epi32 (
+            _mm_move_ss(
+              _mm_mul_ps (mm_color, opr), 
+              _mm_sub_ps (mm_alpha, opr) 
+            )
+          ), 
           mm_opr_mask
         ));
       }

@@ -5,7 +5,11 @@
 void fill_directional_with_shadows (SDL_Surface*& img, const Dir2& direction, const std::vector<MaskObject>& segments) {
   Uint32* buffer = (Uint32*)img->pixels;
 
-  const std::vector<MaskObject> viewed = generate_view_covering_by_direction (direction, segments);
+  const std::vector<MaskObject> viewed = generate_view_covering (
+    direction, 
+    segments, 
+    ViewGeneration::DIRECTION
+  );
 
   const Dir2 dims = Dir2 {(float)img->w, (float)img->h};
   const Dir2 dims2 = dims * 0.5f;
@@ -13,7 +17,6 @@ void fill_directional_with_shadows (SDL_Surface*& img, const Dir2& direction, co
 
   std::array<Dir2, 8> points;
   for (const MaskObject& segment: viewed) {
-
     __m128 denom = _mm_rcp_ps (direction.v);
     __m128 aux1 = _mm_mul_ps ((I - segment.point1).v, denom);
     __m128 aux2 = _mm_mul_ps ((I - segment.point2).v, denom);

@@ -119,11 +119,13 @@ struct FirstLevelElement {
  * direction. The main difference between the position's and direction's versions 
  * is that this one make a covering resembling a parallel view.
  * */
-std::vector<MaskObject> generate_view_covering_by_point (
+enum ViewGeneration {
+  POINT,
+  DIRECTION
+};
+
+std::vector<MaskObject> generate_view_covering (
   const Dir2& position, 
-  const std::vector<MaskObject>& segments
-);
-std::vector<MaskObject> generate_view_covering_by_direction (
-  const Dir2& direction, 
-  const std::vector<MaskObject>& segments
+  const std::vector<MaskObject>& segments, 
+  ViewGeneration by_what
 );

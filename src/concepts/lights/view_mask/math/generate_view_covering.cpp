@@ -5,6 +5,70 @@
 #include <utility>
 #include <immintrin.h>
 
+static inline int meeting_condition_for_ordering_by_direction (
+  const SecondLevelElement& line_1, 
+  const SecondLevelElement& line_2, 
+  const Dir2& d
+) {
+
+  const Dir2 v_1 = line_1.point2 - line_1.point1;
+  const Dir2 v_2 = line_2.point2 - line_2.point1;
+
+  Dir2 lipstick_marks = Dir2 {
+    d.pLd (line_1.point1 - line_2.point1, v_2),
+    d.pLd (line_1.point2 - line_2.point1, v_2)
+  }.bound01();
+
+  Dir2 middle_kiss = v_2.madd (
+    lipstick_marks.sum() * 0.5f, 
+    line_2.point1 - line_1.point1
+  );
+
+  int ret1 = v_1.pLd(middle_kiss, d) > 0.0001f;
+  float coef = d.pLd(middle_kiss, v_1);
+  int ret2 = 0.0001f < coef && coef < 1.0001f;
+  return (ret1 << 1) | ret2;
+}
+
+static inline int meeting_condition_for_obfuscating_by_direction (
+  const SecondLevelElement& line_1, 
+  const SecondLevelElement& line_2, 
+  const Dir2& d, 
+  Dir2& lipstick_marks
+) {
+
+  const Dir2 v_1 = line_1.point2 - line_1.point1;
+  const Dir2 v_2 = line_2.point2 - line_2.point1;
+  const Dir2 d_L = d.percan();
+
+  lipstick_marks = Dir2 {
+    d.pLd (line_1.point1 - line_2.point1, v_2),
+    d.pLd (line_1.point2 - line_2.point1, v_2)
+  }.bound01();
+
+  if (lipstick_marks.y > lipstick_marks.x) {
+    std::swap (lipstick_marks.x, lipstick_marks.y);
+  }
+
+  Dir2 middle_kiss = v_2.madd (lipstick_marks.sum() * 0.5f, line_2.point1);
+
+  __m128 denom = _mm_set1_ps (1.f / (v_1 * d_L));
+  __m128 dist = _mm_mul_ps (
+    _mm_set_ps (
+      0.f,
+      (middle_kiss - line_1.point1) * d_L,
+      (line_2.point1 - line_1.point1) * d_L,
+      (line_2.point2 - line_1.point1) * d_L
+    ), denom
+  );
+  __m128 over_both = _mm_and_ps (
+    _mm_cmplt_ps (dist, _mm_set1_ps (1.0001)), 
+    _mm_cmpgt_ps (dist, _mm_set1_ps (0.0001))
+  );
+
+  return (_mm_movemask_ps(over_both) & 0b111);
+}
+
 static inline int meeting_condition_for_ordering_by_point (const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position) {
   const Dir2 dir_v = line_2.point2 - line_2.point1;
   const Dir2 dir_p1_u1 = line_1.point1 - position; 
@@ -19,12 +83,12 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
     (dir_p2_u1 * dir_p1_u2_L) / (dir_v * dir_p1_u2_L)
   }).bound01();
 
-  Dir2 middle_kiss = dir_v.madd(_mm_cvtss_f32(_mm_hadd_ps(lipstick_marks.v, lipstick_marks.v)) * 0.5f, line_2.point1);
+  Dir2 middle_kiss = dir_v.madd(lipstick_marks.sum() * 0.5f, line_2.point1);
 
   __m128 bound_p = _mm_set1_ps(0.0001), bound_n = _mm_set1_ps(-0.0001);
   __m128 aux;
 
-  __m128 coef = _mm_rcp_ps (_mm_set1_ps (dir_p1_u2_L * dir_p1_u1));
+  __m128 coef = _mm_set1_ps (1.f / (dir_p1_u2_L * dir_p1_u1));
   __m128 over_both = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef, _mm_set_ps (
@@ -46,7 +110,8 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
 
   Dir2 v12p = (line_1.point1 - line_1.point2).percan();
   aux = _mm_mul_ps (v12p.v, dir_p1_u2.v);
-  __m128 coef_2 = _mm_rcp_ps (_mm_add_ps (_mm_shuffle_ps (aux, aux, 0b01010101), _mm_shuffle_ps (aux, aux, 0b00000000)));
+  __m128 coef_2 = _mm_rcp_ss (_mm_add_ss (_mm_shuffle_ps (aux, aux, 0b01010101), aux));
+  coef_2 = _mm_shuffle_ps (coef_2, coef_2, 0b00000000);
   __m128 meet_cond_2 = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef_2, _mm_set_ps (
@@ -67,7 +132,8 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
   );
 
   aux = _mm_mul_ps ((-v12p).v, dir_p1_u1.v);
-  __m128 coef_1 = _mm_rcp_ps (_mm_add_ps (_mm_shuffle_ps (aux, aux, 0b01010101), _mm_shuffle_ps (aux, aux, 0b00000000)));
+  __m128 coef_1 = _mm_rcp_ss (_mm_add_ss (_mm_shuffle_ps (aux, aux, 0b01010101), aux));
+  coef_1 = _mm_shuffle_ps (coef_1, coef_1, 0b00000000);
   __m128 meet_cond_1 = _mm_and_ps (
     _mm_cmpgt_ps (
       _mm_mul_ps (coef_1, _mm_set_ps (
@@ -89,7 +155,10 @@ static inline int meeting_condition_for_ordering_by_point (const SecondLevelElem
 
   __m128 meet_cond = _mm_and_ps (meet_cond_1, meet_cond_2);
 
-  return (_mm_movemask_ps(meet_cond) & 0b111) << 3 | _mm_movemask_ps(over_both);
+  int cond_1 = (_mm_movemask_ps(meet_cond) & 0b111) > 0;
+  int cond_2 = (_mm_movemask_ps(over_both) & 0b111) > 0;
+
+  return (cond_1 << 1) | cond_2;
 }
 
 static inline int meeting_condition_for_obfuscating_by_point (
@@ -138,10 +207,32 @@ static inline int meeting_condition_for_obfuscating_by_point (
     )
   );
 
-  return _mm_movemask_ps(over_both);
+  return _mm_movemask_ps(over_both) & 0b111;
 }
 
-std::vector<MaskObject> generate_view_covering_by_point (const Dir2& position, const std::vector<MaskObject>& segments) {
+std::vector<MaskObject> generate_view_covering (const Dir2& position, const std::vector<MaskObject>& segments, ViewGeneration by_what) {
+  int (*meeting_condition_for_ordering) (
+    const SecondLevelElement&, 
+    const SecondLevelElement&, 
+    const Dir2&
+  );
+  int (*meeting_condition_for_obfuscating) (
+    const SecondLevelElement&, 
+    const SecondLevelElement&, 
+    const Dir2&, 
+    Dir2&
+  );
+  
+  switch(by_what) {
+    case ViewGeneration::POINT:
+      meeting_condition_for_ordering = meeting_condition_for_ordering_by_point;
+      meeting_condition_for_obfuscating = meeting_condition_for_obfuscating_by_point;
+      break;
+    default:
+      meeting_condition_for_ordering = meeting_condition_for_ordering_by_direction;
+      meeting_condition_for_obfuscating = meeting_condition_for_obfuscating_by_direction;
+      break;
+  };
 
   /* Initialization of the buckets. */
   std::vector<FirstLevelElement> buckets(
@@ -184,24 +275,22 @@ std::vector<MaskObject> generate_view_covering_by_point (const Dir2& position, c
         int32_t inner_pos_2 = buckets[pos_2].first_second_level_offset;
         while (inner_pos_2 >= 0) {
 
-          Dir2 lipstick_marks, proportional_distance;
-          int meet_cond = meeting_condition_for_ordering_by_point (
+          int meet_cond = meeting_condition_for_ordering (
             buckets[pos_1].data[inner_pos_1], 
             buckets[pos_2].data[inner_pos_2], 
             position
           );
 
-          if (meet_cond & 0b111) {
-            if (meet_cond & 0b111000) {
+          if (meet_cond & 0b1) {
+            if (meet_cond & 0b10) {
               pos_2 = buckets[pos_2].first_level_offset;
-              goto POS_2_NEXT;
             } else {
               std::swap (buckets[pos_1].data, buckets[pos_2].data);
               std::swap (buckets[pos_1].last_second_level_offset, buckets[pos_2].last_second_level_offset);
               std::swap (buckets[pos_1].first_second_level_offset, buckets[pos_2].first_second_level_offset);
               pos_2 = buckets[pos_1].first_level_offset;
-              goto POS_2_NEXT;
             }
+            goto POS_2_NEXT;
           }
           inner_pos_2 = buckets[pos_2].data[inner_pos_2].partition_offset;
         }
@@ -231,79 +320,130 @@ std::vector<MaskObject> generate_view_covering_by_point (const Dir2& position, c
           const Dir2 dir_v = line_2.point2 - line_2.point1;
 
           Dir2 lipstick_marks;
-          int meet_cond = meeting_condition_for_obfuscating_by_point (
+          int meet_cond = meeting_condition_for_obfuscating (
             buckets[pos_1].data[inner_pos_1], 
             line_2, 
             position, 
             lipstick_marks
           );
 
-          /* obfuscate one side. */
-          if ((meet_cond & 0b11) == 0b10) {
-            if (meet_cond & 0b100)
-              line_2.point1 += dir_v * lipstick_marks.x;
-            else
-              line_2.point1 += dir_v * lipstick_marks.y;
+          switch (by_what) {
+            case ViewGeneration::POINT:
+              /* obfuscate one side. */
+              if ((meet_cond & 0b11) == 0b10) {
+                if (meet_cond & 0b100)
+                  line_2.point1 += dir_v * lipstick_marks.x;
+                else
+                  line_2.point1 += dir_v * lipstick_marks.y;
 
-          } else if ((meet_cond & 0b11) == 0b01) {
-            if (meet_cond & 0b100)
-              line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
-            else
-              line_2.point2 = dir_v.madd(lipstick_marks.x, line_2.point1);
-          
-          /* obfuscate subsegment(divide the segment in two parts). */
-          } else if (meet_cond == 0b100) {
-            Dir2 kiss_x = dir_v.madd(lipstick_marks.x, line_2.point1);
-            Dir2 kiss_y = dir_v.madd(lipstick_marks.y, line_2.point1);
+              } else if ((meet_cond & 0b11) == 0b01) {
+                if (meet_cond & 0b100)
+                  line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
+                else
+                  line_2.point2 = dir_v.madd(lipstick_marks.x, line_2.point1);
 
-            if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
-              int32_t aux = buckets[pos_2].data.size();
-              int32_t last = buckets[pos_2].last_second_level_offset;
+                /* obfuscate subsegment(divide the segment in two parts). */
+              } else if (meet_cond == 0b100) {
+                Dir2 kiss_x = dir_v.madd(lipstick_marks.x, line_2.point1);
+                Dir2 kiss_y = dir_v.madd(lipstick_marks.y, line_2.point1);
 
-              buckets[pos_2].data.push_back(line_2);
+                if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
+                  int32_t aux = buckets[pos_2].data.size();
+                  int32_t last = buckets[pos_2].last_second_level_offset;
 
-              buckets[pos_2].last_second_level_offset = 
-                buckets[pos_2].data[last].partition_offset = 
-                  aux;
-              buckets[pos_2].data[aux].partition_offset = -1;
-              buckets[pos_2].data[aux].point1 = kiss_x;
-              many_elements++;
-            }
-            
-            if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
-              if (buckets[pos_2].first_second_level_offset == inner_pos_2)
-                buckets[pos_2].first_second_level_offset = 
-                  buckets[pos_2].data[inner_pos_2].partition_offset;
-              else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
-                buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
-                buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
-              } else 
-                buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                  buckets[pos_2].data[inner_pos_2].partition_offset;
-              many_elements--;
-            } else {
-              line_2.point2 = kiss_y;
-            }
+                  buckets[pos_2].data.push_back(line_2);
 
-            inner_pos_2 = -1;
-            goto FIN_INNER;
+                  buckets[pos_2].last_second_level_offset = 
+                    buckets[pos_2].data[last].partition_offset = 
+                    aux;
+                  buckets[pos_2].data[aux].partition_offset = -1;
+                  buckets[pos_2].data[aux].point1 = kiss_x;
+                  many_elements++;
+                }
+
+                if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
+                  if (buckets[pos_2].first_second_level_offset == inner_pos_2)
+                    buckets[pos_2].first_second_level_offset = 
+                      buckets[pos_2].data[inner_pos_2].partition_offset;
+                  else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
+                    buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
+                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
+                  } else 
+                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                      buckets[pos_2].data[inner_pos_2].partition_offset;
+                  many_elements--;
+                } else {
+                  line_2.point2 = kiss_y;
+                }
+
+                inner_pos_2 = -1;
+                goto FIN_INNER;
+              }
+              break;
+            default:
+
+              /* obfuscate one side. */
+              if ((meet_cond & 0b11) == 0b10) {
+                line_2.point1 = dir_v.madd(lipstick_marks.x, line_2.point1);
+
+              } else if ((meet_cond & 0b11) == 0b01) {
+                line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
+
+                /* obfuscate subsegment(divide the segment in two parts). */
+              } else if (meet_cond == 0b100) {
+                Dir2 kiss_x = dir_v.madd(lipstick_marks.x, line_2.point1);
+                Dir2 kiss_y = dir_v.madd(lipstick_marks.y, line_2.point1);
+
+                if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
+                  int32_t aux = buckets[pos_2].data.size();
+                  int32_t last = buckets[pos_2].last_second_level_offset;
+
+                  buckets[pos_2].data.push_back(line_2);
+
+                  buckets[pos_2].last_second_level_offset = 
+                    buckets[pos_2].data[last].partition_offset = 
+                    aux;
+                  buckets[pos_2].data[aux].partition_offset = -1;
+                  buckets[pos_2].data[aux].point1 = kiss_x;
+                  many_elements++;
+                }
+
+                if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
+                  if (buckets[pos_2].first_second_level_offset == inner_pos_2)
+                    buckets[pos_2].first_second_level_offset = 
+                      buckets[pos_2].data[inner_pos_2].partition_offset;
+                  else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
+                    buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
+                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
+                  } else 
+                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                      buckets[pos_2].data[inner_pos_2].partition_offset;
+                  many_elements--;
+                } else {
+                  line_2.point2 = kiss_y;
+                }
+
+                inner_pos_2 = -1;
+                goto FIN_INNER;
+              }
+              break;
           }
-  
+
           /* obfuscate completely. */
           if (meet_cond == 0b111 || (line_2.point1 - line_2.point2).modulo2() < 1.f) {
             if (buckets[pos_2].first_second_level_offset == inner_pos_2)
               inner_pos_2 = 
                 buckets[pos_2].first_second_level_offset = 
-                  buckets[pos_2].data[inner_pos_2].partition_offset;
+                buckets[pos_2].data[inner_pos_2].partition_offset;
             else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
               buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
               inner_pos_2 = 
                 buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                  -1;
+                -1;
             } else 
               inner_pos_2 =
                 buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                  buckets[pos_2].data[inner_pos_2].partition_offset;
+                buckets[pos_2].data[inner_pos_2].partition_offset;
             many_elements--;
           } else {
             prev_inner_pos_2 = std::exchange (inner_pos_2, buckets[pos_2].data[inner_pos_2].partition_offset);

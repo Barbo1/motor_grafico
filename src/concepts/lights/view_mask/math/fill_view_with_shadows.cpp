@@ -5,7 +5,11 @@
 void fill_view_with_shadows (SDL_Surface*& img, const Dir2& position, const std::vector<MaskObject>& segments) {
   Uint32* buffer = (Uint32*)img->pixels;
 
-  const std::vector<MaskObject> viewed = generate_view_covering_by_point (position, segments);
+  const std::vector<MaskObject> viewed = generate_view_covering (
+    position, 
+    segments, 
+    ViewGeneration::POINT
+  );
 
   Dir2 dims = Dir2 {(float)img->w, (float)img->h};
   const Dir2& position_off = dims.nmadd (0.5f, position);

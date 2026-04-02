@@ -76,7 +76,6 @@ int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
 
-  Dir2 direction = {518.f, 334.f};
   const std::vector<MaskObject> segments = get_segments_2();
 
   bool cont = true;
@@ -85,8 +84,7 @@ int main () {
   while (cont) {
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
-    const Dir2 dims2 = Dir2 {static_cast<float>(glb->get_width()) * 0.5f, static_cast<float>(glb->get_height()) * 0.5f};
-    direction = Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)} - dims2;
+    Dir2 punto = Dir2 (static_cast<float>(mouse_x), static_cast<float>(mouse_y));
 
     glb->begin_render();
 
@@ -99,8 +97,8 @@ int main () {
       }
 
       float a = clock();
-      std::cout << "position: (" << direction.x << ", " << direction.y << ")";
-      std::vector<MaskObject> view = generate_view_covering (direction, segments, ViewGeneration::DIRECTION);
+      std::cout << "position: (" << punto.x << ", " << punto.y << ")";
+      std::vector<MaskObject> view = generate_view_covering (punto, segments, ViewGeneration::POINT);
       std::cout << ", tiempo: " << ((clock() - a) / CLOCKS_PER_SEC);
       std::cout << std::endl;
 
@@ -112,7 +110,6 @@ int main () {
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
       SDL_RenderDrawPoint(glb->get_render(), mouse_x, mouse_y);
-      SDL_RenderDrawPoint(glb->get_render(), dims2.x, dims2.y);
 
     glb->end_render();
     

@@ -55,6 +55,42 @@ class alignas(16) Dir2 {
     inline bool operator!= (R&& dir) const {
       return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0b0011) != 0b0011;
     }
+    
+    template<DirFin R>
+    inline bool operator> (R&& dir) const {
+      return (_mm_movemask_ps(_mm_cmpgt_ps (this->v, dir.v)) & 0b0011) == 0b0011;
+    }
+    
+    template<DirFin R>
+    inline bool operator< (R&& dir) const {
+      return (_mm_movemask_ps(_mm_cmplt_ps (this->v, dir.v)) & 0b0011) == 0b0011;
+    }
+    
+    template<DirFin R>
+    inline bool operator>= (R&& dir) const {
+      return (_mm_movemask_ps(_mm_cmpge_ps (this->v, dir.v)) & 0b0011) == 0b0011;
+    }
+    
+    template<DirFin R>
+    inline bool operator<= (R&& dir) const {
+      return (_mm_movemask_ps(_mm_cmple_ps (this->v, dir.v)) & 0b0011) == 0b0011;
+    }
+    
+    inline bool operator> (float bound) const {
+      return (_mm_movemask_ps(_mm_cmpgt_ps (this->v, _mm_set1_ps(bound))) & 0b0011) == 0b0011;
+    }
+    
+    inline bool operator< (float bound) const {
+      return (_mm_movemask_ps(_mm_cmplt_ps (this->v, _mm_set1_ps(bound))) & 0b0011) == 0b0011;
+    }
+    
+    inline bool operator>= (float bound) const {
+      return (_mm_movemask_ps(_mm_cmpge_ps (this->v, _mm_set1_ps(bound))) & 0b0011) == 0b0011;
+    }
+    
+    inline bool operator<= (float bound) const {
+      return (_mm_movemask_ps(_mm_cmple_ps (this->v, _mm_set1_ps(bound))) & 0b0011) == 0b0011;
+    }
 
     /* Operators by overloading. */
     template<typename Self>

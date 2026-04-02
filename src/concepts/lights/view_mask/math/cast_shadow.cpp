@@ -42,23 +42,16 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   }
 
   // Filling the shadows.
-  __m128i color_mm = _mm_set_epi32 (255, 255, 255, 255);
-  alignas(8) std::array<std::optional<int32_t>, 2> bounds = std::array<std::optional<int32_t>, 2>();
+  __m128i color_mm = _mm_set1_epi32 (255);
   
-  auto is_value = [&] (int32_t inter) {
-    return
-      (bounds[0].has_value() && bounds[0].value() == inter) || 
-      (bounds[1].has_value() && bounds[1].value() == inter);
-  };
-
   for (int32_t level = bot * width; level < top; level += width) {
-    bounds = {std::optional<int32_t>(), std::optional<int32_t>()};
+    std::array<int32_t, 2> bounds = {-1, -1};
     uint32_t founded = 0;
     for (uint32_t i = 0; i < many_segments; i++) {
       auto& [dev, elem, p, q] = coef[i];
       if (-0.00001 < q && q < 1.00001) {
         int32_t inter = std::lround(elem);
-        if (!is_value(inter)) {
+        if (founded == 0 || (founded == 1 && bounds[0] != inter)) {
           bounds[founded++] = inter;
         }
       }
@@ -66,7 +59,7 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
     }
 
     if (founded == 2) {
-      const std::pair<int32_t, int32_t> min_max_res = std::minmax(bounds[0].value(), bounds[1].value());
+      const std::pair<int32_t, int32_t> min_max_res = std::minmax(bounds[0], bounds[1]);
       int32_t first = bound_inside (min_max_res.first - 1, width) + level;
       int32_t last = bound_inside (min_max_res.second + 1, width) + level;
       uint32_t many = last - first;
