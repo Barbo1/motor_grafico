@@ -4,7 +4,6 @@
 #include <array>
 #include <algorithm>
 #include <cstdint>
-#include <optional>
 
 void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::array<Dir2, 8>& points, uint32_t many_points) {
 

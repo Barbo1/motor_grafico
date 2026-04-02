@@ -117,13 +117,10 @@ inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos,
     (vCB * vDB) / vCB.modulo2()
   ).bound01();
 
-  float minim = std::min (
-    vB.msub(aux.x, vDA).modulo2(), 
-    std::min (
-      vC.msub(aux.y, vDA).modulo2(), 
-      vCB.msub(aux.z, vDB).modulo2()
-    )
-  );
+  __m128 op1 = _mm_set_ss (vB.msub(aux.x, vDA).modulo2());
+  __m128 op2 = _mm_set_ss (vC.msub(aux.y, vDA).modulo2());
+  __m128 op3 = _mm_set_ss (vCB.msub(aux.z, vDB).modulo2());
+  float minim = _mm_cvtss_f32 (_mm_min_ss (_mm_min_ss (op1, op2), op3));
 
   float c1 = vC.pLd(vDA, vB);
   float c2 = vB.pLd(vDA, vC);

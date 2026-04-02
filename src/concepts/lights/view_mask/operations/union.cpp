@@ -95,28 +95,28 @@ ViewMask& ViewMask::operator| (const ViewMask& mask) {
       __m128 ready = _mm_undefined_ps();
 
       for (uint32_t j = 0; j < 4; j++) {
-        __m128i oprti = _mm_cvtepu8_epi32 (charged_t);
-        __m128i oprmi = _mm_cvtepu8_epi32 (charged_m);
-        __m128 oprt = _mm_cvtepi32_ps (oprti);
-        __m128 oprm = _mm_cvtepi32_ps (oprmi);
+        __m128 oprt = _mm_cvtepi32_ps (_mm_cvtepu8_epi32 (charged_t));
+        __m128 oprm = _mm_cvtepi32_ps (_mm_cvtepu8_epi32 (charged_m));
        
         // calculating q.
-        __m128 rest = _mm_sub_ps(alpha_coefs, oprt);
-        __m128 resm = _mm_sub_ps(alpha_coefs, oprm);
-        __m128 opq = _mm_rcp_ps (_mm_add_ps (rest, resm));
-        __m128 opq_m = _mm_mul_ps (resm, opq);
-        __m128 opq_t = _mm_mul_ps (rest, opq);
+        __m128 rest = _mm_sub_ss(alpha_coefs, oprt);
+        __m128 resm = _mm_sub_ss(alpha_coefs, oprm);
+        __m128 opq = _mm_rcp_ss (_mm_add_ss (rest, resm));
+        __m128 opq_m = _mm_mul_ss (resm, opq);
+        __m128 opq_t = _mm_mul_ss (rest, opq);
 
         // constructing pixel.
-        __m128 pixel_color = _mm_castsi128_ps(_mm_cvtps_epi32 (_mm_add_ps (
+        __m128 pixel_color = _mm_add_ps (
           _mm_mul_ps (_mm_shuffle_ps (opq_t, opq_t, 0), oprt), 
           _mm_mul_ps (_mm_shuffle_ps (opq_m, opq_m, 0), oprm)
-        )));
-        __m128 pixel_alpha = _mm_castsi128_ps(_mm_min_epi32 (oprti, oprmi));
-        __m128 pixel = _mm_castsi128_ps(_mm_shuffle_epi8 (
-          _mm_castps_si128 (_mm_move_ss (pixel_color, pixel_alpha)),
-          mm_opr_mask
-        ));
+        );
+        __m128 pixel_alpha = _mm_min_ss (oprt, oprm);
+        __m128 pixel = _mm_castsi128_ps(
+          _mm_shuffle_epi8 (
+            _mm_cvtps_epi32 (_mm_move_ss (pixel_color, pixel_alpha)),
+             mm_opr_mask
+          )
+        );
 
         // putting pixel in ready vector.
         ready = _mm_move_ss(ready, pixel);

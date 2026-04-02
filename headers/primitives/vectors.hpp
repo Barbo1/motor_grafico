@@ -151,10 +151,12 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto operator/ (this Self&& self, const float& number) {
+      __m128 res = _mm_rcp_ss(_mm_set_ss (number));
+      res = _mm_shuffle_ps (res, res, 0);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_mul_ps(self.v, _mm_rcp_ps(_mm_set1_ps (number)));
+        self.v = _mm_mul_ps(self.v, res);
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_mul_ps(self.v, _mm_rcp_ps(_mm_set1_ps (number)))};
+      } else return Dir2 {_mm_mul_ps(self.v, res)};
     }
 
     inline Dir2& operator*= (const float& number) {

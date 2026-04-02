@@ -12,7 +12,6 @@ void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
     pos;
   __m128 
     mm_color = _mm_set_ps (light.color.r, light.color.g, light.color.b, 0.f),
-    mm_alpha = _mm_set_ps (0.f, 0.f, 0.f, 255.f), 
     inv_intensity = _mm_set_ps (0.f, 0.f, 0.f, 1.f / light.intensity);
   __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
 
@@ -32,7 +31,7 @@ void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
           _mm_cvtps_epi32 (
             _mm_move_ss(
               _mm_mul_ps (mm_color, opr), 
-              _mm_sub_ps (mm_alpha, opr) 
+              _mm_sub_ss (_mm_set_ps (0.f, 0.f, 0.f, 255.f), opr) 
             )
           ), 
           mm_opr_mask

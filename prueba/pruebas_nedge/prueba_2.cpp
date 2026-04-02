@@ -62,8 +62,8 @@ int main () {
     std::exit(-1);
   }
 
-  std::array<Dir2, 10> points = set_points_4();
-  NEdge<10> poly(glb, points.data(), points.size(), nullptr, &error);
+  std::array<Dir2, 17> points = set_points_3();
+  NEdge<17> poly(glb, points.data(), points.size(), nullptr, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
