@@ -137,12 +137,12 @@ inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
   bool c3 = q1 + q2 < 0.f;
   float v1 = vB.pLd(vAD, vE);
   float v2 = vC.pLd(vAD, vE);
-  float v3 = (vC - vB).pLd(vB - vAD, vE);
+  float v3 = (vC - vB).pLd(vB + vAD, vE);
 
-  float c_I = std::max (c1 ? v1 : 0.f, std::max (c2 ? v2 : 0.f, c3 ? v3 : 0.f));
-  float c_S = std::min (!c1 ? v1 : 1.f, std::min (!c2 ? v2 : 1.f, !c3 ? v3 : 1.f));
+  float cI = std::max (c1 ? v1 : 0.f, std::max (c2 ? v2 : 0.f, c3 ? v3 : 0.f));
+  float cS = std::min (!c1 ? v1 : 1.f, std::min (!c2 ? v2 : 1.f, !c3 ? v3 : 1.f));
 
-  return c_S > c_I;
+  return cS > cI;
 }
 
 inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
@@ -217,6 +217,24 @@ bool test_collition (const Square& sq, const NEdge<N>& poly) {
     bool eval4 = test_collition_triangle_point (At, vB, vC, sq.position);
     if (eval1 || eval2 || eval3 || eval4) [[unlikely]] {
       return true;
+    }
+  }
+  return false;
+}
+
+template<std::size_t N, std::size_t M> 
+bool test_collition (const NEdge<N>& poly1, const NEdge<M>& poly2) {
+  for (const auto& [A, vB, vC]: poly1.triangles) {
+    Dir2 At = A + poly1.position;
+    for (const auto& [D, vE, vF]: poly2.triangles) {
+      Dir2 Dt = D + poly2.position;
+      bool eval1 = test_collition_triangle_segment (At, vB, vC, Dt, vE);
+      bool eval2 = test_collition_triangle_segment (At, vB, vC, Dt, vF);
+      bool eval3 = test_collition_triangle_segment (At, vB, vC, Dt + vE, vF - vE);
+      bool eval4 = test_collition_triangle_point (Dt, vE, vF, At);
+      if (eval1 || eval2 || eval3 || eval4) [[unlikely]] {
+        return true;
+      }
     }
   }
   return false;
