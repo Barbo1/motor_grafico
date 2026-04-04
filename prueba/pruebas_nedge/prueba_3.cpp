@@ -62,8 +62,8 @@ int main () {
     std::exit(-1);
   }
 
-  std::array<Dir2, 7> points = set_points_1();
-  NEdge<7> poly(glb, points.data(), points.size(), nullptr, &error);
+  std::array<Dir2, 17> points = set_points_3();
+  NEdge<17> poly(glb, points.data(), points.size(), nullptr, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
@@ -71,24 +71,24 @@ int main () {
   poly.set_position(Dir2 (100.f, 100.f));
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Square sq = Square (glb, 20, 40, Dir2 {0, 0}, 0, 0, true, true, &color);
+  Circle cir = Circle (glb, 20, Dir2 {0, 0}, 0, 0, true, true, &color);
 
   bool cont = true;
   while (cont) {
     glb->begin_render();
-    
-    int mouse_x, mouse_y;
-    SDL_GetMouseState(&mouse_x, &mouse_y);
-    sq.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
 
     poly.print(glb, &gs);
     std::string dial = "false";
-    if (test_collition(sq, poly)) {
+    if (test_collition(cir, poly)) {
       dial = "true";
     }
     std::cout << dial << std::endl;
+    
+    int mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+    cir.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
 
-    sq.draw();
+    cir.draw();
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

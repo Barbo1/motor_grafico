@@ -95,21 +95,23 @@ class alignas(16) Dir2 {
     /* Operators by overloading. */
     template<typename Self>
     inline auto operator- (this Self&& self) {
+      __m128 opr = _mm_xor_ps(self.v, _mm_set1_ps(-0.0f));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_xor_ps(self.v, _mm_set1_ps(-0.0f));
+        self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_xor_ps(self.v, _mm_set1_ps(-0.0f))};
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
     inline auto operator- (this Self&& self, R&& dir) {
+      __m128 opr = _mm_sub_ps (self.v, dir.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_sub_ps (self.v, dir.v);
+        self.v = opr;
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.v = _mm_sub_ps (self.v, dir.v);
+        dir.v = opr;
         return std::forward<R>(dir);
-      } else return Dir2 {_mm_sub_ps (self.v, dir.v)};
+      } else return Dir2 {opr};
     }
 
     template<DirFin R>
@@ -120,13 +122,14 @@ class alignas(16) Dir2 {
     
     template<typename Self, DirFin R>
     inline auto operator+ (this Self&& self, R&& dir) {
+      __m128 opr = _mm_add_ps (self.v, dir.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_add_ps (self.v, dir.v);
+        self.v = opr;
         return std::forward<Self>(self);
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
-        dir.v = _mm_add_ps (self.v, dir.v);
+        dir.v = opr;
         return std::forward<R>(dir);
-      } else return Dir2 {_mm_add_ps (self.v, dir.v)};
+      } else return Dir2 (opr);
     }
 
     template<DirFin R> 
@@ -138,25 +141,25 @@ class alignas(16) Dir2 {
     template<DirFin R>
     inline float operator* (R&& dir) const {
       __m128 res = _mm_mul_ps (this->v, dir.v);
-      return _mm_cvtss_f32 (_mm_add_ps (res, _mm_shuffle_ps(res, res, 0b01010101)));
+      return _mm_cvtss_f32 (_mm_hadd_ps (res, res));
     }
 
     template<typename Self>
     inline auto operator* (this Self&& self, const float& number) {
+      __m128 opr = _mm_mul_ps(self.v, _mm_set1_ps (number));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_mul_ps(self.v, _mm_set1_ps (number));
+        self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_mul_ps(self.v, _mm_set1_ps (number))};
+      } else return Dir2 (opr);
     }
 
     template<typename Self>
     inline auto operator/ (this Self&& self, const float& number) {
-      __m128 res = _mm_rcp_ss(_mm_set_ss (number));
-      res = _mm_shuffle_ps (res, res, 0);
+      __m128 opr = _mm_div_ps(self.v, _mm_set1_ps(number));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_mul_ps(self.v, res);
+        self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_mul_ps(self.v, res)};
+      } else return Dir2 (opr);
     }
 
     inline Dir2& operator*= (const float& number) {
@@ -167,16 +170,14 @@ class alignas(16) Dir2 {
     /* Operations by functions. */
     template<typename Self>
     inline auto percan (this Self&& self) {
-      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
-        self.v = _mm_xor_ps (
-          _mm_shuffle_ps(self.v, self.v, 0b11100001),
-          _mm_set_ps (0.f, -0.f, 0.f, -0.f)
-        );
-        return std::forward<Self>(self);
-      } else return Dir2 {_mm_xor_ps (
+      __m128 opr = _mm_xor_ps (
         _mm_shuffle_ps(self.v, self.v, 0b11100001),
         _mm_set_ps (0.f, -0.f, 0.f, -0.f)
-      )};
+      );
+      if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>){
+        self.v = opr;
+        return std::forward<Self>(self);
+      } else return Dir2 (opr);
     }
 
     inline void rotate (const float& angle) {
@@ -190,34 +191,35 @@ class alignas(16) Dir2 {
     template<typename Self>
     inline auto normalize (this Self&& self) {
       __m128 opr = _mm_mul_ps (self.v, self.v);
-      opr = _mm_mul_ps (_mm_set1_ps(_mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)))), self.v);
+      __m128 opr1 = _mm_mul_ps (_mm_set1_ps(_mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)))), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = opr;
+        self.v = opr1;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else return Dir2 (opr1);
     }
 
     template<typename Self>
     inline auto abs (this Self&& self) {
+      __m128 opr = _mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)));
+        self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)))};
+      } else return Dir2 (opr);
     }
 
     template<DirFin R>
     inline float pL (R&& dir) const {
-      __m128 opr = _mm_mul_ps (_mm_shuffle_ps(this->v, this->v, 0b11100001), dir.v);
-      return _mm_cvtss_f32 (_mm_hsub_ps(opr, opr));
+      __m128 opr = _mm_mul_ps(_mm_shuffle_ps(this->v, this->v, 0b11100001), dir.v);
+      return _mm_cvtss_f32(_mm_hsub_ps(opr, opr));
     }
 
     template<DirFin R1, DirFin R2>
     inline float pLd (R1&& dir1, R2&& dir2) const {
       __m128 mine = _mm_shuffle_ps(this->v, this->v, 0b00010001);
-      __m128 opr1 = _mm_mul_ps (mine, dir1.v);
-      __m128 opr2 = _mm_mul_ps (mine, dir2.v);
-      __m128 opr = _mm_hsub_ps(opr1, opr2);
-      return _mm_cvtss_f32 (_mm_div_ps(opr, _mm_shuffle_ps(opr, opr, 0b00010010)));
+      __m128 other = _mm_shuffle_ps(dir1.v, dir2.v, 0b01000100);
+      __m128 res1 = _mm_mul_ps(mine, other);
+      __m128 opr = _mm_hsub_ps(res1, _mm_undefined_ps());
+      return _mm_cvtss_f32(_mm_div_ss(opr, _mm_shuffle_ps(opr, opr, 1)));
     }
 
     inline float modulo () const {
@@ -234,19 +236,13 @@ class alignas(16) Dir2 {
       return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
     }
 
-    inline float angle () const {
-      __m128 opr = _mm_mul_ps(this->v, this->v);
-      return 
-        _mm_cvtss_f32 (_mm_rsqrt_ss(_mm_hadd_ps(opr, opr))) *
-        _mm_cvtss_f32(_mm_hadd_ps(this->v, this->v));
-    }
-
     template<typename Self>
     inline auto max0 (this Self&& self) {
+      __m128 opr = _mm_max_ps (self.v, _mm_set1_ps(0.f));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_max_ps (self.v, _mm_set1_ps(0.f));
+        self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {_mm_max_ps (self.v, _mm_set1_ps(0.f))};
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
@@ -255,7 +251,10 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+        dir.v = opr;
+        return std::forward<R>(dir);
+      } else return Dir2 (opr);
     }
 
     template<typename Self>
@@ -264,7 +263,7 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
@@ -273,7 +272,10 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+        dir.v = opr;
+        return std::forward<R>(dir);
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
@@ -282,7 +284,10 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+        dir.v = opr;
+        return std::forward<R>(dir);
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
@@ -291,7 +296,10 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+        dir.v = opr;
+        return std::forward<R>(dir);
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
@@ -300,7 +308,10 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+        dir.v = opr;
+        return std::forward<R>(dir);
+      } else return Dir2 (opr);
     }
 
     template<typename Self, DirFin R>
@@ -309,7 +320,10 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
+        dir.v = opr;
+        return std::forward<R>(dir);
+      } else return Dir2 (opr);
     }
 
     template<typename Self>
@@ -318,7 +332,7 @@ class alignas(16) Dir2 {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
-      } else return Dir2 {opr};
+      } else return Dir2 (opr);
     }
 };
 
@@ -509,11 +523,6 @@ class alignas(16) AngDir2 {
     inline float modulo2 () const {
       __m128 opr = _mm_mul_ps(this->v, this->v);
       return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
-    }
-
-    inline float angle () const {
-      __m128 opr = _mm_mul_ps(this->v, this->v);
-      return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr))) * _mm_cvtss_f32(_mm_hadd_ps(this->v, this->v));
     }
 
     template<typename Self>

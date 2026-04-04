@@ -129,10 +129,12 @@ inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos,
 }
 
 inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE) {
-  bool c1 = vB.pLd (vE, vC) > 0.f;
-  bool c2 = vC.pLd (vE, vB) > 0.f;
-  bool c3 = c1 + c2 < 0.f;
+  float q1 = vB.pLd (vE, vC);
+  float q2 = vC.pLd (vE, vB);
   Dir2 vAD = A - D;
+  bool c1 = q1 > 0.f;
+  bool c2 = q2 > 0.f;
+  bool c3 = q1 + q2 < 0.f;
   float v1 = vB.pLd(vAD, vE);
   float v2 = vC.pLd(vAD, vE);
   float v3 = (vC - vB).pLd(vB - vAD, vE);
@@ -143,10 +145,37 @@ inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
   return c_S > c_I;
 }
 
+inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
+  Dir2 PA = P - A;
+  float c1 = vC.pLd(PA, vB);
+  float c2 = vB.pLd(PA, vC);
+  return (c1 > 0.f) & (c2 > 0.f) & (c1+c2 < 1.f);
+}
+
+inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
+  Dir2 vAE = A - E;
+
+  __m128 dim_ext = _mm_shuffle_ps (dims.v, dims.v, 0b01010000);
+  __m128 vd_ext = _mm_rcp_ps(_mm_shuffle_ps (vD.v, vD.v, 0b01010000));
+  __m128 vae_ext = _mm_shuffle_ps (vAE.v, vAE.v, 0b01010000);
+  __m128 res1 = _mm_mul_ps (dim_ext, vd_ext);
+  __m128 vN_arr = _mm_fmaddsub_ps (vae_ext, vd_ext, res1); 
+  
+  __m128 cond = _mm_cmplt_ps (vN_arr, _mm_shuffle_ps (vN_arr, vN_arr, 0b10110001));
+  __m128 cmin = _mm_and_ps (cond, vN_arr);
+  __m128 cmax = _mm_or_ps(_mm_andnot_ps (cond, vN_arr), _mm_and_ps (cond, _mm_set1_ps(1.f)));
+  __m128 cI_1 = _mm_max_ps(cmin, _mm_shuffle_ps (cmin, cmin, 0b10110001));
+  __m128 cS_1 = _mm_min_ps(cmax, _mm_shuffle_ps (cmax, cmax, 0b10110001));
+  float cI = _mm_cvtss_f32(_mm_max_ss(cI_1, _mm_shuffle_ps (cI_1, cI_1, 0b00000010)));
+  float cS = _mm_cvtss_f32(_mm_min_ss(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00000010)));
+
+  return cS > cI;
+}
+
 template<std::size_t N> 
 bool test_collition (const Circle& cir, const NEdge<N>& poly) {
   for (const auto& [A, vB, vC]: poly.triangles) {
-    if (test_collition_triangle_circle(A + poly.position, vB, vC, cir.position, cir.radio)) {
+    if (test_collition_triangle_circle(A + poly.position, vB, vC, cir.position, cir.radio)) [[unlikely]] {
       return true;
     }
   }
@@ -160,7 +189,7 @@ template<std::size_t N> bool test_collition (const Line& line, const NEdge<N>& p
     const float cond1 = vL * A;
     const float cond2 = vL * (A + vB);
     const float cond3 = vL * (A + vC);
-    if (cond1*cond2 < 0.f || cond1*cond3 < 0.f) {
+    if (cond1*cond2 < 0.f || cond1*cond3 < 0.f) [[unlikely]] {
       return true;
     }
   }
@@ -170,7 +199,23 @@ template<std::size_t N> bool test_collition (const Line& line, const NEdge<N>& p
 template<std::size_t N> 
 bool test_collition (const Particle& par, const NEdge<N>& poly) {
   for (const auto& [A, vB, vC]: poly.triangles) {
-    if (test_collition_triangle_circle(A + poly.position, vB, vC, par._position, par._radio)) {
+    if (test_collition_triangle_circle(A + poly.position, vB, vC, par._position, par._radio)) [[unlikely]] {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<std::size_t N> 
+bool test_collition (const Square& sq, const NEdge<N>& poly) {
+  Dir2 dims = Dir2 (sq.width, sq.height);
+  for (const auto& [A, vB, vC]: poly.triangles) {
+    Dir2 At = A + poly.position;
+    bool eval1 = test_collition_square_segment (sq.position, dims, At, vB);
+    bool eval2 = test_collition_square_segment (sq.position, dims, At, vC);
+    bool eval3 = test_collition_square_segment (sq.position, dims, At + vB, vC - vB);
+    bool eval4 = test_collition_triangle_point (At, vB, vC, sq.position);
+    if (eval1 || eval2 || eval3 || eval4) [[unlikely]] {
       return true;
     }
   }
