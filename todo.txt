@@ -67,11 +67,10 @@
  |V| - cambiar el formato de las lineas para que queden definidas por:
         + un punto(por el que pasa),
         + un vector(que apunta a su direccion).
- |V| - implementar los poligonos con colisiones:
-        | | + testeo.
-        | | + resolucion.
+ | | - implementar los poligonos con colisiones:
+        |V| + testeo.
         | | + punto de colision.
- | | - implementar colisiones de poligonos.
+        | | + resolucion.
  | | - colisiones de poligonos con circulos, cuadrados y lineas.
  | | - falta implementar: 
         | | + la funcion project de image_modifier, y la function de print polygon,
