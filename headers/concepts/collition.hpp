@@ -132,17 +132,22 @@ inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
   float q1 = vB.pLd (vE, vC);
   float q2 = vC.pLd (vE, vB);
   Dir2 vAD = A - D;
-  bool c1 = q1 > 0.f;
-  bool c2 = q2 > 0.f;
-  bool c3 = q1 + q2 < 0.f;
+
   float v1 = vB.pLd(vAD, vE);
   float v2 = vC.pLd(vAD, vE);
   float v3 = (vC - vB).pLd(vB + vAD, vE);
 
-  float cI = std::max (c1 ? v1 : 0.f, std::max (c2 ? v2 : 0.f, c3 ? v3 : 0.f));
-  float cS = std::min (!c1 ? v1 : 1.f, std::min (!c2 ? v2 : 1.f, !c3 ? v3 : 1.f));
+  __m128 cond = _mm_set_ps (0.f, -(q1+q2), q2, q1);
+  __m128 vals = _mm_set_ps (0.f, v3, v2, v1);
+  __m128 aux = _mm_cmpgt_ps (cond, _mm_setzero_ps());
+  __m128 cmax = _mm_and_ps (aux, vals);
+  __m128 cmin = _mm_or_ps (_mm_andnot_ps(aux, vals), _mm_and_ps (aux, _mm_set1_ps(1.f)));
+  __m128 cI_aux = _mm_max_ps (cmax, _mm_shuffle_ps (cmax, cmax, 0b10101010));
+  __m128 cS_aux = _mm_min_ps (cmin, _mm_shuffle_ps (cmin, cmin, 0b10101010));
+  __m128 cI = _mm_max_ss (cI_aux, _mm_shuffle_ps (cI_aux, cI_aux, 1));
+  __m128 cS = _mm_min_ss (cS_aux, _mm_shuffle_ps (cS_aux, cS_aux, 1));
 
-  return cS > cI;
+  return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
 }
 
 inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
@@ -166,10 +171,10 @@ inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   __m128 cmax = _mm_or_ps(_mm_andnot_ps (cond, vN_arr), _mm_and_ps (cond, _mm_set1_ps(1.f)));
   __m128 cI_1 = _mm_max_ps(cmin, _mm_shuffle_ps (cmin, cmin, 0b10110001));
   __m128 cS_1 = _mm_min_ps(cmax, _mm_shuffle_ps (cmax, cmax, 0b10110001));
-  float cI = _mm_cvtss_f32(_mm_max_ss(cI_1, _mm_shuffle_ps (cI_1, cI_1, 0b00000010)));
-  float cS = _mm_cvtss_f32(_mm_min_ss(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00000010)));
+  __m128 cI = _mm_max_ss(cI_1, _mm_shuffle_ps (cI_1, cI_1, 0b00000010));
+  __m128 cS = _mm_min_ss(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00000010));
 
-  return cS > cI;
+  return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
 }
 
 template<std::size_t N> 
