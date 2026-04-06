@@ -71,7 +71,66 @@
         |V| + testeo.
         | | + punto de colision.
         | | + resolucion.
- | | - colisiones de poligonos con circulos, cuadrados y lineas.
+ | | - implementar Button, CheckBox, TextBox, Slider, TextInput, ScrollPane, Selecter.
+      + todos los objetos tienen una hitbox asociadas, dependiendo del objeto considerado,
+          mediante las cuales se puede generar el cambio de estado entre ellos. 
+      + todos los objetos estan en un estado en particular y pueden ser cambiados por accion
+          del mouse o por una funcion llamada 'void SetState(GUIObjectState)'.
+      + todos los objetos pueden ser testeados mediante el metodo 'GUIObjectState State()'.
+      + se considera un objeto que se llama GUIScreen, en donde se mantienen los elementos
+          en un arreglo. Tiene una referencia al elemento seleccionado y otro para el elemento
+          observado. Los elementos pueden estar en 3 modos: Quiet que significa que no esta 
+          siendo usado, Observed significa que puede ser utilizada su funcionalidad, y Selected 
+          significa que puede su funcionalidad esta activa. La manera de testear el modo es:
+            | Quiet: el puntero no colisiona con su hitbox, 
+            | Observed: el puntero colisiona, pero no fue clckeado, 
+            | Selected: el puntero colisiona y clickeado.
+          Los elementos pueden tener menor
+          cantidad de modos de manera visual, pero operacionalmente todos tienen los 3 estados.
+      + se considera un clickeo como la operacion de precionar el boton izquierdo del mouse.
+      | | - Button: su funcion es poder ser presionado mediante el puntero y testear su modo. 
+              Tiene una hitbox cuadrada, y se crea mediante sus dos dimensiones y sus imagenes 
+              para los modos Quiet, Hover y Selected.
+          + tienen 3 modos visuales: 
+            | Quiet: el puntero no colisiona con sus hitboxes, 
+            | Hover: el puntero colisiona, pero no fue clckeado, 
+            | Selected: el puntero colisiona y se mantiene el click presionado.
+      | | - CheckBox: sirve para setear un estado en particular. Tiene una hitbox cuadrada, y
+              se contruye mediante sus dimensiones(un numero debido a que es un cuadrado) y 
+              sus imagenes para los dos estados Active y Deactive.
+          + tiene 2 modos visuales:
+            | Active: esta activo,
+            | Deactive: esta desactivado
+      | | - TextBox: puede mostrar un texto. Es creado pasandole como parametro sus dimensiones,
+              la imagen del fondo del TextBox, el tamaño y color de los glyphs, un GlyphSystem, 
+              la alineacion del texto (to the left and centered). No tiene hitbox debido a que no 
+              es necesaria una interaccion directa con el. Tiene un metodo 'void Write(std::string_view)' 
+              para poder escribir su contenido y otro 'std::string_view Read()' para leerlo.
+      | | - Slider: tiene la capacidad de poder seleccionar entre muchos estados.
+          + Consiste en tres partes:
+            | Sign: El objeto visual que muestra el valor del Slider,
+            | Base: la region lineal en la que se mueve el Position, que representa todos los 
+                valores posibles.
+              El Slider se construye pasandole las dimensiones del Base, las del Sign, las 
+              imagenes respectivas de cada uno, la cantidad N de valores posibles y la direccion en
+              la que se define(vertical u horizontal). Cuando en el Sign se mantiene el click y 
+              se mueve el mouse, se cambia el valor del Slider al que este mas cerca de la posicion 
+              del mouse en la direccion en la que esta definido(si esta definido verticalmente, se 
+              considera la diferencia vertical, no la horizontal). Esto vale mientras el click este 
+              mantenido, y pasa a quedar quieto cuando se suelta. Si se preciona el click encima del
+              Base, el Sign se mueve al lugar mas cercano al mouse en la posicion definida. Si 
+              se mueve el scroll cuando el puntero esta encima del slider, se movera el Position hacia
+              el mismo lado que el scroll. Es posible setear el valor de la posicion mediante la 
+              function 'void SetValue(uint32_t)'.
+      | | - TextInput: es una clase template que toma por argumento el largo de los textos que
+              puede aceptar. Para ser creado se le pasa por parametro sus dimensiones, el color y
+              tamaño de letra, su imagen y un GlyphSystem. 
+          + tiene 2 modos visuales:
+            | Active: esta preparado para escribir,
+            | Deactive: no se puede escribir.
+    A base de estos, deberian poder ser implementados los siguientes objetos:
+      | | - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
+              cada una con un string que representa el significado.
  | | - falta implementar: 
         | | + la funcion project de image_modifier, y la function de print polygon,
         | | + rounded_square dentro de los constructores de figuras,
