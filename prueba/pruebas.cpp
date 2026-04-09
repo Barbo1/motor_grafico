@@ -170,7 +170,7 @@ int main () {
       if (test_collition(c1, cir)) 
         resolve_collition(cir, c1);
       for (Line& line: lines)
-        if (test_collition(cir, line))
+        if (test_collition(line, cir))
           resolve_collition(cir, line);
     }
 
@@ -182,7 +182,7 @@ int main () {
     if (test_collition(c1, c2)) 
       resolve_collition(c1, c2);
     for (Line& line: lines)
-      if (test_collition(c1, line))
+      if (test_collition(line, c1))
         resolve_collition(c1, line);
     
     /* Evaluacion de perifericos. */

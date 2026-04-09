@@ -131,6 +131,7 @@
     A base de estos, deberian poder ser implementados los siguientes objetos:
       | | - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
               cada una con un string que representa el significado.
+ | | - agregar una comprobacion de punteros nullos cada vez que se hace un new.
  | | - falta implementar: 
         | | + la funcion project de image_modifier, y la function de print polygon,
         | | + rounded_square dentro de los constructores de figuras,

@@ -19,7 +19,7 @@ ViewMask& ViewMask::operator| (const ViewMask& mask) {
     __m128i* buffer_this = (__m128i*)this->img->pixels;
     __m128i* buffer_mask = (__m128i*)mask.img->pixels;
 
-#if __AVX2__
+#if defined(__AVX2__) && defined(__AVX__)
     __m256 coefs_2 = _mm256_set_ps (0.f, 0.f, 0.f, 255.f, 0.f, 0.f, 0.f, 255.f);
     __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
 

@@ -190,8 +190,8 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto normalize (this Self&& self) {
-      __m128 opr = _mm_mul_ps (self.v, self.v);
-      __m128 opr1 = _mm_mul_ps (_mm_set1_ps(_mm_cvtss_f32(_mm_rsqrt_ss(_mm_hadd_ps(opr, opr)))), self.v);
+      __m128 opr = _mm_rsqrt_ss(_mm_dp_ps(self.v, self.v, 0b00110001));
+      __m128 opr1 = _mm_mul_ps(_mm_moveldup_ps(opr), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr1;
         return std::forward<Self>(self);
@@ -200,7 +200,7 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto abs (this Self&& self) {
-      __m128 opr = _mm_and_ps(self.v, _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF)));
+      __m128 opr = _mm_andnot_ps(_mm_set1_ps(-0.f), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -209,7 +209,7 @@ class alignas(16) Dir2 {
 
     template<DirFin R>
     inline float pL (R&& dir) const {
-      __m128 opr = _mm_mul_ps(_mm_shuffle_ps(this->v, this->v, 0b11100001), dir.v);
+      __m128 opr = _mm_mul_ps(_mm_shuffle_ps(this->v, _mm_undefined_ps(), 0b11100001), dir.v);
       return _mm_cvtss_f32(_mm_hsub_ps(opr, opr));
     }
 
@@ -223,8 +223,7 @@ class alignas(16) Dir2 {
     }
 
     inline float modulo () const {
-      __m128 opr = _mm_mul_ps(this->v, this->v);
-      return _mm_cvtss_f32(_mm_sqrt_ss(_mm_hadd_ps(opr, opr)));
+      return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(this->v, this->v, 0b00110001)));
     }
 
     inline float sum () const {
@@ -232,13 +231,12 @@ class alignas(16) Dir2 {
     }
 
     inline float modulo2 () const {
-      __m128 opr = _mm_mul_ps(this->v, this->v);
-      return _mm_cvtss_f32(_mm_hadd_ps(opr, opr));
+      return _mm_cvtss_f32(_mm_dp_ps(this->v, this->v, 0b00110001));
     }
 
     template<typename Self>
     inline auto max0 (this Self&& self) {
-      __m128 opr = _mm_max_ps (self.v, _mm_set1_ps(0.f));
+      __m128 opr = _mm_and_ps(_mm_castsi128_ps(_mm_srai_epi32(_mm_castps_si128(self.v), 31)), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -259,11 +257,13 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto bound01 (this Self&& self) {
-      __m128 opr = _mm_max_ps (_mm_min_ps (self.v, _mm_set1_ps(1.f)), _mm_set1_ps(0.f));
+      __m128i casted = _mm_castps_si128(self.v);
+      __m128i opr = _mm_andnot_si128(_mm_srai_epi32(casted, 31), casted);
+      __m128 opr1 = _mm_castsi128_ps(_mm_min_epi32 (opr, _mm_set1_epi32(0x3f800000)));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = opr;
+        self.v = opr1;
         return std::forward<Self>(self);
-      } else return Dir2 (opr);
+      } else return Dir2 (opr1);
     }
 
     template<typename Self, DirFin R>

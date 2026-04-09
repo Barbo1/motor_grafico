@@ -150,12 +150,29 @@ class GuiScreen {
     GuiElementType get_type(uint32_t);
     void set_position(const Dir2&);
     Dir2 get_position();
-    
 };
 
 /*
   + el 'void begin()' tiene que testear si alguno de los elementos esta siendo 
   observado y, en caso de que lo este, testear si esta siendo seleccionado.
 
-  +
+  + tiene que haber un enumerado GuiElementState en el que se consideren:
+    1- los elementos recien seleccionados(GES_JustPressed),
+    2- los elementos previamente seleccionados(GES_PrevPressed).
+  esta diferencia es necesaria para contemplar el caso de elementos que son
+  seleccionados pueden ser utilizados mientras lo estan, como los Sliders,
+  que tienen que ser movidos mientras este precionado el click.
+  
+  + en base al punto anterior, es necesario mantener una referencia hacia
+  el elemento que esta seleccionado, para verificar que se siga cumpliento
+  la seleccion, y si no, que se elimine la referencia para poder dejar que
+  otro elemento sea seleccionado.
+
+  + es necesario guardar un arreglo de estados, en el que se dicte las imagenes
+  que van a ser utilizadas para mostrar los componentes en pantalla. Esto hace
+  que se puedan separar la tarea de mostrar la interfaz y la de realizar la 
+  logica necesaria para que funcione.
+
+  + los scrollpane deben ser un objeto aparte para que pueda ser todo correctamente
+  utilizado.
 */
