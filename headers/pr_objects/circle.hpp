@@ -15,7 +15,7 @@ template<std::size_t N> class NEdge;
 class Square;
 class Line;
 
-class Circle: public Physical {
+class Circle final: public Physical {
   private:
     uint32_t radio;
     Visualizer<D2FIG> texture;

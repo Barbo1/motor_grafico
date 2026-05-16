@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <utility>
 
+/* function that evaluates if the component element is a straight horizontal line. */
 static inline bool is_horizontal_line (const ComponentElement& elem) {
   return elem.t == ComponentElementType::LINE && (elem.start.round() - elem.end.round()).y == 0.f;
 }
@@ -16,6 +17,16 @@ static inline float get_direction_quad (const Dir2& curr, const Dir2& next, cons
   float ret = (curr - next).y;
   return (ret == 0.f ? (curr - need).y : ret);
 }
+
+/* for every component, there are two of them for which one is the previous(prev) 
+ * and the other is the following(next). These two touch(one of the points that defines
+ * them coinsides) with the considered component, and in this points they have an upward
+ * or downward direction, which defines the cases for printing. The next two functions 
+ * are meant to return a float that represents the direction, with different posibilities:
+ *  - lesser than 0 means that the prev or next, comes or goes downwards,
+ *  - greater than 0 means that the prev or next, comes or goes upwards,
+ *  - 0 means that is a straight line.
+ *  */
 
 static inline float get_prev_direction (ComponentElement elem) {
   switch (elem.t) {
@@ -116,10 +127,11 @@ static void print_bezier_part (
   uint64_t next_direction
 ) {
   float t = bezier_config & BezierConfig::TRule;
-  uint64_t xi = static_cast<uint64_t> (first.round().x);
-  const int64_t first_height = static_cast<int64_t> (first.round().y);
+  const Dir2 fround = first.round();
+  uint64_t xi = static_cast<uint64_t> (fround.x);
+  const int64_t first_height = static_cast<int64_t> (fround.y);
   const int64_t middle_height = (first_height + last_height) >> 1;
-  const float& iavy = 1.f / av.y;
+  const float iavy = 1.f / av.y;
 
   auto print_points = [&] (uint64_t yi, uint64_t yin, uint64_t disappearance_cond) {
     bound.change (yi, xi, (disappearance_cond & bound(yi, xi)) ^ 1ULL);
@@ -197,7 +209,6 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
     prev_point_disapears, next_point_disapears, mid_point_dissapears
   );
 
-  // cases of .
   if (float_is_zero (av.y)) {
     if (float_is_zero (bv.y) || cond.y == 0.f) {
       draw_line (bound, P1, P3, prev_direction, next_direction);
@@ -354,9 +365,24 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       filtered_elements.pop_back ();
     }
 
-    // drawing the component inside the BoolMatrix.
-    std::size_t pos = 0;
+    // iterating over the array until found some element with y difference greater than 0.
+    auto elem = filtered_elements[0];
     std::size_t many = filtered_elements.size ();
+    std::size_t pos = 0;
+    while ((elem.start.round() - elem.end.round()).y == 0.f && pos < many) {
+      std::size_t i = 0;
+      for (; i < filtered_elements.size()-1; i++) {
+        filtered_elements[i] = filtered_elements[i+1];
+      }
+      filtered_elements[i] = elem;
+      elem = filtered_elements[0];
+      pos++;
+    }
+
+    if (pos == many)
+      return nullptr;
+
+    // drawing the component inside the BoolMatrix.
     float prev_direction = get_prev_direction(filtered_elements.back ());
     float next_direction = get_next_direction(filtered_elements [1]);
     for (const auto& elem: filtered_elements) {

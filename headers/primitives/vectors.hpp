@@ -111,7 +111,7 @@ class alignas(16) Dir2 {
       } else if constexpr (std::is_rvalue_reference_v<R&&> && !std::is_const_v<R&&>) {
         dir.v = opr;
         return std::forward<R>(dir);
-      } else return Dir2 {opr};
+      } else return Dir2 (opr);
     }
 
     template<DirFin R>
@@ -141,7 +141,7 @@ class alignas(16) Dir2 {
     template<DirFin R>
     inline float operator* (R&& dir) const {
       __m128 res = _mm_mul_ps (this->v, dir.v);
-      return _mm_cvtss_f32 (_mm_hadd_ps (res, res));
+      return _mm_cvtss_f32 (_mm_add_ps (res, _mm_shuffle_ps(res, res, 0b01010101)));
     }
 
     template<typename Self>
@@ -155,7 +155,8 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto operator/ (this Self&& self, const float& number) {
-      __m128 opr = _mm_div_ps(self.v, _mm_set1_ps(number));
+      __m128 aux = _mm_rcp_ps(_mm_set1_ps (number));
+      __m128 opr = _mm_mul_ps(self.v, aux);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -236,7 +237,7 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto max0 (this Self&& self) {
-      __m128 opr = _mm_and_ps(_mm_castsi128_ps(_mm_srai_epi32(_mm_castps_si128(self.v), 31)), self.v);
+      __m128 opr = _mm_andnot_ps(_mm_castsi128_ps(_mm_srai_epi32(_mm_castps_si128(self.v), 31)), self.v);
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -245,7 +246,12 @@ class alignas(16) Dir2 {
 
     template<typename Self, DirFin R>
     inline auto bound (this Self&& self, R&& dir) {
-      __m128 opr = _mm_max_ps (_mm_min_ps (self.v, dir.v), _mm_or_ps(dir.v, _mm_set1_ps(-0.0f)));
+      __m128i coef = _mm_set1_epi32(0x7FFFFFFF);
+      __m128i mask = _mm_cmplt_epi32(dir.v, _mm_and_si128(self.v, coef));
+      __m128 opr = _mm_castsi128_ps(_mm_or_si128 (
+        _mm_andnot_si128(_mm_and_si128(mask, coef), self.v),
+        _mm_and_si128(mask, dir.v)
+      ));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);

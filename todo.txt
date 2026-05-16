@@ -69,8 +69,24 @@
         + un vector(que apunta a su direccion).
  | | - implementar los poligonos con colisiones:
         |V| + testeo.
-        | | + punto de colision.
+        | | + reposicion.
         | | + resolucion.
+        | | + punto de colision.
+ | | - cambiar modelo de iluminación:
+        | | + en vez de guardarse los lugares donde hay sombra, deberian guardarse los lugares con iluminacion. 
+                Esto permite que se obtengan los lugares por lo que pasa la luz para poder recorrerlos mediante 
+                una linea de rasterización, para poder calcular la luz de cada pixel dentro de la imagen. Mas 
+                aun, es posible utilizar todas las luces posibles para generar una unica mascara de luz, lo cual 
+                mejora todo el sistema luminico, primero por la gran cantidad de memoria que ahorra por todas las 
+                imagenes por separado, y luego por la necesidad excesiba de computo, no solo para llenar las 
+                imagenes, sino tambien para concatenarlas. Por lo tanto, se deberia construir el volumen de 
+                iluminacion, que consiste en un polinomio que recorre todos los pixeles iluminados. La iluminacion
+                ambiental se deberia pasar por parametro para el algoritmo.
+        | | + desde este punto de vista, las luces estaticas deberian generarse mediante la construccion del 
+                volumen de iluminacion, que se guardarían relacionados con la luz en particular.
+        | | + view covering para un circulo, linea y square,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
  | | - implementar Button, CheckBox, TextBox, Slider, TextInput, ScrollPane, Selecter.
       + todos los objetos tienen una hitbox asociadas, dependiendo del objeto considerado,
           mediante las cuales se puede generar el cambio de estado entre ellos. 
@@ -139,6 +155,7 @@
  | | - agregar capacidad de printear letras en los visualizers 2D.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - mejorar el manejo de la memoria de la rasterizacion de letras.
+ | | - re-implementar de nuevo el descompresor de imagenes png.
  | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
         como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
@@ -165,11 +182,6 @@
         Cambiar luces para que sean objetos, que cuando se inicializan calculen la distancia
         maxima hasta la que llega la luz, que abarca todas las funcionalidades.
         | | + ,
- | | - mejora del modelo de luz:
-        | | + view covering para un circulo, linea y square,
-        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
-        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
-        | | + alguna forma de iluminacion ambiental?
  | | - implementar gear.
  | | - mejorar eficiencia de figures_constructors:
         | | + cambiar algoritmo de dibujo de un circulo,

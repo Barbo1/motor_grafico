@@ -6,21 +6,20 @@
 #include "../concepts/glyph_system.hpp"
 #include "../concepts/image_modifier.hpp"
 
+#include <SDL2/SDL.h>
 #include <cstdint>
 #include <cstring>
 #include <cstdint>
 #include <codecvt>
-#include <SDL2/SDL.h>
+#include <array>
 
 class Circle;
 class Line;
 class Particle;
 class Square;
 
-#include <array>
-
 template<std::size_t N>
-class NEdge: public Physical {
+class NEdge final: public Physical {
   private:
     std::array<Dir2, N> points;
     std::array<std::array<Dir2, 3>, N-2> triangles;

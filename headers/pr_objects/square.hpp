@@ -10,7 +10,7 @@ class Line;
 class Particle;
 template<std::size_t N> class NEdge;
 
-class Square: public Physical {
+class Square final: public Physical {
   private:
     float width;
     float height;
