@@ -42,8 +42,8 @@ int main () {
     .deactive_fn = print_checkbox_deactivate,
     .dims = Dir2(40.f, 40.f),
     .position = Dir2(200.f, 200.f),
-    .state = false,
-    .last_state = false
+    .active = false,
+    .last_state = GUIStateQuiet 
   };
 
   GuiComponent<1> inicio = GuiComponent<1>(glb, &gs);

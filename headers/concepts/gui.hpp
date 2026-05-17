@@ -46,11 +46,11 @@ struct CheckBox {
 
   Dir2 dims;
   Dir2 position;
-  bool state;
-  bool last_state;
+  bool active;
+  GuiElementState last_state;
 };
 
-struct  TextBox {
+struct TextBox {
   std::function<void(Dir2)> background;
 
   std::string text;
@@ -102,6 +102,14 @@ class GuiComponent {
       };
     }
 
+    void add (Slider* slider) {
+      this->elems[many++] = {
+        .ptr = slider, 
+        .type = GUISliderType, 
+        .state = GUIStateQuiet
+      };
+    }
+
     // iterating elements
     void test_selected (Dir2 click_position, bool clicking) {
       for (uint32_t i = 0; i < this->many; i++) {
@@ -120,19 +128,18 @@ class GuiComponent {
           break;
           case GUICheckBoxType: {
             CheckBox* check = static_cast<CheckBox*>(this->elems[i].ptr);
-            bool last_state = check->state;
             bool test = test_point_inside_square(click_position, check->position + this->position, check->dims);
             if (clicking && test) {
+              if (check->last_state != GUIStateSelected)
+                check->active = !check->active;
               this->elems[i].state = GUIStateSelected;
-              if (check->last_state != check->state)
-                check->state = !check->state;
             } else if (test) {
               this->elems[i].state = GUIStateObserverd;
             } else {
               this->elems[i].state = GUIStateQuiet;
             }
+            check->last_state = this->elems[i].state;
             std::cout << this->elems[i].state << std::endl; // problema.
-            check->last_state = last_state;
           }
           break;
           default: break;
@@ -161,7 +168,7 @@ class GuiComponent {
           break;
           case GUICheckBoxType: {
             CheckBox* check = static_cast<CheckBox*>(this->elems[i].ptr);
-            if (check->state)
+            if (check->active)
               check->active_fn(this->position + check->position); 
             else
               check->deactive_fn(this->position + check->position); 
