@@ -64,8 +64,8 @@ int main () {
     .base_fn = print_slider_base,
     .sign_fn = print_slider_sign,
     .position = Dir2(200.f, 300.f),
-    .base_dims = Dir2 (100.f, 4.f),
-    .sign_dims = Dir2(26.f, 20.f),
+    .base_dims = Dir2 (100.f, 16.f),
+    .sign_dims = Dir2(6.f, 20.f),
     .curr_index = 0,
     .max_index = 10,
     .direction = false
@@ -104,6 +104,7 @@ int main () {
     
     glb->begin_render();
       inicio.test_selected(click_position, clicking);
+      std::cout << slider_1.curr_index << std::endl;
       inicio.print();
     glb->end_render();
   } 

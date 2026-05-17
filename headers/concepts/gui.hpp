@@ -72,18 +72,25 @@ struct Slider {
 template<std::size_t N>
 class GuiComponent {
   private:
-    std::array<GuiElement, N> elems;
-    std::size_t many;
-    Dir2 position;
-
     const Global* glb;
     const GlyphsSystem* gs;
+
+    // general data.
+    std::array<GuiElement, N> elems;
+    Dir2 position;
+    int32_t many;
+
+    // generating mutex.
+    int32_t id_selected;
+    bool last_clicking;
 
   public:
     GuiComponent (const Global* glb, const GlyphsSystem* gs) {
       this->glb = glb;
       this->gs = gs;
       this->many = 0;
+      this->last_clicking = false;
+      this->id_selected = -1;
     }
 
     void add (Button* button) {
@@ -115,12 +122,15 @@ class GuiComponent {
 
     // iterating elements
     void test_selected (Dir2 click_position, bool clicking) {
-      for (uint32_t i = 0; i < this->many; i++) {
+      int32_t selected = -1;
+
+      for (int32_t i = 0; i < this->many; i++) {
         switch (this->elems[i].type) {
           case GUITypeButton: {
             Button* button = static_cast<Button*>(this->elems[i].ptr);
             bool test = test_point_inside_square(click_position, button->position + this->position, button->dims);
-            if (clicking && test) {
+            if (clicking && test && !this->last_clicking) {
+              selected = i;
               this->elems[i].state = GUIStateSelected;
             } else if (test) {
               this->elems[i].state = GUIStateObserverd;
@@ -129,10 +139,12 @@ class GuiComponent {
             }
           }
           break;
+
           case GUITypeCheckBox: {
             CheckBox* check = static_cast<CheckBox*>(this->elems[i].ptr);
             bool test = test_point_inside_square(click_position, check->position + this->position, check->dims);
-            if (clicking && test) {
+            if (clicking && test && !this->last_clicking) {
+              selected = i;
               if (check->last_state != GUIStateSelected)
                 check->active = !check->active;
               this->elems[i].state = GUIStateSelected;
@@ -144,14 +156,54 @@ class GuiComponent {
             check->last_state = this->elems[i].state;
           }
           break;
+
+          case GUITypeSlider: {
+            Slider* slider = static_cast<Slider*>(this->elems[i].ptr);
+            Dir2 v = Dir2(slider->base_dims.x, 0.f);
+            Dir2 aux = this->position + slider->position;
+            Dir2 P = aux - v * 0.5f;
+
+            // testing selection.
+            bool test = test_point_inside_square(
+              click_position, 
+              slider->position + this->position, 
+              slider->base_dims * 0.5f
+            ) || test_point_inside_square(
+              click_position, 
+              this->position + P + v * static_cast<float>(slider->curr_index),
+              slider->sign_dims * 0.5f
+            );
+
+            // obtain projection.
+            float projection_coef = (v * (click_position - P)) / (slider->base_dims.x * slider->base_dims.x);
+            float bounded_coef = std::min(1.f, std::max(0.f, projection_coef));
+            int32_t new_index = std::lround(bounded_coef * static_cast<float>(slider->max_index));
+
+            if (clicking && (test || (this->last_clicking && this->id_selected == i))) {
+              selected = i;
+              slider->curr_index = new_index;
+              this->elems[i].state = GUIStateSelected;
+            } else if (test) {
+              this->elems[i].state = GUIStateObserverd;
+            } else {
+              this->elems[i].state = GUIStateQuiet;
+            }
+          }
+          break;
+
           default: break;
         }
       }
+
+      if (clicking && !this->last_clicking) {
+        this->id_selected = selected;
+      }
+      this->last_clicking = clicking;
     }
 
     // printing.
     void print () {
-      for (uint32_t i = 0; i < this->many; i++) {
+      for (int32_t i = 0; i < this->many; i++) {
         switch (this->elems[i].type) {
           case GUITypeButton: {
             Button* button = static_cast<Button*>(this->elems[i].ptr);
@@ -197,7 +249,7 @@ class GuiComponent {
     GuiElementType get_type(uint32_t pos) {
       return this->elems[pos].type;
     }
-    
+
     GuiElementState get_state(uint32_t pos) {
       return this->elems[pos].state;
     }
