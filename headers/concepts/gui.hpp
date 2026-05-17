@@ -6,10 +6,10 @@
 #include <iostream>
 
 enum GuiElementType {
-  GUIButtonType,
-  GUICheckBoxType,
-  GUITextBoxType,
-  GUISliderType
+  GUITypeButton,
+  GUITypeCheckBox,
+  GUITypeTextBox,
+  GUITypeSlider
 };
 
 enum GuiElementState {
@@ -65,7 +65,7 @@ struct Slider {
   std::function<void(Dir2)> sign_fn;
 
   Dir2 position, base_dims, sign_dims;
-  uint32_t index, max_index;
+  uint32_t curr_index, max_index;
   bool direction;
 };
 
@@ -87,34 +87,37 @@ class GuiComponent {
     }
 
     void add (Button* button) {
-      this->elems[many++] = {
+      this->elems[this->many] = GuiElement {
         .ptr = button, 
-        .type = GUIButtonType, 
+        .type = GUITypeButton, 
         .state = GUIStateQuiet
       };
+      this->many++;
     }
 
     void add (CheckBox* checkbox) {
-      this->elems[many++] = {
+      this->elems[this->many] = GuiElement {
         .ptr = checkbox, 
-        .type = GUICheckBoxType, 
+        .type = GUITypeCheckBox, 
         .state = GUIStateQuiet
       };
+      this->many++;
     }
 
     void add (Slider* slider) {
-      this->elems[many++] = {
+      this->elems[this->many] = GuiElement {
         .ptr = slider, 
-        .type = GUISliderType, 
+        .type = GUITypeSlider, 
         .state = GUIStateQuiet
       };
+      this->many++;
     }
 
     // iterating elements
     void test_selected (Dir2 click_position, bool clicking) {
       for (uint32_t i = 0; i < this->many; i++) {
         switch (this->elems[i].type) {
-          case GUIButtonType: {
+          case GUITypeButton: {
             Button* button = static_cast<Button*>(this->elems[i].ptr);
             bool test = test_point_inside_square(click_position, button->position + this->position, button->dims);
             if (clicking && test) {
@@ -126,7 +129,7 @@ class GuiComponent {
             }
           }
           break;
-          case GUICheckBoxType: {
+          case GUITypeCheckBox: {
             CheckBox* check = static_cast<CheckBox*>(this->elems[i].ptr);
             bool test = test_point_inside_square(click_position, check->position + this->position, check->dims);
             if (clicking && test) {
@@ -139,7 +142,6 @@ class GuiComponent {
               this->elems[i].state = GUIStateQuiet;
             }
             check->last_state = this->elems[i].state;
-            std::cout << this->elems[i].state << std::endl; // problema.
           }
           break;
           default: break;
@@ -151,7 +153,7 @@ class GuiComponent {
     void print () {
       for (uint32_t i = 0; i < this->many; i++) {
         switch (this->elems[i].type) {
-          case GUIButtonType: {
+          case GUITypeButton: {
             Button* button = static_cast<Button*>(this->elems[i].ptr);
             switch (this->elems[i].state) {
               case GUIStateSelected: 
@@ -166,12 +168,24 @@ class GuiComponent {
             }
           } 
           break;
-          case GUICheckBoxType: {
+          case GUITypeCheckBox: {
             CheckBox* check = static_cast<CheckBox*>(this->elems[i].ptr);
             if (check->active)
               check->active_fn(this->position + check->position); 
             else
               check->deactive_fn(this->position + check->position); 
+          }
+          break;
+          case GUITypeSlider: {
+            Slider* slider = static_cast<Slider*>(this->elems[i].ptr);
+            slider->base_fn(this->position + slider->position);
+
+            Dir2 delta = Dir2(slider->base_dims.x , 0.f);
+            Dir2 sign_pos = this->position + slider->position - delta * 0.5f;
+            float distance = 
+              static_cast<float>(slider->curr_index) / static_cast<float>(slider->max_index);
+
+            slider->sign_fn(sign_pos + delta * distance);
           }
           break;
           default: break;

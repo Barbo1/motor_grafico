@@ -24,6 +24,12 @@ const Visualizer<D2FIG> checkbox_activate =
   ImageModifier::chargePNG("../images/checkbox_activate.png")
   .resize(40, 40)
   .cast(glb);
+const Visualizer<D2FIG> slider_sign = 
+  ImageModifier::square(20, 6, SDL_Color {.r=200, .g=200, .b=200, .a=255})
+  .cast(glb);
+const Visualizer<D2FIG> slider_base = 
+  ImageModifier::square(4, 100, SDL_Color {.r=255, .g=0, .b=0, .a=255})
+  .cast(glb);
 
 void print_checkbox_deactivate(Dir2 pos) {
   checkbox_deactivate.draw(glb, pos);
@@ -31,6 +37,14 @@ void print_checkbox_deactivate(Dir2 pos) {
 
 void print_checkbox_activate(Dir2 pos) {
   checkbox_activate.draw(glb, pos);
+}
+
+void print_slider_base(Dir2 pos) {
+  slider_base.draw(glb, pos);
+}
+
+void print_slider_sign(Dir2 pos) {
+  slider_sign.draw(glb, pos);
 }
 
 int main () {
@@ -46,8 +60,20 @@ int main () {
     .last_state = GUIStateQuiet 
   };
 
-  GuiComponent<1> inicio = GuiComponent<1>(glb, &gs);
+  Slider slider_1 = Slider {
+    .base_fn = print_slider_base,
+    .sign_fn = print_slider_sign,
+    .position = Dir2(200.f, 300.f),
+    .base_dims = Dir2 (100.f, 4.f),
+    .sign_dims = Dir2(26.f, 20.f),
+    .curr_index = 0,
+    .max_index = 10,
+    .direction = false
+  };
+
+  GuiComponent<2> inicio = GuiComponent<2>(glb, &gs);
   inicio.add(&check);
+  inicio.add(&slider_1);
 
   /* Creacion de lineas de colision. */
   while (cont) {
