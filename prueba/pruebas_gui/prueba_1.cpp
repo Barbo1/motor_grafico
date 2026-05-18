@@ -24,11 +24,29 @@ const Visualizer<D2FIG> checkbox_activate =
   ImageModifier::chargePNG("../images/checkbox_activate.png")
   .resize(40, 40)
   .cast(glb);
+
 const Visualizer<D2FIG> slider_sign = 
   ImageModifier::square(20, 6, SDL_Color {.r=200, .g=200, .b=200, .a=255})
   .cast(glb);
 const Visualizer<D2FIG> slider_base = 
   ImageModifier::square(4, 100, SDL_Color {.r=255, .g=0, .b=0, .a=255})
+  .cast(glb);
+
+const Visualizer<D2FIG> slider_sign_2 = 
+  ImageModifier::square(6, 20, SDL_Color {.r=200, .g=200, .b=200, .a=255})
+  .cast(glb);
+const Visualizer<D2FIG> slider_base_2 = 
+  ImageModifier::square(100, 4, SDL_Color {.r=255, .g=0, .b=0, .a=255})
+  .cast(glb);
+
+const Visualizer<D2FIG> button_quiet = 
+  ImageModifier::square(20, 40, SDL_Color {.r=0, .g=0, .b=255, .a=255})
+  .cast(glb);
+const Visualizer<D2FIG> button_observed = 
+  ImageModifier::square(20, 40, SDL_Color {.r=255, .g=0, .b=0, .a=255})
+  .cast(glb);
+const Visualizer<D2FIG> button_selected = 
+  ImageModifier::square(20, 40, SDL_Color {.r=0, .g=255, .b=0, .a=255})
   .cast(glb);
 
 void print_checkbox_deactivate(Dir2 pos) {
@@ -47,33 +65,71 @@ void print_slider_sign(Dir2 pos) {
   slider_sign.draw(glb, pos);
 }
 
+void print_slider_base_2(Dir2 pos) {
+  slider_base_2.draw(glb, pos);
+}
+
+void print_slider_sign_2(Dir2 pos) {
+  slider_sign_2.draw(glb, pos);
+}
+
+void print_button_quiet(Dir2 pos) {
+  button_quiet.draw(glb, pos);
+}
+
+void print_button_observed(Dir2 pos) {
+  button_observed.draw(glb, pos);
+}
+
+void print_button_selected(Dir2 pos) {
+  button_selected.draw(glb, pos);
+}
+
 int main () {
   bool cont = true;
   SDL_Event event;
 
-  CheckBox check = CheckBox {
-    .active_fn = print_checkbox_activate, 
-    .deactive_fn = print_checkbox_deactivate,
-    .dims = Dir2(40.f, 40.f),
-    .position = Dir2(200.f, 200.f),
-    .active = false,
-    .last_state = GUIStateQuiet 
-  };
+  CheckBox check = CheckBox (
+    print_checkbox_activate, 
+    print_checkbox_deactivate,
+    Dir2(200.f, 200.f),
+    Dir2(40.f, 40.f),
+    false
+  );
 
-  Slider slider_1 = Slider {
-    .base_fn = print_slider_base,
-    .sign_fn = print_slider_sign,
-    .position = Dir2(200.f, 300.f),
-    .base_dims = Dir2 (100.f, 16.f),
-    .sign_dims = Dir2(6.f, 20.f),
-    .curr_index = 0,
-    .max_index = 10,
-    .direction = false
-  };
+  Slider slider_1 = Slider (
+    print_slider_base,
+    print_slider_sign,
+    Dir2(200.f, 300.f),
+    Dir2 (100.f, 16.f),
+    Dir2(6.f, 20.f),
+    1,
+    SliderDirectionX
+  );
+  
+  Slider slider_2 = Slider (
+    print_slider_base_2,
+    print_slider_sign_2,
+    Dir2(200.f, 400.f),
+    Dir2 (16.f, 100.f),
+    Dir2(20.f, 6.f),
+    6,
+    SliderDirectionY
+  );
 
-  GuiComponent<2> inicio = GuiComponent<2>(glb, &gs);
+  Button button = Button (
+    print_button_selected,
+    print_button_observed,
+    print_button_quiet,
+    Dir2(300.f, 200.f),
+    Dir2(40.f, 20.f)
+  );
+
+  GuiComponent<4> inicio = GuiComponent<4>(glb, &gs);
   inicio.add(&check);
   inicio.add(&slider_1);
+  inicio.add(&slider_2);
+  inicio.add(&button);
 
   /* Creacion de lineas de colision. */
   while (cont) {
@@ -103,8 +159,7 @@ int main () {
     }
     
     glb->begin_render();
-      inicio.test_selected(click_position, clicking);
-      std::cout << slider_1.curr_index << std::endl;
+      inicio.test(click_position, clicking);
       inicio.print();
     glb->end_render();
   } 
