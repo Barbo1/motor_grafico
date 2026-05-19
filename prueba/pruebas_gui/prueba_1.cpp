@@ -49,6 +49,10 @@ const Visualizer<D2FIG> button_selected =
   ImageModifier::square(20, 40, SDL_Color {.r=0, .g=255, .b=0, .a=255})
   .cast(glb);
 
+const Visualizer<D2FIG> textbox_background =
+  ImageModifier::square(20, 90, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
+  cast(glb);
+
 void print_checkbox_deactivate(Dir2 pos) {
   checkbox_deactivate.draw(glb, pos);
 }
@@ -83,6 +87,10 @@ void print_button_observed(Dir2 pos) {
 
 void print_button_selected(Dir2 pos) {
   button_selected.draw(glb, pos);
+}
+
+void print_texbox (Dir2 pos) {
+  textbox_background.draw(glb, pos);
 }
 
 int main () {
@@ -125,21 +133,37 @@ int main () {
     Dir2(40.f, 20.f)
   );
 
-  GuiComponent<4> inicio = GuiComponent<4>(glb, &gs);
+  TextBox textbox = TextBox (
+    print_texbox,
+    Dir2(400.f, 300.f),
+    Dir2(90.f, 20.f),
+    16,
+    SDL_Color {.r=255, .g=255, .b=255, .a=255},
+    15,
+    false
+  );
+
+  std::vector<SDL_KeyCode> keys = std::vector<SDL_KeyCode> {
+    SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, 
+    SDLK_i, SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, 
+    SDLK_q, SDLK_r, SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, 
+    SDLK_y, SDLK_z
+  };
+
+  GuiComponent<5> inicio = GuiComponent<5>(glb, &gs, keys, &error);
+  if (error != 0) {
+    std::cout << "there is a problem with the gui" << std::endl;
+    std::exit(-1);
+  }
+
   inicio.add(&check);
   inicio.add(&slider_1);
   inicio.add(&slider_2);
   inicio.add(&button);
+  inicio.add(&textbox);
 
   /* Creacion de lineas de colision. */
   while (cont) {
-    Dir2 click_position;
-    int x, y;
-    bool clicking;
-
-    uint32_t mask = SDL_GetMouseState(&x, &y);
-    clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
-    click_position = Dir2(x, y);
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {
@@ -159,7 +183,7 @@ int main () {
     }
     
     glb->begin_render();
-      inicio.test(click_position, clicking);
+      inicio.test();
       inicio.print();
     glb->end_render();
   } 

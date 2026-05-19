@@ -3,6 +3,7 @@
 #include <array>
 #include <functional>
 #include <cstdint>
+#include <bitset>
 #include <iostream>
 
 enum GuiElementType {
@@ -44,8 +45,7 @@ class Button {
     std::function<void(Dir2)> selected_fn;
     std::function<void(Dir2)> observed_fn;
     std::function<void(Dir2)> quiet_fn;
-    Dir2 position;
-    Dir2 dims;
+    Dir2 position, dims;
 
   public:
     Button (
@@ -71,11 +71,9 @@ class Button {
 
 class CheckBox {
   private:
-
     std::function<void(Dir2)> active_fn;
     std::function<void(Dir2)> deactive_fn;
-    Dir2 position;
-    Dir2 dims;
+    Dir2 position, dims;
     GuiElementState last_state = GuiElementState::GUIStateQuiet;
     bool active;
 
@@ -136,73 +134,167 @@ class Slider {
     template<std::size_t N> friend class GuiComponent;
 };
 
-struct TextBox {
-  std::function<void(Dir2)> background;
+class TextBox {
+  private:
+    std::function<void(Dir2)> background;
+    char* text;
+    Dir2 position, dims;
+    uint32_t letter_size, text_len, max_len, curr_pos;
+    uint32_t config;
+    SDL_Color letter_color;
 
-  std::string text;
-  Dir2 dims;
-  Dir2 position;
-  SDL_Color gs_color;
-  uint32_t gs_size;
+  public:
+    TextBox (
+      std::function<void(Dir2)> background,
+      Dir2 position, 
+      Dir2 dims,
+      uint32_t max_len,
+      SDL_Color letter_color,
+      uint32_t letter_size,
+      bool various_lines
+    ) noexcept;
+
+    ~TextBox();
+
+    void set_background_fn (std::function<void(Dir2)> fn);
+
+    Dir2 get_position() const;
+    void set_position(const Dir2&);
+
+    void set_dimentions (const Dir2&);
+    Dir2 get_dimentions () const;
+    
+    std::string get_text() const;
+    bool set_text(const std::string&);
+    bool set_cursor(uint32_t pos); // return true if the reposition was made.
+    uint32_t get_cursor();
+
+    template<std::size_t N> friend class GuiComponent;
 };
 
 
 template<std::size_t N>
 class GuiComponent {
   private:
-    const Global* glb;
-    const GlyphsSystem* gs;
+    Global* glb;
+    GlyphsSystem* gs;
+    const Uint8* key_array;
 
     // general data.
     std::array<GuiElement, N> elems;
     Dir2 position;
-    int32_t many;
+    int32_t many_elems;
 
-    // generating mutex.
+    // generating click mutex.
     int32_t id_selected;
     bool last_clicking;
 
+    // text input.
+    SDL_KeyCode admited_keys[128];
+    uint64_t pressed_keys[2];
+    uint32_t many_keys;
+
   public:
-    GuiComponent (const Global* glb, const GlyphsSystem* gs) {
-      this->glb = glb;
-      this->gs = gs;
-      this->many = 0;
-      this->last_clicking = false;
-      this->id_selected = -1;
+    GuiComponent (Global* glb, GlyphsSystem* gs, const std::vector<SDL_KeyCode>& possible_keys, int* error)
+      : glb(glb),
+        gs(gs),
+        key_array(SDL_GetKeyboardState(nullptr)), 
+        many_elems(0), 
+        id_selected(-1), 
+        last_clicking(false)
+    {
+      *error = -1;
+      if (possible_keys.size() > 128)
+        return;
+      for (uint32_t i = 0; i < possible_keys.size(); i++) {
+        SDL_KeyCode curr_char = possible_keys[i];
+        for (uint32_t j = i+1; j < possible_keys.size(); j++)
+          if (curr_char == possible_keys[j])
+            return;
+      }
+
+      *error = 0;
+      int s;
+      SDL_GetKeyboardState(&s);
+      this->many_keys = s = std::min(s, static_cast<int>(possible_keys.size()));
+      this->pressed_keys[0] = 0;
+      this->pressed_keys[1] = 0;
+      for (int32_t i = 0; i < s; i++)
+        this->admited_keys[i] = possible_keys[i];
     }
 
     void add (Button* button) {
-      this->elems[this->many] = GuiElement {
+      this->elems[this->many_elems] = GuiElement {
         .ptr = button, 
         .type = GUITypeButton, 
         .state = GUIStateQuiet
       };
-      this->many++;
+      this->many_elems++;
     }
 
     void add (CheckBox* checkbox) {
-      this->elems[this->many] = GuiElement {
+      this->elems[this->many_elems] = GuiElement {
         .ptr = checkbox, 
         .type = GUITypeCheckBox, 
         .state = GUIStateQuiet
       };
-      this->many++;
+      this->many_elems++;
     }
 
     void add (Slider* slider) {
-      this->elems[this->many] = GuiElement {
+      this->elems[this->many_elems] = GuiElement {
         .ptr = slider, 
         .type = GUITypeSlider, 
         .state = GUIStateQuiet
       };
-      this->many++;
+      this->many_elems++;
+    }
+
+    void add (TextBox* txtb) {
+      this->elems[this->many_elems] = GuiElement {
+        .ptr = txtb, 
+        .type = GUITypeTextBox, 
+        .state = GUIStateQuiet
+      };
+      this->many_elems++;
     }
 
     // iterating elements
-    void test (Dir2 click_position, bool clicking) {
+    void test () {
+      // obtain click position and test if click is pressed.
+      int x, y;
+      Dir2 click_position;
+      bool clicking;
+      uint32_t mask = SDL_GetMouseState(&x, &y);
+      clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
+      click_position = Dir2(x, y);
+
+      // process pressed keys.
+      SDL_Keymod mod = SDL_GetModState();
+      int upper = ((mod & KMOD_LSHIFT) || (mod & KMOD_RSHIFT)) ^ (mod & KMOD_CAPS);
+      uint64_t new_pressed_keys[2];
+      new_pressed_keys[0] = 0;
+      new_pressed_keys[1] = 0;
+      for (uint32_t i = 0; i < this->many_keys; i++) {
+        bool is_pressed = this->key_array[SDL_GetScancodeFromKey(this->admited_keys[i])];
+        uint32_t pos = i / 64;
+        new_pressed_keys[pos] |= static_cast<uint64_t>(is_pressed) << (i & 63);
+        if (is_pressed) {
+          char curr_char = *SDL_GetKeyName(this->admited_keys[i]);
+          if (!upper && 65 <= curr_char && 90 >= curr_char)
+            curr_char += 32;
+        }
+      }
+      uint64_t xor_pressed_keys[2] = {
+        (new_pressed_keys[0] ^ this->pressed_keys[0]) & new_pressed_keys[0], 
+        (new_pressed_keys[1] ^ this->pressed_keys[1]) & new_pressed_keys[1]
+      };
+      this->pressed_keys[0] = new_pressed_keys[0];
+      this->pressed_keys[1] = new_pressed_keys[1];
+
       int32_t selected = -1;
 
-      for (int32_t i = 0; i < this->many; i++) {
+      for (int32_t i = 0; i < this->many_elems; i++) {
         switch (this->elems[i].type) {
           case GUITypeButton: {
             Button* button = static_cast<Button*>(this->elems[i].ptr);
@@ -220,7 +312,11 @@ class GuiComponent {
 
           case GUITypeCheckBox: {
             CheckBox* check = static_cast<CheckBox*>(this->elems[i].ptr);
-            bool test = test_point_inside_square(click_position, check->position + this->position, check->dims * 0.5f);
+            bool test = test_point_inside_square(
+              click_position, 
+              check->position + this->position, 
+              check->dims * 0.5f
+            );
             if (clicking && test && !this->last_clicking) {
               selected = i;
               if (check->last_state != GUIStateSelected)
@@ -282,6 +378,38 @@ class GuiComponent {
           }
           break;
 
+          case GUITypeTextBox: {
+            TextBox* textbox = static_cast<TextBox*>(this->elems[i].ptr);
+            bool test = test_point_inside_square(
+              click_position, 
+              textbox->position + this->position, 
+              textbox->dims * 0.5f
+            );
+            
+            if ((this->id_selected == i && !clicking) || (clicking && test && !this->last_clicking)) {
+              selected = i;
+              this->elems[i].state = GUIStateSelected;
+
+              // response to key press.
+              for (uint32_t i = 0; i < this->many_keys; i++) {
+                bool is_pressed = xor_pressed_keys[i / 64] & (1ULL << (i & 63));
+                if (is_pressed && textbox->text_len < textbox->max_len) {
+                  char curr_char = *SDL_GetKeyName(this->admited_keys[i]);
+                  if (!upper && 65 <= curr_char && 90 >= curr_char)
+                    curr_char += 32;
+                  textbox->text[textbox->curr_pos] = curr_char;
+                  textbox->curr_pos++;
+                  textbox->text_len++;
+                }
+              }
+            } else if (test) {
+              this->elems[i].state = GUIStateObserverd;
+            } else {
+              this->elems[i].state = GUIStateQuiet;
+            }
+          }
+          break;
+
           default: break;
         }
       }
@@ -294,7 +422,7 @@ class GuiComponent {
 
     // printing.
     void print () {
-      for (int32_t i = 0; i < this->many; i++) {
+      for (int32_t i = 0; i < this->many_elems; i++) {
         switch (this->elems[i].type) {
           case GUITypeButton: {
             Button* button = static_cast<Button*>(this->elems[i].ptr);
@@ -339,6 +467,16 @@ class GuiComponent {
             slider->sign_fn(delta.madd(distance - 0.5f, aux));
           }
           break;
+          case GUITypeTextBox: {
+            TextBox* textbox = static_cast<TextBox*>(this->elems[i].ptr);
+            Dir2 aux = this->position + textbox->position;
+            textbox->background(aux);
+
+            Dir2 v = Dir2(textbox->dims.x, 0.f);
+            Dir2 P = v.nmadd(0.5f, aux);
+            this->gs->print(textbox->get_text(), textbox->letter_size, textbox->letter_color, P);
+          }
+          break;
           default: break;
         }
       }
@@ -355,6 +493,10 @@ class GuiComponent {
 
     void set_position(const Dir2& pos) {
       this->position = pos;
+    }
+
+    bool any_selected () {
+      return this->id_selected > -1;
     }
 
     Dir2 get_position() {

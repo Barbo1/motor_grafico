@@ -78,7 +78,7 @@ class GlyphsSystem {
     // state of the metadata.
     bool is_meta;
 
-    SDL_Surface* raster(char16_t, uint16_t, SDL_Color);
+    SDL_Surface* raster(char16_t, uint16_t, SDL_Color) const;
     static uint64_t get_key(char16_t, uint16_t, Uint32);
     
   public:
@@ -97,9 +97,10 @@ class GlyphsSystem {
      * */
     void print (char16_t, uint16_t, SDL_Color, Dir2);
     void print (std::u16string, uint16_t, SDL_Color, Dir2);
+    void print (std::string, uint16_t, SDL_Color, Dir2);
 
     /* test if a glyph is rasterized. */
-    bool is_cached (char16_t, uint16_t, SDL_Color);
+    bool is_cached (char16_t, uint16_t, SDL_Color) const;
     
     /* raster a particular letter. */
     void cache (char16_t, uint16_t, SDL_Color);

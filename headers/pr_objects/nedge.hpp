@@ -7,11 +7,7 @@
 #include "../concepts/image_modifier.hpp"
 
 #include <SDL2/SDL.h>
-#include <cstdint>
-#include <cstring>
-#include <cstdint>
 #include <codecvt>
-#include <array>
 
 class Circle;
 class Line;

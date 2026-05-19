@@ -1,5 +1,6 @@
 #include "../../../headers/concepts/glyph_system.hpp"
-#include <cstdint>
+#include <codecvt>
+#include <locale>
 
 void GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Dir2 position) {
   uint32_t w, h;
@@ -41,4 +42,9 @@ void GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Di
       };
     }
   }
+}
+
+void GlyphsSystem::print (std::string str, uint16_t size, SDL_Color color, Dir2 position) {
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
+  this->print(conv.from_bytes(str), size, color, position);
 }
