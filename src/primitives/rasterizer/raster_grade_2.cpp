@@ -320,7 +320,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       const Dir2 diff31r = P3.round () - P1.round ();
 
       // rule 1.
-      if (diff31r == Dir2 {})
+      if (diff31r == Dir2())
         continue;
 
       // rule 2.
@@ -330,7 +330,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
         Dir2 bv = P1 - P2;
         float t_bound = bv.y / av.y;
         float yim = av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y;
-        this_component_is_hl = P1.round().y == yim && P3.round().y == yim;
+        this_component_is_hl &= P1.round().y == yim;
       }
 
       // rule 3.
@@ -339,7 +339,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       } else if (this_component_is_hl) {
         filtered_elements.push_back (ComponentElement {
           .start = P1,
-          .middle = Dir2 {},
+          .middle = Dir2(),
           .end = P3,
           .t = ComponentElementType::LINE
         });
@@ -350,7 +350,6 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
           .end = P3,
           .t = elem.t
         });
-
       }
 
       last_component_was_hl = this_component_is_hl;
@@ -359,8 +358,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     // last iteration for the last and first elements.
     const auto last_elem = filtered_elements.back ();
     auto& first_elem = filtered_elements[0];
-    const float diff = (first_elem.start.round () - last_elem.start.round ()).y;
-    if (is_horizontal_line (first_elem) && is_horizontal_line (last_elem) && diff == 0.f) {
+    if (is_horizontal_line (first_elem) && is_horizontal_line (last_elem)) {
       first_elem.start = last_elem.start;
       filtered_elements.pop_back ();
     }
@@ -371,9 +369,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     std::size_t pos = 0;
     while ((elem.start.round() - elem.end.round()).y == 0.f && pos < many) {
       std::size_t i = 0;
-      for (; i < filtered_elements.size()-1; i++) {
+      for (; i < filtered_elements.size()-1; i++)
         filtered_elements[i] = filtered_elements[i+1];
-      }
       filtered_elements[i] = elem;
       elem = filtered_elements[0];
       pos++;
@@ -385,6 +382,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     // drawing the component inside the BoolMatrix.
     float prev_direction = get_prev_direction(filtered_elements.back ());
     float next_direction = get_next_direction(filtered_elements [1]);
+    pos = 0;
     for (const auto& elem: filtered_elements) {
       switch (elem.t) {
         case ComponentElementType::CURVE:

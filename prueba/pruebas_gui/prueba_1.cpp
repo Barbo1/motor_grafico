@@ -50,7 +50,7 @@ const Visualizer<D2FIG> button_selected =
   .cast(glb);
 
 const Visualizer<D2FIG> textbox_background =
-  ImageModifier::square(20, 90, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
+  ImageModifier::square(50, 90, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
   cast(glb);
 
 void print_checkbox_deactivate(Dir2 pos) {
@@ -136,10 +136,10 @@ int main () {
   TextBox textbox = TextBox (
     print_texbox,
     Dir2(400.f, 300.f),
-    Dir2(90.f, 20.f),
+    Dir2(90.f, 50.f),
     16,
     SDL_Color {.r=255, .g=255, .b=255, .a=255},
-    15,
+    40,
     false
   );
 

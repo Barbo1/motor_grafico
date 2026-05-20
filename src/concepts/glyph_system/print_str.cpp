@@ -31,6 +31,7 @@ void GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Di
       const ttf_glyph_data& data = this->glyphs[pos];
       SDL_Rect dst;
       dst.x = std::fmaf (data.left_bearing, sizef, position.x);
+      // dst.y = position.y - sizef * this->line_height * 0.5f; 
       dst.y = std::lround(data.bounding_box.second.nmadd(sizef, position).y); 
       dst.w = w;
       dst.h = h;

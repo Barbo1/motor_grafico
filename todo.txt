@@ -67,26 +67,6 @@
  |V| - cambiar el formato de las lineas para que queden definidas por:
         + un punto(por el que pasa),
         + un vector(que apunta a su direccion).
- | | - implementar los poligonos con colisiones:
-        |V| + testeo.
-        | | + reposicion.
-        | | + resolucion.
-        | | + punto de colision.
- | | - cambiar modelo de iluminación:
-        | | + en vez de guardarse los lugares donde hay sombra, deberian guardarse los lugares con iluminacion. 
-                Esto permite que se obtengan los lugares por lo que pasa la luz para poder recorrerlos mediante 
-                una linea de rasterización, para poder calcular la luz de cada pixel dentro de la imagen. Mas 
-                aun, es posible utilizar todas las luces posibles para generar una unica mascara de luz, lo cual 
-                mejora todo el sistema luminico, primero por la gran cantidad de memoria que ahorra por todas las 
-                imagenes por separado, y luego por la necesidad excesiba de computo, no solo para llenar las 
-                imagenes, sino tambien para concatenarlas. Por lo tanto, se deberia construir el volumen de 
-                iluminacion, que consiste en un polinomio que recorre todos los pixeles iluminados. La iluminacion
-                ambiental se deberia pasar por parametro para el algoritmo.
-        | | + desde este punto de vista, las luces estaticas deberian generarse mediante la construccion del 
-                volumen de iluminacion, que se guardarían relacionados con la luz en particular.
-        | | + view covering para un circulo, linea y square,
-        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
-        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
  | | - implementar Button, CheckBox, TextBox, Slider, TextInput, ScrollPane, Selecter.
       + todos los objetos tienen una hitbox asociadas, dependiendo del objeto considerado,
           mediante las cuales se puede generar el cambio de estado entre ellos. 
@@ -104,25 +84,20 @@
           Los elementos pueden tener menor
           cantidad de modos de manera visual, pero operacionalmente todos tienen los 3 estados.
       + se considera un clickeo como la operacion de precionar el boton izquierdo del mouse.
-      | | - Button: su funcion es poder ser presionado mediante el puntero y testear su modo. 
+      |V| - Button: su funcion es poder ser presionado mediante el puntero y testear su modo. 
               Tiene una hitbox cuadrada, y se crea mediante sus dos dimensiones y sus imagenes 
               para los modos Quiet, Hover y Selected.
           + tienen 3 modos visuales: 
             | Quiet: el puntero no colisiona con sus hitboxes, 
             | Hover: el puntero colisiona, pero no fue clckeado, 
             | Selected: el puntero colisiona y se mantiene el click presionado.
-      | | - CheckBox: sirve para setear un estado en particular. Tiene una hitbox cuadrada, y
+      |V| - CheckBox: sirve para setear un estado en particular. Tiene una hitbox cuadrada, y
               se contruye mediante sus dimensiones(un numero debido a que es un cuadrado) y 
               sus imagenes para los dos estados Active y Deactive.
           + tiene 2 modos visuales:
             | Active: esta activo,
             | Deactive: esta desactivado
-      | | - TextBox: puede mostrar un texto. Es creado pasandole como parametro sus dimensiones,
-              la imagen del fondo del TextBox, el tamaño y color de los glyphs, un GlyphSystem, 
-              la alineacion del texto (to the left and centered). No tiene hitbox debido a que no 
-              es necesaria una interaccion directa con el. Tiene un metodo 'void Write(std::string_view)' 
-              para poder escribir su contenido y otro 'std::string_view Read()' para leerlo.
-      | | - Slider: tiene la capacidad de poder seleccionar entre muchos estados.
+      |V| - Slider: tiene la capacidad de poder seleccionar entre muchos estados.
           + Consiste en tres partes:
             | Sign: El objeto visual que muestra el valor del Slider,
             | Base: la region lineal en la que se mueve el Position, que representa todos los 
@@ -138,15 +113,21 @@
               se mueve el scroll cuando el puntero esta encima del slider, se movera el Position hacia
               el mismo lado que el scroll. Es posible setear el valor de la posicion mediante la 
               function 'void SetValue(uint32_t)'.
-      | | - TextInput: es una clase template que toma por argumento el largo de los textos que
+      | | - TextBox: es una clase template que toma por argumento el largo de los textos que
               puede aceptar. Para ser creado se le pasa por parametro sus dimensiones, el color y
               tamaño de letra, su imagen y un GlyphSystem. 
-          + tiene 2 modos visuales:
-            | Active: esta preparado para escribir,
-            | Deactive: no se puede escribir.
-    A base de estos, deberian poder ser implementados los siguientes objetos:
+      | | - Label: puede mostrar un texto. Es creado pasandole como parametro sus dimensiones,
+              la imagen del fondo del TextBox, el tamaño y color de los glyphs, un GlyphSystem, 
+              la alineacion del texto (to the left and centered). No tiene hitbox debido a que no 
+              es necesaria una interaccion directa con el. Tiene un metodo 'void Write(std::string_view)' 
+              para poder escribir su contenido y otro 'std::string_view Read()' para leerlo.
       | | - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
               cada una con un string que representa el significado.
+ | | - implementar los poligonos con colisiones:
+        |V| + testeo.
+        | | + reposicion.
+        | | + resolucion.
+        | | + punto de colision.
  | | - agregar una comprobacion de punteros nullos cada vez que se hace un new.
  | | - falta implementar: 
         | | + la funcion project de image_modifier, y la function de print polygon,
@@ -169,6 +150,21 @@
         + imagenes continuas(Visualizer<D2CON>) y,
         + imagenes continuas con mapeo(Visualizer<D2MAP>).
  | | - agregar utilizacion de audios.
+ | | - cambiar modelo de iluminación:
+        | | + en vez de guardarse los lugares donde hay sombra, deberian guardarse los lugares con iluminacion. 
+                Esto permite que se obtengan los lugares por lo que pasa la luz para poder recorrerlos mediante 
+                una linea de rasterización, para poder calcular la luz de cada pixel dentro de la imagen. Mas 
+                aun, es posible utilizar todas las luces posibles para generar una unica mascara de luz, lo cual 
+                mejora todo el sistema luminico, primero por la gran cantidad de memoria que ahorra por todas las 
+                imagenes por separado, y luego por la necesidad excesiba de computo, no solo para llenar las 
+                imagenes, sino tambien para concatenarlas. Por lo tanto, se deberia construir el volumen de 
+                iluminacion, que consiste en un polinomio que recorre todos los pixeles iluminados. La iluminacion
+                ambiental se deberia pasar por parametro para el algoritmo.
+        | | + desde este punto de vista, las luces estaticas deberian generarse mediante la construccion del 
+                volumen de iluminacion, que se guardarían relacionados con la luz en particular.
+        | | + view covering para un circulo, linea y square,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
  | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
         mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
         | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 

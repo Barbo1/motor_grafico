@@ -1,5 +1,6 @@
 #include "../concepts/glyph_system.hpp"
 
+#include <SDL2/SDL_render.h>
 #include <array>
 #include <functional>
 #include <cstdint>
@@ -472,8 +473,10 @@ class GuiComponent {
             Dir2 aux = this->position + textbox->position;
             textbox->background(aux);
 
-            Dir2 v = Dir2(textbox->dims.x, 0.f);
-            Dir2 P = v.nmadd(0.5f, aux);
+            Dir2 v = Dir2 (-textbox->dims.x, 0.f);
+            Dir2 P = v.madd(0.5f, aux);
+            SDL_SetRenderDrawColor(this->glb->get_render(), 255, 255, 255, 255);
+            SDL_RenderDrawPoint(this->glb->get_render(), P.x, P.y);
             this->gs->print(textbox->get_text(), textbox->letter_size, textbox->letter_color, P);
           }
           break;

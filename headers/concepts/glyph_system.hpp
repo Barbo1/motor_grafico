@@ -73,7 +73,7 @@ class GlyphsSystem {
     std::map<char16_t, uint16_t> mapping;
     std::vector<ttf_glyph_data> glyphs;
     uint32_t max_points, max_component_depth;
-    float inv_units_per_em_f;
+    float inv_units_per_em_f, line_height;
 
     // state of the metadata.
     bool is_meta;
