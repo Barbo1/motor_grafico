@@ -1,6 +1,8 @@
 #include "../concepts/glyph_system.hpp"
+#include "../concepts/visualizer.hpp"
 
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_scancode.h>
 #include <array>
 #include <functional>
 #include <cstdint>
@@ -137,15 +139,24 @@ class Slider {
 
 class TextBox {
   private:
+    GlyphsSystem* gs;
     std::function<void(Dir2)> background;
+    Visualizer<D2FIG> cursor_image;
     char* text;
     Dir2 position, dims;
-    uint32_t letter_size, text_len, max_len, curr_pos;
-    uint32_t config;
+    uint32_t 
+      letter_size, 
+      text_len, 
+      max_len, 
+      curr_pos, 
+      cursor_dev, 
+      config;
     SDL_Color letter_color;
 
   public:
     TextBox (
+      Global* glb,
+      GlyphsSystem* gs,
       std::function<void(Dir2)> background,
       Dir2 position, 
       Dir2 dims,
@@ -178,7 +189,6 @@ template<std::size_t N>
 class GuiComponent {
   private:
     Global* glb;
-    GlyphsSystem* gs;
     const Uint8* key_array;
 
     // general data.
@@ -191,15 +201,15 @@ class GuiComponent {
     bool last_clicking;
 
     // text input.
-    SDL_KeyCode admited_keys[128];
+    SDL_Scancode admited_keys[128];
     uint64_t pressed_keys[2];
     uint32_t many_keys;
 
   public:
-    GuiComponent (Global* glb, GlyphsSystem* gs, const std::vector<SDL_KeyCode>& possible_keys, int* error)
+    GuiComponent (Global* glb, const std::vector<SDL_Scancode>& possible_keys, int* error)
       : glb(glb),
-        gs(gs),
         key_array(SDL_GetKeyboardState(nullptr)), 
+        position(Dir2()),
         many_elems(0), 
         id_selected(-1), 
         last_clicking(false)
@@ -208,7 +218,7 @@ class GuiComponent {
       if (possible_keys.size() > 128)
         return;
       for (uint32_t i = 0; i < possible_keys.size(); i++) {
-        SDL_KeyCode curr_char = possible_keys[i];
+        SDL_Scancode curr_char = possible_keys[i];
         for (uint32_t j = i+1; j < possible_keys.size(); j++)
           if (curr_char == possible_keys[j])
             return;
@@ -277,11 +287,11 @@ class GuiComponent {
       new_pressed_keys[0] = 0;
       new_pressed_keys[1] = 0;
       for (uint32_t i = 0; i < this->many_keys; i++) {
-        bool is_pressed = this->key_array[SDL_GetScancodeFromKey(this->admited_keys[i])];
+        bool is_pressed = this->key_array[this->admited_keys[i]];
         uint32_t pos = i / 64;
         new_pressed_keys[pos] |= static_cast<uint64_t>(is_pressed) << (i & 63);
         if (is_pressed) {
-          char curr_char = *SDL_GetKeyName(this->admited_keys[i]);
+          char curr_char = *SDL_GetScancodeName(this->admited_keys[i]);
           if (!upper && 65 <= curr_char && 90 >= curr_char)
             curr_char += 32;
         }
@@ -394,13 +404,41 @@ class GuiComponent {
               // response to key press.
               for (uint32_t i = 0; i < this->many_keys; i++) {
                 bool is_pressed = xor_pressed_keys[i / 64] & (1ULL << (i & 63));
-                if (is_pressed && textbox->text_len < textbox->max_len) {
-                  char curr_char = *SDL_GetKeyName(this->admited_keys[i]);
-                  if (!upper && 65 <= curr_char && 90 >= curr_char)
-                    curr_char += 32;
-                  textbox->text[textbox->curr_pos] = curr_char;
-                  textbox->curr_pos++;
-                  textbox->text_len++;
+                if (is_pressed) {
+                  switch (this->admited_keys[i]) {
+                    case SDL_SCANCODE_RIGHT:
+                      if (textbox->curr_pos < textbox->text_len)
+                        textbox->curr_pos++;
+                      break;
+                    case SDL_SCANCODE_LEFT:
+                      if (0 < textbox->curr_pos)
+                        textbox->curr_pos--;
+                      break;
+                    case SDL_SCANCODE_BACKSPACE:
+                      if (0 < textbox->text_len && 0 < textbox->curr_pos) {
+                        textbox->curr_pos--;
+                        textbox->text_len--;
+                      }
+                      break;
+                    case SDL_SCANCODE_SPACE:
+                      if (textbox->text_len < textbox->max_len) {
+                        textbox->text[textbox->curr_pos] = ' ';
+                        if (textbox->text_len == textbox->curr_pos)
+                          textbox->text_len++;
+                        textbox->curr_pos++;
+                      }
+                      break;
+                    default:
+                      if (textbox->text_len < textbox->max_len) {
+                        char curr_char = *SDL_GetScancodeName(this->admited_keys[i]);
+                        if (!upper && 65 <= curr_char && 90 >= curr_char)
+                          curr_char += 32;
+                        textbox->text[textbox->curr_pos] = curr_char;
+                        if (textbox->text_len == textbox->curr_pos)
+                          textbox->text_len++;
+                        textbox->curr_pos++;
+                      }
+                  }
                 }
               }
             } else if (test) {
@@ -475,9 +513,16 @@ class GuiComponent {
 
             Dir2 v = Dir2 (-textbox->dims.x, 0.f);
             Dir2 P = v.madd(0.5f, aux);
-            SDL_SetRenderDrawColor(this->glb->get_render(), 255, 255, 255, 255);
-            SDL_RenderDrawPoint(this->glb->get_render(), P.x, P.y);
-            this->gs->print(textbox->get_text(), textbox->letter_size, textbox->letter_color, P);
+            std::string str = textbox->get_text();
+            textbox->gs->print(
+              str, 
+              textbox->letter_size, 
+              textbox->letter_color, 
+              P
+            );
+
+            uint32_t total_length = textbox->gs->get_length(str, textbox->curr_pos, textbox->letter_size);
+            textbox->cursor_image.draw(this->glb, P + Dir2(total_length + 2 * textbox->cursor_dev, 0.f));
           }
           break;
           default: break;

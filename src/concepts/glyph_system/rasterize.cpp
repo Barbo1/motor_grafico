@@ -7,22 +7,18 @@
 #include <iostream>
 #include <variant>
 
-static Dir2 resposition (const Dir2& vec, const Dir2& min, const Dir2& dims_resposition, const float& sizef) {
-  Dir2 p = (vec - min) * sizef;
-  p.y = (dims_resposition - p).y;
-  return p;
+static inline void resposition (Dir2& vec, const Dir2& min, const Dir2& dims_resposition, const float& sizef) {
+  vec = vec.msub(sizef, min);
+  vec.y = (dims_resposition - vec).y;
 }
 
 static Dir2 get_mn (Dir2 m1, Dir2 m2) {
-  float abs_a = std::abs (m1.x);
-  float abs_b = std::abs (m2.x);
-  float abs_c = std::abs (m1.y);
-  float abs_d = std::abs (m2.y);
-  float m_0 = std::max (abs_a, abs_b);
-  float n_0 = std::max (abs_c, abs_d);
+  m1 = m1.abs();
+  m2 = m2.abs();
+  Dir2 mmax = Dir2(_mm_max_ps(m1.v, m2.v));
   return Dir2 (
-    (std::abs(abs_a - abs_c) <= 33.f / 65536.f ? 2.f : 1.f) * m_0,
-    (std::abs(abs_b - abs_d) <= 33.f / 65536.f ? 2.f : 1.f) * n_0  
+    (std::abs(m1.x - m1.y) <= 33.f / 65536.f ? 2.f : 1.f) * mmax.x,
+    (std::abs(m2.x - m2.y) <= 33.f / 65536.f ? 2.f : 1.f) * mmax.y  
   );
 }
 
@@ -193,9 +189,9 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint16_t s, SDL_Color col
 
   float sizef = static_cast<float>(s);
   uint32_t glyph_index = founded->second;
-  Dir2 min = this->glyphs[glyph_index].bounding_box.first - Dir2 (0.1f, 0.1f);
-  Dir2 max = this->glyphs[glyph_index].bounding_box.second + Dir2 (0.1f, 0.1f);
-  Dir2 dims_resposition = (max - min) * sizef;
+  Dir2 min = (this->glyphs[glyph_index].bounding_box.first - Dir2 (0.1f, 0.1f)) * sizef;
+  Dir2 max = (this->glyphs[glyph_index].bounding_box.second + Dir2 (0.1f, 0.1f)) * sizef;
+  Dir2 dims_resposition = max - min;
 
   std::vector<std::vector<std::vector<ComponentElement>>> parts;
   
@@ -286,9 +282,9 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint16_t s, SDL_Color col
   for (auto& glyph: parts) {
     for (auto& line: glyph) {
       for (auto& component: line) {
-        component.start = resposition (component.start, min, dims_resposition, sizef);
-        component.middle = resposition (component.middle, min, dims_resposition, sizef);
-        component.end = resposition (component.end, min, dims_resposition, sizef);
+        resposition (component.start, min, dims_resposition, sizef);
+        resposition (component.middle, min, dims_resposition, sizef);
+        resposition (component.end, min, dims_resposition, sizef);
       } 
     } 
   }
@@ -298,7 +294,8 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint16_t s, SDL_Color col
   for (const auto& components: parts) {
     SDL_Surface* aux = raster_grade_2(
       components, 
-      min * sizef, max * sizef, 
+      min, 
+      max, 
       color, 
       AntiAliasingType::AAx16
     );

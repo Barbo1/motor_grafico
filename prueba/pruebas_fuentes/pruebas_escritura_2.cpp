@@ -25,7 +25,7 @@ int main () {
     Aloevera-OVoWO
     TrenchThin-aZ1J
   */
-  std::string path = "../fuentes_letras/Aloevera-OVoWO.ttf";
+  std::string path = "../fuentes_letras/Nostard-Medium.ttf";
   GlyphsSystem gs (glb, path, &error);
   if (error != 0) {
     std::exit (-1);

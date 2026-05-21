@@ -6,15 +6,25 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
-#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
-  
+
 Global* glb = Global::create("Ventana", 600, 800, SDL_Color {30, 30, 30, 0});
 
 int error;
 GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+
+const std::vector<SDL_Scancode> keys = std::vector<SDL_Scancode> {
+  SDL_SCANCODE_A, SDL_SCANCODE_B, SDL_SCANCODE_C, SDL_SCANCODE_D,
+  SDL_SCANCODE_E, SDL_SCANCODE_F, SDL_SCANCODE_G, SDL_SCANCODE_H,
+  SDL_SCANCODE_I, SDL_SCANCODE_J, SDL_SCANCODE_K, SDL_SCANCODE_L,
+  SDL_SCANCODE_M, SDL_SCANCODE_N, SDL_SCANCODE_O, SDL_SCANCODE_P,
+  SDL_SCANCODE_Q, SDL_SCANCODE_R, SDL_SCANCODE_S, SDL_SCANCODE_T,
+  SDL_SCANCODE_U, SDL_SCANCODE_V, SDL_SCANCODE_W, SDL_SCANCODE_X,
+  SDL_SCANCODE_Y, SDL_SCANCODE_Z, SDL_SCANCODE_SPACE, SDL_SCANCODE_BACKSPACE,
+  SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT
+};
 
 const Visualizer<D2FIG> checkbox_deactivate = 
   ImageModifier::chargePNG("../images/checkbox_deactivate.png")
@@ -50,7 +60,7 @@ const Visualizer<D2FIG> button_selected =
   .cast(glb);
 
 const Visualizer<D2FIG> textbox_background =
-  ImageModifier::square(50, 90, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
+  ImageModifier::square(80, 90, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
   cast(glb);
 
 void print_checkbox_deactivate(Dir2 pos) {
@@ -134,23 +144,18 @@ int main () {
   );
 
   TextBox textbox = TextBox (
+    glb,
+    &gs,
     print_texbox,
     Dir2(400.f, 300.f),
-    Dir2(90.f, 50.f),
-    16,
+    Dir2(90.f, 80.f),
+    15,
     SDL_Color {.r=255, .g=255, .b=255, .a=255},
     40,
     false
   );
 
-  std::vector<SDL_KeyCode> keys = std::vector<SDL_KeyCode> {
-    SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, 
-    SDLK_i, SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, 
-    SDLK_q, SDLK_r, SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, 
-    SDLK_y, SDLK_z
-  };
-
-  GuiComponent<5> inicio = GuiComponent<5>(glb, &gs, keys, &error);
+  GuiComponent<5> inicio = GuiComponent<5>(glb, keys, &error);
   if (error != 0) {
     std::cout << "there is a problem with the gui" << std::endl;
     std::exit(-1);

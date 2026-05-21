@@ -2,8 +2,8 @@
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 
-void GlyphsSystem::print (char16_t character, uint16_t size, SDL_Color color, Dir2 position) {
-  uint32_t w, h;
+uint32_t GlyphsSystem::print (char16_t character, uint16_t size, SDL_Color color, Dir2 position) {
+  uint32_t w = 0, h;
   SDL_Texture* tex = nullptr;
   Uint32 colori = ((Uint32)color.r << 24) & ((Uint32)color.g << 16) & ((Uint32)color.b << 8) & (Uint32)color.a;
 
@@ -24,6 +24,12 @@ void GlyphsSystem::print (char16_t character, uint16_t size, SDL_Color color, Di
 
     SDL_FreeSurface (sur);
   }
+  uint16_t pos = this->mapping[character];
+  float coord = (
+    pos < this->advance_widths.size () ? 
+      this->advance_widths[pos] : 
+      this->advance_widths.back()
+  ) * static_cast<float>(size);
 
   if (tex != nullptr) {
     SDL_Rect dst;
@@ -34,5 +40,5 @@ void GlyphsSystem::print (char16_t character, uint16_t size, SDL_Color color, Di
     SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);
   }
 
-  return;
+  return coord;
 }

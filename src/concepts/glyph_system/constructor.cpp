@@ -431,15 +431,15 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     *error = -3;
     return;
   }
-  float ascent = u16tof(file.read16()) * inv_units_per_em_f;
-  float descent = u16tof(file.read16()) * inv_units_per_em_f;
+  this->ascent = u16tof(file.read16()) * inv_units_per_em_f;
+  this->descent = u16tof(file.read16()) * inv_units_per_em_f;
   float line_gap = u16tof(file.read16()) * inv_units_per_em_f;
-  this->line_height = ascent - descent + line_gap;
+  this->line_height = this->ascent - this->descent;
   uint16_t advance_width_max = file.read16 ();
   int16_t min_left_side_bearing = std::bit_cast<int16_t>(file.read16 ());
   int16_t min_right_side_bearing = std::bit_cast<int16_t>(file.read16 ());
 
-  min_right_side_bearing += min_right_side_bearing + min_left_side_bearing + advance_width_max;
+  min_right_side_bearing += min_right_side_bearing + min_left_side_bearing + advance_width_max + line_gap;
 
   file.read64 ();
   if (file.read64 () != 0 || file.read16 () != 0) {

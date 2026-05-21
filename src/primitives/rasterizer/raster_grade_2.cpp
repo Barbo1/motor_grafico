@@ -204,8 +204,7 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
 
   uint64_t prev_point_disapears, next_point_disapears, mid_point_dissapears;
   get_directions_for_quad (
-    P1, P2, P3, 
-    prev_direction, next_direction, 
+    P1, P2, P3, prev_direction, next_direction, 
     prev_point_disapears, next_point_disapears, mid_point_dissapears
   );
 
@@ -248,6 +247,7 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
         bzc2 |= BezierConfig::PrintDIR;
       }
     } else {
+      yim = (P1ry + P3ry) >> 1;
       if (cond.y == 0.f) {
         if (cond.x != 0.f && prev_direction * next_direction > 0.f)
           bound.change (P1ry, P1rx, 0ULL);
@@ -258,11 +258,9 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
         return;
       } else if (0.f < cond.y) {
         bzc1 |= BezierConfig::PrintDIR;
-        yim = (P1ry + P3ry) >> 1;
         yim2 = yim + 1;
       } else if (cond.y < 0.f) {
         bzc2 |= BezierConfig::PrintDIR;
-        yim = (P1ry + P3ry) >> 1;
         yim2 = yim - 1;
       }
     }
@@ -288,7 +286,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     case AAx16: antialias_multiplier = 16.f; break;
     default: antialias_multiplier = 1.f;
   }
-
+    
   // calculating dimensions of the image and matrix.
   Dir2 dims_l = max - min;
   Dir2 dims = dims_l.madd (antialias_multiplier, Dir2{16.f, 16.f});
@@ -326,10 +324,10 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       // rule 2.
       bool this_component_is_hl = diff31r.y == 0.f;
       if (elem.t == ComponentElementType::CURVE) {
-        Dir2 av = P3 + P1 - P2 * 2.f;
-        Dir2 bv = P1 - P2;
-        float t_bound = bv.y / av.y;
-        float yim = av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y;
+        const Dir2 av = P3 + P1 - P2 * 2.f;
+        const Dir2 bv = P1 - P2;
+        const float t_bound = bv.y / av.y;
+        const float yim = av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y;
         this_component_is_hl &= P1.round().y == yim;
       }
 
@@ -365,25 +363,20 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
 
     // iterating over the array until found some element with y difference greater than 0.
     auto elem = filtered_elements[0];
-    std::size_t many = filtered_elements.size ();
+    const std::size_t many = filtered_elements.size ();
     std::size_t pos = 0;
-    while ((elem.start.round() - elem.end.round()).y == 0.f && pos < many) {
-      std::size_t i = 0;
-      for (; i < filtered_elements.size()-1; i++)
-        filtered_elements[i] = filtered_elements[i+1];
-      filtered_elements[i] = elem;
-      elem = filtered_elements[0];
-      pos++;
-    }
+    while ((elem.start.round() - elem.end.round()).y == 0.f && elem.t == ComponentElementType::LINE && pos < many)
+      elem = filtered_elements[++pos];
 
+    // assuming that no glyph can be compound only on straight lines.
     if (pos == many)
       return nullptr;
 
     // drawing the component inside the BoolMatrix.
-    float prev_direction = get_prev_direction(filtered_elements.back ());
-    float next_direction = get_next_direction(filtered_elements [1]);
-    pos = 0;
-    for (const auto& elem: filtered_elements) {
+    float prev_direction = get_prev_direction(filtered_elements [(many + pos - 1) % many]);
+    float next_direction = get_next_direction(filtered_elements [(pos + 1) % many]);
+    for (uint32_t k = 0; k < many; k++) {
+      const auto& elem = filtered_elements[pos];
       switch (elem.t) {
         case ComponentElementType::CURVE:
           draw_quad_bezier (
@@ -405,8 +398,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
           );
           break;
       }
-      pos++;
-      prev_direction = get_prev_direction(filtered_elements [pos - 1]);
+      pos = (pos + 1) % many;
+      prev_direction = get_prev_direction(filtered_elements [(many + pos - 1) % many]);
       next_direction = get_next_direction(filtered_elements [(pos + 1) % many]);
     }
   }

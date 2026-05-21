@@ -73,7 +73,7 @@ class GlyphsSystem {
     std::map<char16_t, uint16_t> mapping;
     std::vector<ttf_glyph_data> glyphs;
     uint32_t max_points, max_component_depth;
-    float inv_units_per_em_f, line_height;
+    float inv_units_per_em_f, ascent, descent, line_height;
 
     // state of the metadata.
     bool is_meta;
@@ -95,9 +95,9 @@ class GlyphsSystem {
     /* functions meant to print a letter or string, in the screen, on a specified 
      * position. 
      * */
-    void print (char16_t, uint16_t, SDL_Color, Dir2);
-    void print (std::u16string, uint16_t, SDL_Color, Dir2);
-    void print (std::string, uint16_t, SDL_Color, Dir2);
+    uint32_t print (char16_t, uint16_t, SDL_Color, Dir2);
+    uint32_t print (std::u16string, uint16_t, SDL_Color, Dir2);
+    uint32_t print (std::string, uint16_t, SDL_Color, Dir2);
 
     /* test if a glyph is rasterized. */
     bool is_cached (char16_t, uint16_t, SDL_Color) const;
@@ -117,4 +117,9 @@ class GlyphsSystem {
      * impossible to raster new ones. 
      * */
     void clear_meta ();
+
+    float get_ascent (float) const;
+    float get_descent (float) const;
+    uint32_t get_length (std::u16string, uint32_t, float);
+    uint32_t get_length (std::string, uint32_t, float);
 };

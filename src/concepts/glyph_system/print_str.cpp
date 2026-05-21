@@ -1,9 +1,11 @@
 #include "../../../headers/concepts/glyph_system.hpp"
 #include <codecvt>
+#include <cstdint>
 #include <locale>
 
-void GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Dir2 position) {
+uint32_t GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Dir2 position) {
   uint32_t w, h;
+  float total_length = 0.f;
   float sizef = static_cast<float>(size);
   Uint32 colori = ((Uint32)color.r << 24) & ((Uint32)color.g << 16) & ((Uint32)color.b << 8) & (Uint32)color.a;
   for (const char16_t& character: str) {
@@ -24,28 +26,39 @@ void GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Di
       this->cached_glyphs.insert ({key, TTFCachedGlyphInfo {tex, w, h}});
 
       SDL_FreeSurface (sur);
-    }
+    } else w = 0;
 
     if (tex != nullptr) {
       uint16_t pos = this->mapping[character];
       const ttf_glyph_data& data = this->glyphs[pos];
       SDL_Rect dst;
       dst.x = std::fmaf (data.left_bearing, sizef, position.x);
-      // dst.y = position.y - sizef * this->line_height * 0.5f; 
-      dst.y = std::lround(data.bounding_box.second.nmadd(sizef, position).y); 
+      
+      dst.y = std::lround(
+        position.y - 
+        sizef * (data.bounding_box.second.y + 0.1f) + 
+        sizef * this->line_height * 0.25f
+      ); 
       dst.w = w;
       dst.h = h;
       SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);
 
-      position += Dir2 {
-        (pos < this->advance_widths.size () ? this->advance_widths[pos] : this->advance_widths.back()) * sizef, 
-        0.f
-      };
+      float coord = (
+        pos < this->advance_widths.size () ? 
+          this->advance_widths[pos] : 
+          this->advance_widths.back()
+      ) * sizef;
+
+      total_length += coord;
+
+      position += Dir2 (coord, 0.f);
     }
   }
+
+  return total_length;
 }
 
-void GlyphsSystem::print (std::string str, uint16_t size, SDL_Color color, Dir2 position) {
+uint32_t GlyphsSystem::print (std::string str, uint16_t size, SDL_Color color, Dir2 position) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  this->print(conv.from_bytes(str), size, color, position);
+  return this->print(conv.from_bytes(str), size, color, position);
 }
