@@ -23,7 +23,7 @@ const std::vector<SDL_Scancode> keys = std::vector<SDL_Scancode> {
   SDL_SCANCODE_Q, SDL_SCANCODE_R, SDL_SCANCODE_S, SDL_SCANCODE_T,
   SDL_SCANCODE_U, SDL_SCANCODE_V, SDL_SCANCODE_W, SDL_SCANCODE_X,
   SDL_SCANCODE_Y, SDL_SCANCODE_Z, SDL_SCANCODE_SPACE, SDL_SCANCODE_BACKSPACE,
-  SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT
+  SDL_SCANCODE_RIGHT, SDL_SCANCODE_LEFT, SDL_SCANCODE_RETURN
 };
 
 const Visualizer<D2FIG> checkbox_deactivate = 
@@ -59,10 +59,6 @@ const Visualizer<D2FIG> button_selected =
   ImageModifier::square(20, 40, SDL_Color {.r=0, .g=255, .b=0, .a=255})
   .cast(glb);
 
-const Visualizer<D2FIG> textbox_background =
-  ImageModifier::square(80, 90, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
-  cast(glb);
-
 void print_checkbox_deactivate(Dir2 pos) {
   checkbox_deactivate.draw(glb, pos);
 }
@@ -97,10 +93,6 @@ void print_button_observed(Dir2 pos) {
 
 void print_button_selected(Dir2 pos) {
   button_selected.draw(glb, pos);
-}
-
-void print_texbox (Dir2 pos) {
-  textbox_background.draw(glb, pos);
 }
 
 int main () {
@@ -146,16 +138,22 @@ int main () {
   TextBox textbox = TextBox (
     glb,
     &gs,
-    print_texbox,
-    Dir2(400.f, 300.f),
-    Dir2(90.f, 80.f),
+    nullptr,
+    Dir2(500.f, 300.f),
+    Dir2(90.f, 50.f),
     15,
     SDL_Color {.r=255, .g=255, .b=255, .a=255},
-    40,
-    false
+    40
   );
+  const Visualizer<D2FIG> textbox_background =
+    ImageModifier::square(50, textbox.get_dimentions().x, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
+    cast(glb);
+  textbox.set_background_fn([&] (Dir2 pos) {
+    textbox_background.draw(glb, pos);
+  });
 
-  GuiComponent<5> inicio = GuiComponent<5>(glb, keys, &error);
+
+  GuiComponent inicio = GuiComponent(glb, 5, keys, &error);
   if (error != 0) {
     std::cout << "there is a problem with the gui" << std::endl;
     std::exit(-1);
@@ -190,6 +188,8 @@ int main () {
     glb->begin_render();
       inicio.test();
       inicio.print();
+      if (textbox.get_active())
+        std::cout << "empanada" << std::endl;
     glb->end_render();
   } 
 }

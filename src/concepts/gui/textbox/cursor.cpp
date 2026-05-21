@@ -7,6 +7,6 @@ bool TextBox::set_cursor(uint32_t pos) {
   return could;
 }
 
-uint32_t TextBox::get_cursor() {
+uint32_t TextBox::get_cursor() const {
   return this->curr_pos;
 }

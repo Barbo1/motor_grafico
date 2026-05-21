@@ -10,6 +10,10 @@ float GlyphsSystem::get_ascent (float size) const {
 float GlyphsSystem::get_descent (float size) const {
   return this->descent * size;
 }
+    
+float GlyphsSystem::get_max_advance (float size) const {
+  return this->max_advance * size;
+}
 
 uint32_t GlyphsSystem::get_length (std::u16string str, uint32_t many, float size) {
   float total_length = 0.f;
