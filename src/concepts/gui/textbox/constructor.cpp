@@ -21,13 +21,15 @@ TextBox::TextBox (
    text_len(0),
    max_len(max_len),
    curr_pos(0),
-   config(0)
+   config(0),
+   window_start(0),
+   window_end(0)
 {
   this->text_area = SDL_CreateTexture(
     glb->get_render(), 
     SDL_PIXELFORMAT_RGBA8888, 
     SDL_TEXTUREACCESS_TARGET, 
-    std::max(this->dims.x, gs->get_max_advance(letter_size) * max_len) * 0.5f, 
+    this->dims.x + gs->get_max_advance(letter_size), 
     dims.y
   );
   this->cursor_dev = log2(letter_size) * 0.63092975f;

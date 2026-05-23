@@ -150,10 +150,12 @@ class TextBox {
       max_len, 
       curr_pos, 
       cursor_dev, 
-      config;
+      config,
+      window_start,
+      window_end;
 
-    /* position ->   0       1
-     * config   -> ENTER PRINT_POS
+    /* position ->   0       1              2
+     * config   -> ENTER PRINT_POS WINDOW_AGAINST_RIGHT
      * 
      * ENTER is set if the enter key is pressed,
      * PRINT_POS is set if the text is set over the end or the start of the textbox.
