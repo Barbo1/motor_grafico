@@ -2,22 +2,6 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
 #include <cmath>
 
-/*
-    GlyphsSystem* gs;
-    std::function<void(Dir2)> background;
-    Visualizer<D2FIG> cursor_image;
-    char* text;
-    Dir2 position, dims;
-    SDL_Color letter_color;
-    uint32_t 
-      letter_size, 
-      text_len, 
-      max_len, 
-      curr_pos, 
-      cursor_dev, 
-      config;
- * */
-
 TextBox::TextBox (
   Global* glb,
   GlyphsSystem* gs,
@@ -31,6 +15,7 @@ TextBox::TextBox (
    background(background),
    text(new char[max_len]),
    position(position),
+   dims(dims),
    letter_color(letter_color),
    letter_size(letter_size),
    text_len(0),
@@ -38,8 +23,13 @@ TextBox::TextBox (
    curr_pos(0),
    config(0)
 {
-  this->dims = dims;
-  this->dims.x = std::max(this->dims.x, gs->get_max_advance(letter_size) * max_len) * 0.5f;
+  this->text_area = SDL_CreateTexture(
+    glb->get_render(), 
+    SDL_PIXELFORMAT_RGBA8888, 
+    SDL_TEXTUREACCESS_TARGET, 
+    std::max(this->dims.x, gs->get_max_advance(letter_size) * max_len) * 0.5f, 
+    dims.y
+  );
   this->cursor_dev = log2(letter_size) * 0.63092975f;
   this->cursor_image = ImageModifier::square(
     gs->get_ascent(letter_size) - gs->get_descent(letter_size),

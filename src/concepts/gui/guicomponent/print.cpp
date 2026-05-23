@@ -51,18 +51,30 @@ void GuiComponent::print () {
         Dir2 aux = this->position + textbox->position;
         textbox->background(aux);
 
-        Dir2 v = Dir2 (-textbox->dims.x, 0.f);
-        Dir2 P = v.madd(0.5f, aux);
+        Dir2 Q = textbox->dims.nmadd(0.5f, aux);
         std::string str = textbox->get_text();
-        textbox->gs->print(
-          str, 
-          textbox->letter_size, 
-          textbox->letter_color, 
-          P
-        );
+        textbox->gs->fill (str, textbox->letter_size, textbox->letter_color, textbox->text_area);
 
-        uint32_t total_length = textbox->gs->get_length(str, textbox->curr_pos, textbox->letter_size);
-        textbox->cursor_image.draw(this->glb, P + Dir2(total_length + 2 * textbox->cursor_dev, 0.f));
+        SDL_Texture* actual_target = SDL_GetRenderTarget(glb->get_render());
+        SDL_SetRenderTarget(glb->get_render(), textbox->text_area);
+          uint32_t total_length = textbox->gs->get_length(str, textbox->curr_pos, textbox->letter_size);
+          textbox->cursor_image.draw(this->glb, Dir2(total_length + 2 * textbox->cursor_dev, textbox->dims.y * 0.5f));
+        SDL_SetRenderTarget(glb->get_render(), actual_target);
+
+        SDL_Rect src = SDL_Rect {
+          .x = 0,
+          .y = 0, 
+          .w = static_cast<int>(textbox->dims.x),
+          .h = static_cast<int>(textbox->dims.y) 
+        };
+        SDL_Rect dst = SDL_Rect {
+          .x = static_cast<int>(Q.x),
+          .y = static_cast<int>(Q.y), 
+          .w = static_cast<int>(textbox->dims.x),
+          .h = static_cast<int>(textbox->dims.y) 
+        };
+        SDL_SetTextureBlendMode (textbox->text_area, SDL_BLENDMODE_BLEND);
+        SDL_RenderCopy (glb->get_render(), textbox->text_area, &src, &dst);
       }
       break;
       default: break;

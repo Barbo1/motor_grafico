@@ -92,12 +92,18 @@ class GlyphsSystem {
     GlyphsSystem (Global* glb, std::string path, int* error);
     ~GlyphsSystem () = default;
 
-    /* functions meant to print a letter or string, in the screen, on a specified 
-     * position. 
-     * */
+    /* functions meant to print a letters or strings in different ways. */
     uint32_t print (char16_t, uint16_t, SDL_Color, Dir2);
     uint32_t print (std::u16string, uint16_t, SDL_Color, Dir2);
     uint32_t print (std::string, uint16_t, SDL_Color, Dir2);
+
+    SDL_Texture* image (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
+    SDL_Texture* image (std::u16string, uint16_t, SDL_Color, Dir2);
+    SDL_Texture* image (std::string, uint16_t, SDL_Color, Dir2);
+
+    void fill (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
+    void fill (std::u16string, uint16_t, SDL_Color, SDL_Texture*);
+    void fill (std::string, uint16_t, SDL_Color, SDL_Texture*);
 
     /* test if a glyph is rasterized. */
     bool is_cached (char16_t, uint16_t, SDL_Color) const;

@@ -140,6 +140,7 @@ class TextBox {
     GlyphsSystem* gs;
     std::function<void(Dir2)> background;
     Visualizer<D2FIG> cursor_image;
+    SDL_Texture* text_area;
     char* text;
     Dir2 position, dims;
     SDL_Color letter_color;
@@ -151,8 +152,11 @@ class TextBox {
       cursor_dev, 
       config;
 
-    /* position ->   0      1
-     * config   -> ENTER 
+    /* position ->   0       1
+     * config   -> ENTER PRINT_POS
+     * 
+     * ENTER is set if the enter key is pressed,
+     * PRINT_POS is set if the text is set over the end or the start of the textbox.
      * */
 
     void copial_patra() {

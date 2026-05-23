@@ -4,11 +4,12 @@
 
 template <VisualType T>
 void Visualizer<T>::draw (Global* glb, const AngDir2 & position, float scale) const {
-  SDL_Rect dst;
-  dst.x = static_cast<int>(position.x) - this->width / 2;
-  dst.y = static_cast<int>(position.y) - this->height / 2; 
-  dst.w = static_cast<int>((float)this->width * scale);
-  dst.h = static_cast<int>((float)this->height * scale);
+  SDL_Rect dst = SDL_Rect {
+    .x = static_cast<int>(position.x) - this->width / 2,
+    .y = static_cast<int>(position.y) - this->height / 2, 
+    .w = static_cast<int>((float)this->width * scale),
+    .h = static_cast<int>((float)this->height * scale)
+  };
   SDL_SetTextureBlendMode (this->texture.get(), SDL_BLENDMODE_BLEND);
   SDL_RenderCopyEx (glb->get_render(), this->texture.get(), nullptr, &dst, position.a, nullptr, SDL_FLIP_NONE);
 }
