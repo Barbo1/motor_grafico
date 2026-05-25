@@ -1,4 +1,5 @@
 #include "../../../../headers/concepts/gui.hpp"
+#include <cstdint>
 
 void GuiComponent::test () {
   // obtain click position and test if click is pressed.
@@ -169,6 +170,49 @@ void GuiComponent::test () {
                   textbox->text_len++;
                   textbox->curr_pos++;
                 }
+            }
+
+            if (is_pressed) {
+              if (textbox->config & 4) {
+                if (textbox->window_end < textbox->curr_pos) {
+                  textbox->window_end = textbox->curr_pos;
+                  textbox->window_start = textbox->gs->get_left_window(
+                    textbox->get_text(), 
+                    textbox->curr_pos,
+                    textbox->letter_size,
+                    textbox->dims.x
+                  );
+                } else if (textbox->curr_pos <= textbox->window_start) {
+                  // textbox->config = (textbox->config & 0xFFFFFFFB) | (~textbox->config & 4);
+                  textbox->config = textbox->config & 0xFFFFFFFB;
+                  textbox->window_start = textbox->curr_pos;
+                  textbox->window_end = textbox->gs->get_right_window(
+                    textbox->get_text(), 
+                    textbox->curr_pos,
+                    textbox->letter_size,
+                    textbox->dims.x
+                  );
+                }
+              } else {
+                if (textbox->window_end <= textbox->curr_pos) {
+                  textbox->config = (textbox->config & 0xFFFFFFFB) | 4;
+                  textbox->window_end = textbox->curr_pos;
+                  textbox->window_start = textbox->gs->get_left_window(
+                    textbox->get_text(), 
+                    textbox->curr_pos,
+                    textbox->letter_size,
+                    textbox->dims.x
+                  );
+                } else if (textbox->curr_pos < textbox->window_start) {
+                  textbox->window_start = textbox->curr_pos;
+                  textbox->window_end = textbox->gs->get_right_window(
+                    textbox->get_text(), 
+                    textbox->curr_pos,
+                    textbox->letter_size,
+                    textbox->dims.x
+                  );
+                }
+              }
             }
           }
         } else if (test) {

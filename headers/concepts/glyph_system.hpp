@@ -90,7 +90,7 @@ class GlyphsSystem {
      *  + -5 inconsistencies between inner information,.
      * */
     GlyphsSystem (Global* glb, std::string path, int* error);
-    ~GlyphsSystem () = default;
+    ~GlyphsSystem ();
 
     /* functions meant to print a letters or strings in different ways. */
     uint32_t print (char16_t, uint16_t, SDL_Color, Dir2);
@@ -101,9 +101,9 @@ class GlyphsSystem {
     SDL_Texture* image (std::u16string, uint16_t, SDL_Color, Dir2);
     SDL_Texture* image (std::string, uint16_t, SDL_Color, Dir2);
 
-    void fill (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
-    void fill (std::u16string, uint16_t, SDL_Color, SDL_Texture*);
-    void fill (std::string, uint16_t, SDL_Color, SDL_Texture*);
+    float fill (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
+    float fill (std::u16string, uint16_t, SDL_Color, SDL_Texture*);
+    float fill (std::string, uint16_t, SDL_Color, SDL_Texture*);
 
     /* test if a glyph is rasterized. */
     bool is_cached (char16_t, uint16_t, SDL_Color) const;
@@ -128,10 +128,10 @@ class GlyphsSystem {
     float get_ascent (float) const;
     float get_descent (float) const;
 
-    void get_right_window (std::u16string, int32_t, uint16_t, float, uint32_t*, float*);
-    void get_right_window (std::string, int32_t, uint16_t, float, uint32_t*, float*);
-    void get_left_window (std::u16string, int32_t, uint16_t, float, uint32_t*, float*);
-    void get_left_window (std::string, int32_t, uint16_t, float, uint32_t*, float*);
+    uint32_t get_right_window (std::u16string, int32_t, uint16_t, float);
+    uint32_t get_right_window (std::string, int32_t, uint16_t, float);
+    uint32_t get_left_window (std::u16string, int32_t, uint16_t, float);
+    uint32_t get_left_window (std::string, int32_t, uint16_t, float);
 
     uint32_t get_length (std::u16string, uint32_t, float);
     uint32_t get_length (std::string, uint32_t, float);

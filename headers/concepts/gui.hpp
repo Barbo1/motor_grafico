@@ -137,9 +137,9 @@ class Slider {
 
 class TextBox {
   private:
-    GlyphsSystem* gs;
     std::function<void(Dir2)> background;
     Visualizer<D2FIG> cursor_image;
+    GlyphsSystem* gs;
     SDL_Texture* text_area;
     char* text;
     Dir2 position, dims;

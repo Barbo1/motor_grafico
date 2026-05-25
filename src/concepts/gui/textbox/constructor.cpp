@@ -11,8 +11,9 @@ TextBox::TextBox (
   uint32_t max_len,
   SDL_Color letter_color,
   uint32_t letter_size
-) noexcept: gs(gs),
+) noexcept:
    background(background),
+   gs(gs),
    text(new char[max_len]),
    position(position),
    dims(dims),

@@ -1,4 +1,6 @@
 #include "../../../../headers/concepts/gui.hpp"
+#include <cstdint>
+#include <iostream>
 
 void GuiComponent::print () {
   for (int32_t i = 0; i < this->many_elems; i++) {
@@ -51,18 +53,36 @@ void GuiComponent::print () {
         Dir2 aux = this->position + textbox->position;
         textbox->background(aux);
 
-        Dir2 Q = textbox->dims.nmadd(0.5f, aux);
-        std::string str = textbox->get_text();
-        textbox->gs->fill (str, textbox->letter_size, textbox->letter_color, textbox->text_area);
+        std::string str = textbox->get_text().substr(
+          textbox->window_start, 
+          textbox->window_end - textbox->window_start
+        );
+        
+        float xdev = textbox->gs->fill (
+          str, 
+          textbox->letter_size, 
+          textbox->letter_color, 
+          textbox->text_area
+        );
+        xdev -= textbox->dims.x;
+        int xdevi = (textbox->config & 4) && (xdev > 0.f) ? static_cast<int>(xdev) : 0;
 
         SDL_Texture* actual_target = SDL_GetRenderTarget(glb->get_render());
         SDL_SetRenderTarget(glb->get_render(), textbox->text_area);
-          uint32_t total_length = textbox->gs->get_length(str, textbox->curr_pos, textbox->letter_size);
-          textbox->cursor_image.draw(this->glb, Dir2(total_length + 2 * textbox->cursor_dev, textbox->dims.y * 0.5f));
+          uint32_t cursor_pos = textbox->gs->get_length (
+            str, 
+            textbox->curr_pos - textbox->window_start, 
+            textbox->letter_size
+          );
+          textbox->cursor_image.draw(
+            this->glb, 
+            Dir2(cursor_pos + 2 * textbox->cursor_dev, textbox->dims.y * 0.5f)
+          );
         SDL_SetRenderTarget(glb->get_render(), actual_target);
 
+        Dir2 Q = textbox->dims.nmadd(0.5f, aux);
         SDL_Rect src = SDL_Rect {
-          .x = 0,
+          .x = xdevi,
           .y = 0, 
           .w = static_cast<int>(textbox->dims.x),
           .h = static_cast<int>(textbox->dims.y) 

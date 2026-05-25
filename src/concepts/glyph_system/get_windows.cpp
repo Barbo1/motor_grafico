@@ -5,44 +5,40 @@
 #include <cstdint>
 #include <locale>
 
-void GlyphsSystem::get_right_window (std::u16string str, int32_t pos, uint16_t size, float dimention, uint32_t* window_bound, float* dev) {
-  uint32_t i = pos;
+uint32_t GlyphsSystem::get_right_window (std::u16string str, int32_t pos, uint16_t size, float dimention) {
   float total_width = 0.f, sizef = static_cast<float>(size);
-  while (i < str.size() && total_width < dimention) {
-    uint16_t j = this->mapping[str[i]];
-    total_width += (
+  while (pos < static_cast<int>(str.size()) && total_width < dimention) {
+    uint16_t j = this->mapping[str[pos]];
+    total_width += sizef * (
       j < this->advance_widths.size () ? 
         this->advance_widths[j] : 
         this->advance_widths.back()
-    ) * sizef;
-    i++;
+    );
+    pos++;
   }
-  *window_bound = i;
-  *dev = total_width - dimention;
+  return pos;
 }
 
-void GlyphsSystem::get_right_window (std::string str, int32_t pos, uint16_t size, float dimention, uint32_t* window_bound, float* dev) {
+uint32_t GlyphsSystem::get_right_window (std::string str, int32_t pos, uint16_t size, float dimention) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  this->get_right_window(conv.from_bytes(str), pos, size, dimention, window_bound, dev);
+  return this->get_right_window(conv.from_bytes(str), pos, size, dimention);
 }
 
-void GlyphsSystem::get_left_window (std::u16string str, int32_t pos, uint16_t size, float dimention, uint32_t* window_bound, float* dev) {
-  int32_t i = pos;
+uint32_t GlyphsSystem::get_left_window (std::u16string str, int32_t pos, uint16_t size, float dimention) {
   float total_width = 0.f, sizef = static_cast<float>(size);
-  while (-1 < i && total_width < dimention) {
-    uint16_t j = this->mapping[str[i]];
-    total_width += (
+  while (0 <= pos && total_width < dimention) {
+    uint16_t j = this->mapping[str[pos]];
+    total_width += sizef * (
       j < this->advance_widths.size () ? 
         this->advance_widths[j] : 
         this->advance_widths.back()
-    ) * sizef;
-    i--;
+    );
+    pos--;
   }
-  *window_bound = i;
-  *dev = total_width - dimention;
+  return 0 <= pos ? pos : 0;
 }
 
-void GlyphsSystem::get_left_window (std::string str, int32_t pos, uint16_t size, float dimention, uint32_t* window_bound, float* dev) {
+uint32_t GlyphsSystem::get_left_window (std::string str, int32_t pos, uint16_t size, float dimention) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  this->get_left_window(conv.from_bytes(str), pos, size, dimention, window_bound, dev);
+  return this->get_left_window(conv.from_bytes(str), pos, size, dimention);
 }
