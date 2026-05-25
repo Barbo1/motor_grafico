@@ -187,9 +187,9 @@ int main () {
     
     glb->begin_render();
       inicio.test();
+      if (inicio.get_state(3) == GUIStateSelected)
+        std::cout << textbox.get_text() << std::endl;
       inicio.print();
-      if (textbox.get_active())
-        std::cout << "empanada" << std::endl;
     glb->end_render();
   } 
 }

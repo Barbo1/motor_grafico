@@ -174,7 +174,7 @@ void GuiComponent::test () {
             }
 
             float xdev;
-            if (is_pressed) {
+            if (is_pressed && textbox->text_len != 0) {
               if (textbox->config & 4) {
                 if (textbox->text_len < prev_text_len) {
                   textbox->window_end = textbox->text_len;
@@ -185,7 +185,7 @@ void GuiComponent::test () {
                     textbox->dims.x,
                     &xdev
                   );
-                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                  textbox->xdev = xdev - textbox->dims.x;
                 } else if (textbox->window_end < textbox->curr_pos) {
                   textbox->window_end = textbox->curr_pos;
                   textbox->window_start = textbox->gs->get_left_window(
@@ -195,9 +195,8 @@ void GuiComponent::test () {
                     textbox->dims.x,
                     &xdev
                   );
-                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                  textbox->xdev = xdev - textbox->dims.x;
                 } else if (textbox->curr_pos <= textbox->window_start) {
-                  // textbox->config = (textbox->config & 0xFFFFFFFB) | (~textbox->config & 4);
                   textbox->config = textbox->config & 0xFFFFFFFB;
                   textbox->window_start = textbox->curr_pos;
                   textbox->window_end = textbox->gs->get_right_window(
@@ -207,7 +206,7 @@ void GuiComponent::test () {
                     textbox->dims.x,
                     &xdev
                   );
-                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                  textbox->xdev = xdev - textbox->dims.x;
                 }
               } else {
                 if (textbox->window_end <= textbox->curr_pos) {
@@ -220,7 +219,7 @@ void GuiComponent::test () {
                     textbox->dims.x,
                     &xdev
                   );
-                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                  textbox->xdev = xdev - textbox->dims.x;
                 } else if (textbox->curr_pos <= textbox->window_start) {
                   textbox->window_start = textbox->curr_pos;
                   textbox->window_end = textbox->gs->get_right_window(
@@ -230,7 +229,7 @@ void GuiComponent::test () {
                     textbox->dims.x,
                     &xdev
                   );
-                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                  textbox->xdev = xdev - textbox->dims.x;
                 }
               }
             }

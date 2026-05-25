@@ -1,6 +1,5 @@
 #include "../../../../headers/concepts/gui.hpp"
 #include <cstdint>
-#include <iostream>
 
 void GuiComponent::print () {
   for (int32_t i = 0; i < this->many_elems; i++) {
@@ -64,9 +63,6 @@ void GuiComponent::print () {
           textbox->letter_color, 
           textbox->text_area
         );
-        int xdevi = (textbox->config & 4) && (textbox->xdev > 0.f) ? 
-          static_cast<int>(textbox->xdev) : 
-          0;
 
         SDL_Texture* actual_target = SDL_GetRenderTarget(this->glb->get_render());
         SDL_SetRenderTarget(this->glb->get_render(), textbox->text_area);
@@ -81,6 +77,9 @@ void GuiComponent::print () {
           );
         SDL_SetRenderTarget(this->glb->get_render(), actual_target);
 
+        int xdevi = (textbox->config & 4) && (textbox->xdev > 0.f) ? 
+          static_cast<int>(textbox->xdev) + 3 * static_cast<int>(textbox->cursor_dev) : 
+          0;
         Dir2 Q = textbox->dims.nmadd(0.5f, aux);
         SDL_Rect src = SDL_Rect {
           .x = xdevi,
@@ -96,14 +95,6 @@ void GuiComponent::print () {
         };
         SDL_SetTextureBlendMode (textbox->text_area, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy (glb->get_render(), textbox->text_area, &src, &dst);
-      
-        SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
-        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 26.56, aux.y);
-        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 53.12, aux.y);
-        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 79.68, aux.y);
-        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 106.24, aux.y);
-        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 132.8, aux.y);
-        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 159.36, aux.y);
       }
       break;
       default: break;
