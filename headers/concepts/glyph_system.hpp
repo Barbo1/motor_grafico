@@ -128,10 +128,10 @@ class GlyphsSystem {
     float get_ascent (float) const;
     float get_descent (float) const;
 
-    uint32_t get_right_window (std::u16string, int32_t, uint16_t, float);
-    uint32_t get_right_window (std::string, int32_t, uint16_t, float);
-    uint32_t get_left_window (std::u16string, int32_t, uint16_t, float);
-    uint32_t get_left_window (std::string, int32_t, uint16_t, float);
+    uint32_t get_right_window (std::u16string, int32_t, uint16_t, float, float*);
+    uint32_t get_right_window (std::string, int32_t, uint16_t, float, float*);
+    uint32_t get_left_window (std::u16string, int32_t, uint16_t, float, float*);
+    uint32_t get_left_window (std::string, int32_t, uint16_t, float, float*);
 
     uint32_t get_length (std::u16string, uint32_t, float);
     uint32_t get_length (std::string, uint32_t, float);

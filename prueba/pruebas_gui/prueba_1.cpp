@@ -140,13 +140,13 @@ int main () {
     &gs,
     nullptr,
     Dir2(500.f, 300.f),
-    Dir2(90.f, 50.f),
-    15,
+    Dir2(150.f, 50.f),
+    20,
     SDL_Color {.r=255, .g=255, .b=255, .a=255},
     40
   );
   const Visualizer<D2FIG> textbox_background =
-    ImageModifier::square(50, textbox.get_dimentions().x, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
+    ImageModifier::square(textbox.get_dimentions().y, textbox.get_dimentions().x, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
     cast(glb);
   textbox.set_background_fn([&] (Dir2 pos) {
     textbox_background.draw(glb, pos);

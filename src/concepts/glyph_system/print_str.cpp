@@ -31,17 +31,18 @@ uint32_t GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color
     if (tex != nullptr) {
       uint16_t pos = this->mapping[character];
       const ttf_glyph_data& data = this->glyphs[pos];
-      SDL_Rect dst;
-      dst.x = std::fmaf (data.left_bearing, sizef, position.x);
-      
-      dst.y = std::lround(
-        position.y - 
-        sizef * (data.bounding_box.second.y + 0.1f) + 
-        sizef * this->line_height * 0.25f
-      ); 
-      dst.w = w;
-      dst.h = h;
-      SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);
+
+      SDL_Rect dst = SDL_Rect {
+        .x = static_cast<int>(std::fmaf (data.left_bearing, sizef, position.x)),
+        .y = static_cast<int>(std::lround(
+          position.y - 
+          sizef * (data.bounding_box.second.y + 0.1f) + 
+          sizef * this->line_height * 0.25f
+        )), 
+        .w = static_cast<int>(w),
+        .h = static_cast<int>(h)
+      };
+      SDL_RenderCopy (glb->get_render(), tex, nullptr, &dst);
 
       float coord = (
         pos < this->advance_widths.size () ? 

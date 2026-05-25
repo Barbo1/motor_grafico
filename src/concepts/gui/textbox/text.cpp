@@ -2,7 +2,7 @@
 #include <cstring>
 
 std::string TextBox::get_text() const {
-  std::string ret(this->text_len, '\0');
+  std::string ret(this->text_len, '0');
   std::memcpy(ret.data(), this->text, sizeof(char) * this->text_len);
   return ret;
 }

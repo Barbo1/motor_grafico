@@ -134,6 +134,7 @@ void GuiComponent::test () {
           // response to key press.
           for (uint32_t i = 0; i < this->many_keys; i++) {
             bool is_pressed = xor_pressed_keys[i / 64] & (1ULL << (i & 63));
+            uint32_t prev_text_len = textbox->text_len;
             switch (this->admited_keys[i]) {
               case SDL_SCANCODE_RETURN:
                 textbox->config = (textbox->config & 0xFFFFFFFE) | is_pressed;
@@ -172,16 +173,29 @@ void GuiComponent::test () {
                 }
             }
 
+            float xdev;
             if (is_pressed) {
               if (textbox->config & 4) {
-                if (textbox->window_end < textbox->curr_pos) {
+                if (textbox->text_len < prev_text_len) {
+                  textbox->window_end = textbox->text_len;
+                  textbox->window_start = textbox->gs->get_left_window(
+                    textbox->get_text(), 
+                    textbox->text_len,
+                    textbox->letter_size,
+                    textbox->dims.x,
+                    &xdev
+                  );
+                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                } else if (textbox->window_end < textbox->curr_pos) {
                   textbox->window_end = textbox->curr_pos;
                   textbox->window_start = textbox->gs->get_left_window(
                     textbox->get_text(), 
                     textbox->curr_pos,
                     textbox->letter_size,
-                    textbox->dims.x
+                    textbox->dims.x,
+                    &xdev
                   );
+                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
                 } else if (textbox->curr_pos <= textbox->window_start) {
                   // textbox->config = (textbox->config & 0xFFFFFFFB) | (~textbox->config & 4);
                   textbox->config = textbox->config & 0xFFFFFFFB;
@@ -190,8 +204,10 @@ void GuiComponent::test () {
                     textbox->get_text(), 
                     textbox->curr_pos,
                     textbox->letter_size,
-                    textbox->dims.x
+                    textbox->dims.x,
+                    &xdev
                   );
+                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
                 }
               } else {
                 if (textbox->window_end <= textbox->curr_pos) {
@@ -201,16 +217,20 @@ void GuiComponent::test () {
                     textbox->get_text(), 
                     textbox->curr_pos,
                     textbox->letter_size,
-                    textbox->dims.x
+                    textbox->dims.x,
+                    &xdev
                   );
-                } else if (textbox->curr_pos < textbox->window_start) {
+                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
+                } else if (textbox->curr_pos <= textbox->window_start) {
                   textbox->window_start = textbox->curr_pos;
                   textbox->window_end = textbox->gs->get_right_window(
                     textbox->get_text(), 
                     textbox->curr_pos,
                     textbox->letter_size,
-                    textbox->dims.x
+                    textbox->dims.x,
+                    &xdev
                   );
+                  textbox->xdev = xdev - textbox->dims.x + 3 * static_cast<int>(textbox->cursor_dev);
                 }
               }
             }

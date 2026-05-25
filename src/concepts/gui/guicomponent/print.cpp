@@ -58,17 +58,18 @@ void GuiComponent::print () {
           textbox->window_end - textbox->window_start
         );
         
-        float xdev = textbox->gs->fill (
+        textbox->gs->fill (
           str, 
           textbox->letter_size, 
           textbox->letter_color, 
           textbox->text_area
         );
-        xdev -= textbox->dims.x;
-        int xdevi = (textbox->config & 4) && (xdev > 0.f) ? static_cast<int>(xdev) : 0;
+        int xdevi = (textbox->config & 4) && (textbox->xdev > 0.f) ? 
+          static_cast<int>(textbox->xdev) : 
+          0;
 
-        SDL_Texture* actual_target = SDL_GetRenderTarget(glb->get_render());
-        SDL_SetRenderTarget(glb->get_render(), textbox->text_area);
+        SDL_Texture* actual_target = SDL_GetRenderTarget(this->glb->get_render());
+        SDL_SetRenderTarget(this->glb->get_render(), textbox->text_area);
           uint32_t cursor_pos = textbox->gs->get_length (
             str, 
             textbox->curr_pos - textbox->window_start, 
@@ -78,7 +79,7 @@ void GuiComponent::print () {
             this->glb, 
             Dir2(cursor_pos + 2 * textbox->cursor_dev, textbox->dims.y * 0.5f)
           );
-        SDL_SetRenderTarget(glb->get_render(), actual_target);
+        SDL_SetRenderTarget(this->glb->get_render(), actual_target);
 
         Dir2 Q = textbox->dims.nmadd(0.5f, aux);
         SDL_Rect src = SDL_Rect {
@@ -95,6 +96,14 @@ void GuiComponent::print () {
         };
         SDL_SetTextureBlendMode (textbox->text_area, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy (glb->get_render(), textbox->text_area, &src, &dst);
+      
+        SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
+        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 26.56, aux.y);
+        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 53.12, aux.y);
+        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 79.68, aux.y);
+        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 106.24, aux.y);
+        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 132.8, aux.y);
+        SDL_RenderDrawPoint(glb->get_render(), aux.x - 75 + 159.36, aux.y);
       }
       break;
       default: break;

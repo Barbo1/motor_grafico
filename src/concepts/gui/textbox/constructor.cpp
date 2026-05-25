@@ -24,7 +24,8 @@ TextBox::TextBox (
    curr_pos(0),
    config(0),
    window_start(0),
-   window_end(0)
+   window_end(0),
+   xdev(0.f)
 {
   this->text_area = SDL_CreateTexture(
     glb->get_render(), 

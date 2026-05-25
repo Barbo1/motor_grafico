@@ -153,6 +153,7 @@ class TextBox {
       config,
       window_start,
       window_end;
+    float xdev;
 
     /* position ->   0       1              2
      * config   -> ENTER PRINT_POS WINDOW_AGAINST_RIGHT

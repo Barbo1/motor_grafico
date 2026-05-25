@@ -6,15 +6,14 @@
 #include <locale>
 
 float GlyphsSystem::fill (std::u16string str, uint16_t size, SDL_Color color, SDL_Texture* texture) {
-  float sizef = static_cast<float>(size);
-  Uint32 colori = 
+  const float sizef = static_cast<float>(size);
+  const Uint32 colori = 
     ((Uint32)color.r << 24) & 
     ((Uint32)color.g << 16) & 
     ((Uint32)color.b << 8) & 
     (Uint32)color.a;
 
-  for (uint32_t i = 0; i < str.size(); i++) {
-    const char16_t& character = str[i];
+  for (const char16_t& character: str) {
     uint32_t key = GlyphsSystem::get_key(character, size, colori);
     auto founded = this->cached_glyphs.find(key);
 
@@ -28,22 +27,22 @@ float GlyphsSystem::fill (std::u16string str, uint16_t size, SDL_Color color, SD
     }
   }
 
+  int h;
+  SDL_QueryTexture(texture, nullptr, nullptr, nullptr, &h);
+  const float dimy2 = static_cast<float>(h) * 0.5f;
+
+  float xposition = 0.f;
+
   SDL_Texture* actual_target = SDL_GetRenderTarget(glb->get_render());
   SDL_SetRenderTarget(glb->get_render(), texture);
   SDL_RenderClear(glb->get_render());
-
-  int h;
-  SDL_QueryTexture(texture, nullptr, nullptr, nullptr, &h);
-  float dimy2 = static_cast<float>(h) * 0.5f;
-
-  float xposition = 0.f;
 
   for (const char16_t& character: str) {
     uint32_t key = GlyphsSystem::get_key(character, size, colori);
     auto founded = this->cached_glyphs.find(key);
 
     if (founded != this->cached_glyphs.end()) {
-      uint16_t pos = this->mapping[character];
+      int pos = this->mapping[character];
       const ttf_glyph_data& data = this->glyphs[pos];
 
       SDL_Rect dst = SDL_Rect {
@@ -58,15 +57,14 @@ float GlyphsSystem::fill (std::u16string str, uint16_t size, SDL_Color color, SD
       };
       SDL_RenderCopy(glb->get_render(), founded->second.tex, nullptr, &dst);
 
-      xposition += sizef * (
-        pos < this->advance_widths.size() ? 
-          this->advance_widths[pos] : 
-          this->advance_widths.back()
-      );
+      xposition += sizef * this->advance_widths[
+        std::min(pos, static_cast<int>(this->advance_widths.size()-1))
+      ];
     }
   }
 
   SDL_SetRenderTarget(glb->get_render(), actual_target);
+
   return xposition;
 }
 
