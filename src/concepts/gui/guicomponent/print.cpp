@@ -71,6 +71,7 @@ void GuiComponent::print () {
         SDL_SetTextureBlendMode (textbox->text_area, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy (glb->get_render(), textbox->text_area, &src, &dst);
       }
+      break;
       case GUITypeLabel: {
         Label* label = static_cast<Label*>(this->elems[i].ptr);
         Dir2 aux = this->position + label->position;

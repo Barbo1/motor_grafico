@@ -100,42 +100,6 @@ class CheckBox {
     friend class GuiComponent;
 };
 
-class Slider {
-  private:
-    std::function<void(Dir2)> base_fn;
-    std::function<void(Dir2)> sign_fn;
-    Dir2 position, base_dims, sign_dims;
-    float max_index;
-    uint32_t curr_index;
-    SliderDirection direction;
-
-  public:
-    Slider (
-      std::function<void(Dir2)> base_fn,
-      std::function<void(Dir2)> sign_fn,
-      Dir2 position,
-      Dir2 base_dims,
-      Dir2 sign_dims,
-      uint32_t number_values,
-      SliderDirection direction
-    ) noexcept;
-
-    void set_base_fn (std::function<void(Dir2)> fn);
-    void set_sign_fn (std::function<void(Dir2)> fn);
-
-    void set_position (const Dir2& pos);
-    Dir2 get_position () const;
-
-    void set_base_dimentions (const Dir2& dimentions);
-    Dir2 get_base_dimentions () const;
-    void set_sign_dimentions (const Dir2& dimentions);
-    Dir2 get_sign_dimentions () const;
-
-    uint32_t get_current_value () const;
-
-    friend class GuiComponent;
-};
-
 class TextBox {
   private:
     std::function<void(Dir2)> background;
@@ -249,6 +213,42 @@ class Label {
     std::string get_text() const;
     void set_text(std::string_view);
     void set_text(std::u16string_view);
+
+    friend class GuiComponent;
+};
+
+class Slider {
+  private:
+    std::function<void(Dir2)> base_fn;
+    std::function<void(Dir2)> sign_fn;
+    Dir2 position, base_dims, sign_dims;
+    float max_index;
+    uint32_t curr_index;
+    SliderDirection direction;
+
+  public:
+    Slider (
+      std::function<void(Dir2)> base_fn,
+      std::function<void(Dir2)> sign_fn,
+      Dir2 position,
+      Dir2 base_dims,
+      Dir2 sign_dims,
+      uint32_t number_values,
+      SliderDirection direction
+    ) noexcept;
+
+    void set_base_fn (std::function<void(Dir2)> fn);
+    void set_sign_fn (std::function<void(Dir2)> fn);
+
+    void set_position (const Dir2& pos);
+    Dir2 get_position () const;
+
+    void set_base_dimentions (const Dir2& dimentions);
+    Dir2 get_base_dimentions () const;
+    void set_sign_dimentions (const Dir2& dimentions);
+    Dir2 get_sign_dimentions () const;
+
+    uint32_t get_current_value () const;
 
     friend class GuiComponent;
 };

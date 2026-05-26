@@ -67,7 +67,7 @@
  |V| - cambiar el formato de las lineas para que queden definidas por:
         + un punto(por el que pasa),
         + un vector(que apunta a su direccion).
- | | - implementar Button, CheckBox, TextBox, Slider, TextInput, ScrollPane, Selecter.
+ |T| - implementar Button, CheckBox, TextBox, Slider, TextInput, ScrollPane, Selecter.
       + todos los objetos tienen una hitbox asociadas, dependiendo del objeto considerado,
           mediante las cuales se puede generar el cambio de estado entre ellos. 
       + todos los objetos estan en un estado en particular y pueden ser cambiados por accion
@@ -121,7 +121,7 @@
               la alineacion del texto (to the left and centered). No tiene hitbox debido a que no 
               es necesaria una interaccion directa con el. Tiene un metodo 'void Write(std::string_view)' 
               para poder escribir su contenido y otro 'std::string_view Read()' para leerlo.
-      | | - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
+      |X| - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
               cada una con un string que representa el significado.
  | | - implementar los poligonos con colisiones:
         |V| + testeo.

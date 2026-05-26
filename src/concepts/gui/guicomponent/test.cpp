@@ -177,16 +177,7 @@ void GuiComponent::test () {
             float xdev;
             if (is_pressed) {
               if (textbox->text_len != 0) {
-                /*
-                std::cout << "---------------------------------" << std::endl;
-                std::cout << "   prev_len: " << prev_text_len << std::endl;
-                std::cout << "   text_len: " << textbox->text_len << std::endl;
-                std::cout << "previo a cambio:" << std::endl;
-                std::cout << "window_start: " << textbox->window_start << std::endl;
-                std::cout << "window_end: " << textbox->window_end << std::endl;
-                */
                 if (textbox->text_len < prev_text_len && textbox->window_end - 1 == prev_text_len) {
-                  //std::cout << 1 << std::endl;
                   textbox->config = 
                     (textbox->config & ~TextBox::TextBoxConfig::TBCWinAgRight) | 
                     TextBox::TextBoxConfig::TBCWinAgRight;
@@ -201,7 +192,6 @@ void GuiComponent::test () {
                   textbox->xdev = xdev - textbox->dims.x;
                 } else if (textbox->config & TextBox::TextBoxConfig::TBCWinAgRight) {
                   if (textbox->window_end <= textbox->curr_pos) {
-                    //std::cout << 2 << std::endl;
                     textbox->window_end = textbox->curr_pos + 1;
                     textbox->window_start = textbox->gs->get_left_window(
                       textbox->get_text_16(), 
@@ -212,7 +202,6 @@ void GuiComponent::test () {
                     );
                     textbox->xdev = xdev - textbox->dims.x;
                   } else if (textbox->curr_pos <= textbox->window_start) {
-                    //std::cout << 3 << std::endl;
                     textbox->config &= ~TextBox::TextBoxConfig::TBCWinAgRight;
                     textbox->window_start = textbox->curr_pos;
                     textbox->window_end = textbox->gs->get_right_window(
@@ -226,7 +215,6 @@ void GuiComponent::test () {
                   }
                 } else {
                   if (textbox->window_end <= textbox->curr_pos) {
-                    //std::cout << 5 << std::endl;
                     textbox->config |= TextBox::TextBoxConfig::TBCWinAgRight;
                     textbox->window_end = textbox->curr_pos + 1;
                     textbox->window_start = textbox->gs->get_left_window(
@@ -238,7 +226,6 @@ void GuiComponent::test () {
                     );
                     textbox->xdev = xdev - textbox->dims.x;
                   } else if (textbox->curr_pos <= textbox->window_start) {
-                    //std::cout << 6 << std::endl;
                     textbox->window_start = textbox->curr_pos;
                     textbox->window_end = textbox->gs->get_right_window(
                       textbox->get_text_16(), 
@@ -250,13 +237,6 @@ void GuiComponent::test () {
                     textbox->xdev = xdev - textbox->dims.x;
                   }
                 }
-                /*
-                std::cout << "luego de cambio:" << std::endl;
-                std::cout << "window_start: " << textbox->window_start << std::endl;
-                std::cout << "window_end: " << textbox->window_end << std::endl;
-                */
-
-
               } else if (textbox->text_len == 0) {
                 textbox->window_start = 0;
                 textbox->window_end = 1;
