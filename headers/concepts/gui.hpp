@@ -10,7 +10,8 @@ enum GuiElementType {
   GUITypeButton,
   GUITypeCheckBox,
   GUITypeTextBox,
-  GUITypeSlider
+  GUITypeSlider,
+  GUITypeLabel
 };
 
 enum GuiElementState {
@@ -141,7 +142,7 @@ class TextBox {
     Visualizer<D2FIG> cursor_image;
     GlyphsSystem* gs;
     SDL_Texture* text_area;
-    char* text;
+    char16_t* text;
     Dir2 position, dims;
     SDL_Color letter_color;
     uint32_t 
@@ -155,12 +156,10 @@ class TextBox {
       window_end;
     float xdev;
 
-    /* position ->   0       1              2
-     * config   -> ENTER PRINT_POS WINDOW_AGAINST_RIGHT
-     * 
-     * ENTER is set if the enter key is pressed,
-     * PRINT_POS is set if the text is set over the end or the start of the textbox.
-     * */
+    enum TextBoxConfig {
+      TBCEnter = 0b1,
+      TBCWinAgRight = 0b10
+    };
 
     void copial_patra() {
       for (uint32_t i = this->curr_pos-1; i < this->text_len; i++) {
@@ -196,13 +195,60 @@ class TextBox {
     void set_dimentions (const Dir2&);
     Dir2 get_dimentions () const;
     
+    std::u16string get_text_16() const;
     std::string get_text() const;
-    bool set_text(const std::string&);
 
     bool set_cursor(uint32_t pos);
     uint32_t get_cursor() const;
 
     bool get_active () const;
+
+    friend class GuiComponent;
+};
+
+class Label {
+  private:
+    std::function<void(Dir2)> background;
+    GlyphsSystem* gs;
+    SDL_Texture* text_area;
+    char16_t* text;
+    Dir2 position, dims;
+    SDL_Color letter_color;
+    uint32_t 
+      letter_size, 
+      max_len,
+      text_len,
+      config;
+
+    enum LabelConfig {
+      LCchanged = 0b1
+    };
+  public:
+    Label (
+      Global* glb,
+      GlyphsSystem* gs,
+      std::function<void(Dir2)> background,
+      Dir2 position, 
+      Dir2 dims,
+      uint32_t max_len,
+      SDL_Color letter_color,
+      uint32_t letter_size
+    ) noexcept;
+
+    ~Label();
+
+    void set_background_fn (std::function<void(Dir2)> fn);
+
+    Dir2 get_position() const;
+    void set_position(const Dir2&);
+
+    void set_dimentions (const Dir2&);
+    Dir2 get_dimentions () const;
+    
+    std::u16string get_text_16() const;
+    std::string get_text() const;
+    void set_text(std::string_view);
+    void set_text(std::u16string_view);
 
     friend class GuiComponent;
 };
@@ -239,6 +285,7 @@ class GuiComponent {
     void add (CheckBox* checkbox);
     void add (Slider* slider);
     void add (TextBox* txtb);
+    void add (Label* label);
 
     void test ();
     void print ();

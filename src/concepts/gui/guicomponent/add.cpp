@@ -35,3 +35,12 @@ void GuiComponent::add (TextBox* txtb) {
   };
   this->many_elems++;
 }
+
+void GuiComponent::add (Label* txtb) {
+  this->elems[this->many_elems] = GuiElement {
+    .ptr = txtb, 
+    .type = GUITypeLabel, 
+    .state = GUIStateQuiet
+  };
+  this->many_elems++;
+}

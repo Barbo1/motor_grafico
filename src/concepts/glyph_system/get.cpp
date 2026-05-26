@@ -19,7 +19,7 @@ float GlyphsSystem::get_left_bearing(char16_t character, float size) {
   return this->glyphs[this->mapping[character]].left_bearing * size;
 }
 
-float GlyphsSystem::get_length (std::u16string str, uint32_t many, float size) {
+float GlyphsSystem::get_length (std::u16string_view str, uint32_t many, float size) {
   float total_length = 0.f;
   float sizef = static_cast<float>(size);
   for (uint32_t i = 0; i < many; i++) {
@@ -35,7 +35,7 @@ float GlyphsSystem::get_length (std::u16string str, uint32_t many, float size) {
   return total_length;
 }
 
-float GlyphsSystem::get_length (std::string str, uint32_t many, float size) {
+float GlyphsSystem::get_length (std::string_view str, uint32_t many, float size) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  return this->get_length(conv.from_bytes(str), many, size);
+  return this->get_length(conv.from_bytes(std::string(str)), many, size);
 }

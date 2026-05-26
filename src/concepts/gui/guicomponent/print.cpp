@@ -52,32 +52,7 @@ void GuiComponent::print () {
         Dir2 aux = this->position + textbox->position;
         textbox->background(aux);
 
-        std::string str = textbox->get_text().substr(
-          textbox->window_start, 
-          textbox->window_end - textbox->window_start
-        );
-        
-        textbox->gs->fill (
-          str, 
-          textbox->letter_size, 
-          textbox->letter_color, 
-          textbox->text_area
-        );
-
-        SDL_Texture* actual_target = SDL_GetRenderTarget(this->glb->get_render());
-        SDL_SetRenderTarget(this->glb->get_render(), textbox->text_area);
-          uint32_t cursor_pos = textbox->gs->get_length (
-            str, 
-            textbox->curr_pos - textbox->window_start, 
-            textbox->letter_size
-          );
-          textbox->cursor_image.draw(
-            this->glb, 
-            Dir2(cursor_pos + textbox->cursor_dev , textbox->dims.y * 0.5f)
-          );
-        SDL_SetRenderTarget(this->glb->get_render(), actual_target);
-
-        int xdevi = (textbox->config & 4) && (textbox->xdev > 0.f) ? 
+        int xdevi = (textbox->config & TextBox::TextBoxConfig::TBCWinAgRight) && (textbox->xdev > 0.f) ? 
           static_cast<int>(textbox->xdev) + 2*textbox->cursor_dev: 
           0;
         Dir2 Q = textbox->dims.nmadd(0.5f, aux);
@@ -95,6 +70,21 @@ void GuiComponent::print () {
         };
         SDL_SetTextureBlendMode (textbox->text_area, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy (glb->get_render(), textbox->text_area, &src, &dst);
+      }
+      case GUITypeLabel: {
+        Label* label = static_cast<Label*>(this->elems[i].ptr);
+        Dir2 aux = this->position + label->position;
+        label->background(aux);
+
+        Dir2 Q = label->dims.nmadd(0.5f, aux);
+        SDL_Rect dst = SDL_Rect {
+          .x = static_cast<int>(Q.x),
+          .y = static_cast<int>(Q.y), 
+          .w = static_cast<int>(label->dims.x),
+          .h = static_cast<int>(label->dims.y) 
+        };
+        SDL_SetTextureBlendMode (label->text_area, SDL_BLENDMODE_BLEND);
+        SDL_RenderCopy (glb->get_render(), label->text_area, nullptr, &dst);
       }
       break;
       default: break;

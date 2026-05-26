@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <locale>
 
-float GlyphsSystem::fill (std::u16string str, uint16_t size, SDL_Color color, SDL_Texture* texture) {
+float GlyphsSystem::fill (std::u16string_view str, uint16_t size, SDL_Color color, SDL_Texture* texture) {
   const float sizef = static_cast<float>(size);
   const Uint32 colori = 
     ((Uint32)color.r << 24) & 
@@ -68,7 +68,7 @@ float GlyphsSystem::fill (std::u16string str, uint16_t size, SDL_Color color, SD
   return xposition;
 }
 
-float GlyphsSystem::fill (std::string str, uint16_t size, SDL_Color color, SDL_Texture* texture) {
+float GlyphsSystem::fill (std::string_view str, uint16_t size, SDL_Color color, SDL_Texture* texture) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  return this->fill(conv.from_bytes(str), size, color, texture);
+  return this->fill(conv.from_bytes(std::string(str)), size, color, texture);
 }

@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <locale>
 
-SDL_Texture* GlyphsSystem::image (std::u16string str, uint16_t size, SDL_Color color, Dir2 dims) {
+SDL_Texture* GlyphsSystem::image (std::u16string_view str, uint16_t size, SDL_Color color, Dir2 dims) {
   float sizef = static_cast<float>(size), total_width = 0.f;
   Uint32 colori = 
     ((Uint32)color.r << 24) & 
@@ -95,7 +95,7 @@ SDL_Texture* GlyphsSystem::image (std::u16string str, uint16_t size, SDL_Color c
   }
 }
 
-SDL_Texture* GlyphsSystem::image (std::string str, uint16_t size, SDL_Color color, Dir2 dims) {
+SDL_Texture* GlyphsSystem::image (std::string_view str, uint16_t size, SDL_Color color, Dir2 dims) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  return this->image(conv.from_bytes(str), size, color, dims);
+  return this->image(conv.from_bytes(std::string(str)), size, color, dims);
 }

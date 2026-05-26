@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <locale>
 
-uint32_t GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color, Dir2 position) {
+uint32_t GlyphsSystem::print (std::u16string_view str, uint16_t size, SDL_Color color, Dir2 position) {
   uint32_t w, h;
   float total_length = 0.f;
   float sizef = static_cast<float>(size);
@@ -59,7 +59,7 @@ uint32_t GlyphsSystem::print (std::u16string str, uint16_t size, SDL_Color color
   return total_length;
 }
 
-uint32_t GlyphsSystem::print (std::string str, uint16_t size, SDL_Color color, Dir2 position) {
+uint32_t GlyphsSystem::print (std::string_view str, uint16_t size, SDL_Color color, Dir2 position) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  return this->print(conv.from_bytes(str), size, color, position);
+  return this->print(conv.from_bytes(std::string(str)), size, color, position);
 }

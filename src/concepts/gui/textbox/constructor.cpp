@@ -14,7 +14,7 @@ TextBox::TextBox (
 ) noexcept:
    background(background),
    gs(gs),
-   text(new char[max_len]),
+   text(new char16_t[max_len]),
    position(position),
    dims(dims),
    letter_color(letter_color),
@@ -41,4 +41,13 @@ TextBox::TextBox (
     cursor_dev,
     letter_color
   ).cast(glb);
+
+  SDL_Texture* actual_target = SDL_GetRenderTarget(glb->get_render());
+  SDL_SetRenderTarget(glb->get_render(), this->text_area);
+    this->cursor_image.draw(
+      glb, 
+      Dir2(this->cursor_dev , this->dims.y * 0.5f)
+    );
+  SDL_SetRenderTarget(glb->get_render(), actual_target);
+
 }

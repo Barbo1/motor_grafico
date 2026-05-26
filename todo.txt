@@ -113,10 +113,10 @@
               se mueve el scroll cuando el puntero esta encima del slider, se movera el Position hacia
               el mismo lado que el scroll. Es posible setear el valor de la posicion mediante la 
               function 'void SetValue(uint32_t)'.
-      | | - TextBox: es una clase template que toma por argumento el largo de los textos que
+      |V| - TextBox: es una clase template que toma por argumento el largo de los textos que
               puede aceptar. Para ser creado se le pasa por parametro sus dimensiones, el color y
               tamaño de letra, su imagen y un GlyphSystem. 
-      | | - Label: puede mostrar un texto. Es creado pasandole como parametro sus dimensiones,
+      |V| - Label: puede mostrar un texto. Es creado pasandole como parametro sus dimensiones,
               la imagen del fondo del TextBox, el tamaño y color de los glyphs, un GlyphSystem, 
               la alineacion del texto (to the left and centered). No tiene hitbox debido a que no 
               es necesaria una interaccion directa con el. Tiene un metodo 'void Write(std::string_view)' 

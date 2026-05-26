@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_render.h>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
@@ -156,8 +157,18 @@ int main () {
     textbox_background.draw(glb, pos);
   });
 
+  Label label_1 = Label (
+    glb,
+    &gs,
+    [&] (Dir2 pos) {textbox_background.draw(glb, pos);},
+    Dir2(600.f, 400.f),
+    Dir2(150.f, 50.f),
+    20,
+    SDL_Color {.r=255, .g=255, .b=255, .a=255},
+    30
+  );
 
-  GuiComponent inicio = GuiComponent(glb, 5, keys, &error);
+  GuiComponent inicio = GuiComponent(glb, 6, keys, &error);
   if (error != 0) {
     std::cout << "there is a problem with the gui" << std::endl;
     std::exit(-1);
@@ -168,8 +179,10 @@ int main () {
   inicio.add(&slider_2);
   inicio.add(&button);
   inicio.add(&textbox);
+  inicio.add(&label_1);
 
   /* Creacion de lineas de colision. */
+  uint32_t contador = 0;
   while (cont) {
 
     /* Evaluacion de perifericos. */
@@ -187,6 +200,11 @@ int main () {
           }
           break;
       }
+    }
+    contador++;
+    if (contador == 1000) {
+      std::cout << "seteado" << std::endl;
+      label_1.set_text("hola como andas?");
     }
     
     glb->begin_render();

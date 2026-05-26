@@ -133,11 +133,12 @@ void GuiComponent::test () {
 
           // response to key press.
           for (uint32_t i = 0; i < this->many_keys; i++) {
-            bool is_pressed = xor_pressed_keys[i / 64] & (1ULL << (i & 63));
+            uint32_t is_pressed = xor_pressed_keys[i / 64] & (1ULL << (i & 63)) ?
+              TextBox::TextBoxConfig::TBCEnter : 0;
             uint32_t prev_text_len = textbox->text_len;
             switch (this->admited_keys[i]) {
               case SDL_SCANCODE_RETURN:
-                textbox->config = (textbox->config & 0xFFFFFFFE) | is_pressed;
+                textbox->config = (textbox->config & ~TextBox::TextBoxConfig::TBCEnter) | (is_pressed);
               case SDL_SCANCODE_RIGHT:
                 if (is_pressed && textbox->curr_pos < textbox->text_len)
                   textbox->curr_pos++;
@@ -174,86 +175,116 @@ void GuiComponent::test () {
             }
 
             float xdev;
-            if (is_pressed && textbox->text_len != 0) {
-              /*
-              std::cout << "---------------------------------" << std::endl;
-              std::cout << "   prev_len: " << prev_text_len << std::endl;
-              std::cout << "   text_len: " << textbox->text_len << std::endl;
-              std::cout << "previo a cambio:" << std::endl;
-              std::cout << "window_start: " << textbox->window_start << std::endl;
-              std::cout << "window_end: " << textbox->window_end << std::endl;
-              */
-              if (textbox->text_len < prev_text_len && textbox->window_end - 1 == prev_text_len) {
-                //std::cout << 1 << std::endl;
-                textbox->config = (textbox->config & 0xFFFFFFFB) | 0x4;
-                textbox->window_end = prev_text_len;
-                textbox->window_start = textbox->gs->get_left_window(
-                  textbox->get_text(), 
-                  textbox->text_len,
-                  textbox->letter_size,
-                  textbox->dims.x,
-                  &xdev
-                );
-                textbox->xdev = xdev - textbox->dims.x;
-              } else if (textbox->config & 4) {
-                if (textbox->window_end <= textbox->curr_pos) {
-                  //std::cout << 2 << std::endl;
-                  textbox->window_end = textbox->curr_pos + 1;
+            if (is_pressed) {
+              if (textbox->text_len != 0) {
+                /*
+                std::cout << "---------------------------------" << std::endl;
+                std::cout << "   prev_len: " << prev_text_len << std::endl;
+                std::cout << "   text_len: " << textbox->text_len << std::endl;
+                std::cout << "previo a cambio:" << std::endl;
+                std::cout << "window_start: " << textbox->window_start << std::endl;
+                std::cout << "window_end: " << textbox->window_end << std::endl;
+                */
+                if (textbox->text_len < prev_text_len && textbox->window_end - 1 == prev_text_len) {
+                  //std::cout << 1 << std::endl;
+                  textbox->config = 
+                    (textbox->config & ~TextBox::TextBoxConfig::TBCWinAgRight) | 
+                    TextBox::TextBoxConfig::TBCWinAgRight;
+                  textbox->window_end = prev_text_len;
                   textbox->window_start = textbox->gs->get_left_window(
-                    textbox->get_text(), 
-                    textbox->curr_pos,
+                    textbox->get_text_16(), 
+                    textbox->text_len,
                     textbox->letter_size,
                     textbox->dims.x,
                     &xdev
                   );
                   textbox->xdev = xdev - textbox->dims.x;
-                } else if (textbox->curr_pos <= textbox->window_start) {
-                  //std::cout << 3 << std::endl;
-                  textbox->config &= 0xFFFFFFFB;
-                  textbox->window_start = textbox->curr_pos;
-                  textbox->window_end = textbox->gs->get_right_window(
-                    textbox->get_text(), 
-                    textbox->curr_pos,
-                    textbox->letter_size,
-                    textbox->dims.x,
-                    &xdev
-                  );
-                  textbox->xdev = xdev - textbox->dims.x;
+                } else if (textbox->config & TextBox::TextBoxConfig::TBCWinAgRight) {
+                  if (textbox->window_end <= textbox->curr_pos) {
+                    //std::cout << 2 << std::endl;
+                    textbox->window_end = textbox->curr_pos + 1;
+                    textbox->window_start = textbox->gs->get_left_window(
+                      textbox->get_text_16(), 
+                      textbox->curr_pos,
+                      textbox->letter_size,
+                      textbox->dims.x,
+                      &xdev
+                    );
+                    textbox->xdev = xdev - textbox->dims.x;
+                  } else if (textbox->curr_pos <= textbox->window_start) {
+                    //std::cout << 3 << std::endl;
+                    textbox->config &= ~TextBox::TextBoxConfig::TBCWinAgRight;
+                    textbox->window_start = textbox->curr_pos;
+                    textbox->window_end = textbox->gs->get_right_window(
+                      textbox->get_text_16(), 
+                      textbox->curr_pos,
+                      textbox->letter_size,
+                      textbox->dims.x,
+                      &xdev
+                    );
+                    textbox->xdev = xdev - textbox->dims.x;
+                  }
+                } else {
+                  if (textbox->window_end <= textbox->curr_pos) {
+                    //std::cout << 5 << std::endl;
+                    textbox->config |= TextBox::TextBoxConfig::TBCWinAgRight;
+                    textbox->window_end = textbox->curr_pos + 1;
+                    textbox->window_start = textbox->gs->get_left_window(
+                      textbox->get_text_16(),
+                      textbox->curr_pos,
+                      textbox->letter_size,
+                      textbox->dims.x,
+                      &xdev
+                    );
+                    textbox->xdev = xdev - textbox->dims.x;
+                  } else if (textbox->curr_pos <= textbox->window_start) {
+                    //std::cout << 6 << std::endl;
+                    textbox->window_start = textbox->curr_pos;
+                    textbox->window_end = textbox->gs->get_right_window(
+                      textbox->get_text_16(), 
+                      textbox->curr_pos,
+                      textbox->letter_size,
+                      textbox->dims.x,
+                      &xdev
+                    );
+                    textbox->xdev = xdev - textbox->dims.x;
+                  }
                 }
-              } else {
-                if (textbox->window_end <= textbox->curr_pos) {
-                  //std::cout << 5 << std::endl;
-                  textbox->config = (textbox->config & 0xFFFFFFFB) | 0x4;
-                  textbox->window_end = textbox->curr_pos + 1;
-                  textbox->window_start = textbox->gs->get_left_window(
-                    textbox->get_text(),
-                    textbox->curr_pos,
-                    textbox->letter_size,
-                    textbox->dims.x,
-                    &xdev
-                  );
-                  textbox->xdev = xdev - textbox->dims.x;
-                } else if (textbox->curr_pos <= textbox->window_start) {
-                  //std::cout << 6 << std::endl;
-                  textbox->window_start = textbox->curr_pos;
-                  textbox->window_end = textbox->gs->get_right_window(
-                    textbox->get_text(), 
-                    textbox->curr_pos,
-                    textbox->letter_size,
-                    textbox->dims.x,
-                    &xdev
-                  );
-                  textbox->xdev = xdev - textbox->dims.x;
-                }
+                /*
+                std::cout << "luego de cambio:" << std::endl;
+                std::cout << "window_start: " << textbox->window_start << std::endl;
+                std::cout << "window_end: " << textbox->window_end << std::endl;
+                */
+
+
+              } else if (textbox->text_len == 0) {
+                textbox->window_start = 0;
+                textbox->window_end = 1;
               }
-              /*
-              std::cout << "luego de cambio:" << std::endl;
-              std::cout << "window_start: " << textbox->window_start << std::endl;
-              std::cout << "window_end: " << textbox->window_end << std::endl;
-              */
-            } else if (textbox->text_len == 0) {
-              textbox->window_start = 0;
-              textbox->window_end = 1;
+
+              // filling the text_area with the new image which will be showed.
+              std::u16string str = textbox->get_text_16().substr(
+                textbox->window_start, 
+                textbox->window_end - textbox->window_start
+              );
+              textbox->gs->fill (
+                str, 
+                textbox->letter_size, 
+                textbox->letter_color, 
+                textbox->text_area
+              );
+              SDL_Texture* actual_target = SDL_GetRenderTarget(this->glb->get_render());
+              SDL_SetRenderTarget(this->glb->get_render(), textbox->text_area);
+                uint32_t cursor_pos = textbox->gs->get_length (
+                  str, 
+                  textbox->curr_pos - textbox->window_start, 
+                  textbox->letter_size
+                );
+                textbox->cursor_image.draw(
+                  this->glb, 
+                  Dir2(cursor_pos + textbox->cursor_dev , textbox->dims.y * 0.5f)
+                );
+              SDL_SetRenderTarget(this->glb->get_render(), actual_target);
             }
           }
         } else if (test) {
@@ -261,6 +292,20 @@ void GuiComponent::test () {
         } else {
           this->elems[i].state = GUIStateQuiet;
         }
+      }
+      break;
+
+      case GuiElementType::GUITypeLabel: {
+        Label* label = static_cast<Label*>(this->elems[i].ptr);
+        if (label->config & Label::LabelConfig::LCchanged) {
+          label->gs->fill (
+            label->get_text_16(), 
+            label->letter_size, 
+            label->letter_color, 
+            label->text_area
+          );
+        }
+        label->config &= ~Label::LabelConfig::LCchanged;
       }
       break;
 

@@ -94,18 +94,18 @@ class GlyphsSystem {
 
     /* functions meant to print a letters or strings in different ways. */
     uint32_t print (char16_t, uint16_t, SDL_Color, Dir2);
-    uint32_t print (std::u16string, uint16_t, SDL_Color, Dir2);
-    uint32_t print (std::string, uint16_t, SDL_Color, Dir2);
+    uint32_t print (std::u16string_view, uint16_t, SDL_Color, Dir2);
+    uint32_t print (std::string_view, uint16_t, SDL_Color, Dir2);
 
     /* functions meant to print a letter or string in a new texture. */
     SDL_Texture* image (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
-    SDL_Texture* image (std::u16string, uint16_t, SDL_Color, Dir2);
-    SDL_Texture* image (std::string, uint16_t, SDL_Color, Dir2);
+    SDL_Texture* image (std::u16string_view, uint16_t, SDL_Color, Dir2);
+    SDL_Texture* image (std::string_view, uint16_t, SDL_Color, Dir2);
 
     /* functions meant to print a letter or string in a given texture. */
     float fill (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
-    float fill (std::u16string, uint16_t, SDL_Color, SDL_Texture*);
-    float fill (std::string, uint16_t, SDL_Color, SDL_Texture*);
+    float fill (std::u16string_view, uint16_t, SDL_Color, SDL_Texture*);
+    float fill (std::string_view, uint16_t, SDL_Color, SDL_Texture*);
     
     /* raster a particular letter. */
     void cache (char16_t, uint16_t, SDL_Color);
@@ -138,14 +138,14 @@ class GlyphsSystem {
      *             1       2
      *  | . . . hours i have . . . |
      * */
-    uint32_t get_right_window (std::u16string, int32_t, uint16_t, float, float*);
-    uint32_t get_right_window (std::string, int32_t, uint16_t, float, float*);
-    uint32_t get_left_window (std::u16string, int32_t, uint16_t, float, float*);
-    uint32_t get_left_window (std::string, int32_t, uint16_t, float, float*);
+    uint32_t get_right_window (std::u16string_view, int32_t, uint16_t, float, float*);
+    uint32_t get_right_window (std::string_view, int32_t, uint16_t, float, float*);
+    uint32_t get_left_window (std::u16string_view, int32_t, uint16_t, float, float*);
+    uint32_t get_left_window (std::string_view, int32_t, uint16_t, float, float*);
 
     /* given a string, returns the length of that string if it was writen with
      * the current font.
      * */
-    float get_length (std::u16string, uint32_t, float);
-    float get_length (std::string, uint32_t, float);
+    float get_length (std::u16string_view, uint32_t, float);
+    float get_length (std::string_view, uint32_t, float);
 };
