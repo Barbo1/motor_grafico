@@ -8,7 +8,7 @@
 uint32_t GlyphsSystem::get_right_window (std::u16string str, int32_t pos, uint16_t size, float dimention, float* bound) {
   const float sizef = static_cast<float>(size);
   const int strsizem1 = str.size() - 1;
-  *bound = 0;
+  *bound = 0.f;
   if (strsizem1 < pos) 
     return strsizem1;
   float total_width = sizef * this->advance_widths[
@@ -37,7 +37,7 @@ uint32_t GlyphsSystem::get_right_window (std::string str, int32_t pos, uint16_t 
 
 uint32_t GlyphsSystem::get_left_window (std::u16string str, int32_t pos, uint16_t size, float dimention, float* bound) {
   const float sizef = static_cast<float>(size);
-  *bound = 0;
+  *bound = 0.f;
   if (pos < 0) 
     return 0;
   float total_width = sizef * this->advance_widths[

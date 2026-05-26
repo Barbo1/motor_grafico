@@ -146,7 +146,11 @@ int main () {
     40
   );
   const Visualizer<D2FIG> textbox_background =
-    ImageModifier::square(textbox.get_dimentions().y, textbox.get_dimentions().x, SDL_Color {.r=0, .g=0, .b=0, .a=255}).
+    ImageModifier::square(
+      textbox.get_dimentions().y, 
+      textbox.get_dimentions().x, 
+      SDL_Color {.r=0, .g=0, .b=0, .a=255}
+    ).
     cast(glb);
   textbox.set_background_fn([&] (Dir2 pos) {
     textbox_background.draw(glb, pos);

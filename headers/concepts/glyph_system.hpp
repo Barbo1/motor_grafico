@@ -97,16 +97,15 @@ class GlyphsSystem {
     uint32_t print (std::u16string, uint16_t, SDL_Color, Dir2);
     uint32_t print (std::string, uint16_t, SDL_Color, Dir2);
 
+    /* functions meant to print a letter or string in a new texture. */
     SDL_Texture* image (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
     SDL_Texture* image (std::u16string, uint16_t, SDL_Color, Dir2);
     SDL_Texture* image (std::string, uint16_t, SDL_Color, Dir2);
 
+    /* functions meant to print a letter or string in a given texture. */
     float fill (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
     float fill (std::u16string, uint16_t, SDL_Color, SDL_Texture*);
     float fill (std::string, uint16_t, SDL_Color, SDL_Texture*);
-
-    /* test if a glyph is rasterized. */
-    bool is_cached (char16_t, uint16_t, SDL_Color) const;
     
     /* raster a particular letter. */
     void cache (char16_t, uint16_t, SDL_Color);
@@ -124,15 +123,29 @@ class GlyphsSystem {
      * */
     void clear_meta ();
 
-    float get_max_advance (float) const;
-    float get_ascent (float) const;
-    float get_descent (float) const;
+    /* tests and information getters. */
+    bool is_cached (char16_t, uint16_t, SDL_Color);
+    float get_max_advance (float);
+    float get_ascent (float);
+    float get_descent (float);
+    float get_left_bearing(char16_t, float);
 
+    /* from a given string, a floating bound and a position(1), calculate the 
+     * position(2), starting from the first one(1), that accumulates the 
+     * smallest characters distance from it, which is also greater than bound. 
+     * It must be passed a location to a float so the function can return the 
+     * complete distance.
+     *             1       2
+     *  | . . . hours i have . . . |
+     * */
     uint32_t get_right_window (std::u16string, int32_t, uint16_t, float, float*);
     uint32_t get_right_window (std::string, int32_t, uint16_t, float, float*);
     uint32_t get_left_window (std::u16string, int32_t, uint16_t, float, float*);
     uint32_t get_left_window (std::string, int32_t, uint16_t, float, float*);
 
-    uint32_t get_length (std::u16string, uint32_t, float);
-    uint32_t get_length (std::string, uint32_t, float);
+    /* given a string, returns the length of that string if it was writen with
+     * the current font.
+     * */
+    float get_length (std::u16string, uint32_t, float);
+    float get_length (std::string, uint32_t, float);
 };

@@ -24,7 +24,7 @@ TextBox::TextBox (
    curr_pos(0),
    config(0),
    window_start(0),
-   window_end(0),
+   window_end(1),
    xdev(0.f)
 {
   this->text_area = SDL_CreateTexture(
@@ -34,10 +34,11 @@ TextBox::TextBox (
     this->dims.x + gs->get_max_advance(letter_size), 
     dims.y
   );
-  this->cursor_dev = log2(letter_size) * 0.63092975f;
+  float cursor_dev = log2(letter_size) * 0.63092975f;
+  this->cursor_dev = cursor_dev;
   this->cursor_image = ImageModifier::square(
     gs->get_ascent(letter_size) - gs->get_descent(letter_size),
-    this->cursor_dev,
+    cursor_dev,
     letter_color
   ).cast(glb);
 }

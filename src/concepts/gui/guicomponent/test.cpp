@@ -175,19 +175,30 @@ void GuiComponent::test () {
 
             float xdev;
             if (is_pressed && textbox->text_len != 0) {
-              if (textbox->config & 4) {
-                if (textbox->text_len < prev_text_len) {
-                  textbox->window_end = textbox->text_len;
-                  textbox->window_start = textbox->gs->get_left_window(
-                    textbox->get_text(), 
-                    textbox->text_len,
-                    textbox->letter_size,
-                    textbox->dims.x,
-                    &xdev
-                  );
-                  textbox->xdev = xdev - textbox->dims.x;
-                } else if (textbox->window_end < textbox->curr_pos) {
-                  textbox->window_end = textbox->curr_pos;
+              /*
+              std::cout << "---------------------------------" << std::endl;
+              std::cout << "   prev_len: " << prev_text_len << std::endl;
+              std::cout << "   text_len: " << textbox->text_len << std::endl;
+              std::cout << "previo a cambio:" << std::endl;
+              std::cout << "window_start: " << textbox->window_start << std::endl;
+              std::cout << "window_end: " << textbox->window_end << std::endl;
+              */
+              if (textbox->text_len < prev_text_len && textbox->window_end - 1 == prev_text_len) {
+                //std::cout << 1 << std::endl;
+                textbox->config = (textbox->config & 0xFFFFFFFB) | 0x4;
+                textbox->window_end = prev_text_len;
+                textbox->window_start = textbox->gs->get_left_window(
+                  textbox->get_text(), 
+                  textbox->text_len,
+                  textbox->letter_size,
+                  textbox->dims.x,
+                  &xdev
+                );
+                textbox->xdev = xdev - textbox->dims.x;
+              } else if (textbox->config & 4) {
+                if (textbox->window_end <= textbox->curr_pos) {
+                  //std::cout << 2 << std::endl;
+                  textbox->window_end = textbox->curr_pos + 1;
                   textbox->window_start = textbox->gs->get_left_window(
                     textbox->get_text(), 
                     textbox->curr_pos,
@@ -197,7 +208,8 @@ void GuiComponent::test () {
                   );
                   textbox->xdev = xdev - textbox->dims.x;
                 } else if (textbox->curr_pos <= textbox->window_start) {
-                  textbox->config = textbox->config & 0xFFFFFFFB;
+                  //std::cout << 3 << std::endl;
+                  textbox->config &= 0xFFFFFFFB;
                   textbox->window_start = textbox->curr_pos;
                   textbox->window_end = textbox->gs->get_right_window(
                     textbox->get_text(), 
@@ -210,10 +222,11 @@ void GuiComponent::test () {
                 }
               } else {
                 if (textbox->window_end <= textbox->curr_pos) {
-                  textbox->config = (textbox->config & 0xFFFFFFFB) | 4;
-                  textbox->window_end = textbox->curr_pos;
+                  //std::cout << 5 << std::endl;
+                  textbox->config = (textbox->config & 0xFFFFFFFB) | 0x4;
+                  textbox->window_end = textbox->curr_pos + 1;
                   textbox->window_start = textbox->gs->get_left_window(
-                    textbox->get_text(), 
+                    textbox->get_text(),
                     textbox->curr_pos,
                     textbox->letter_size,
                     textbox->dims.x,
@@ -221,6 +234,7 @@ void GuiComponent::test () {
                   );
                   textbox->xdev = xdev - textbox->dims.x;
                 } else if (textbox->curr_pos <= textbox->window_start) {
+                  //std::cout << 6 << std::endl;
                   textbox->window_start = textbox->curr_pos;
                   textbox->window_end = textbox->gs->get_right_window(
                     textbox->get_text(), 
@@ -232,6 +246,14 @@ void GuiComponent::test () {
                   textbox->xdev = xdev - textbox->dims.x;
                 }
               }
+              /*
+              std::cout << "luego de cambio:" << std::endl;
+              std::cout << "window_start: " << textbox->window_start << std::endl;
+              std::cout << "window_end: " << textbox->window_end << std::endl;
+              */
+            } else if (textbox->text_len == 0) {
+              textbox->window_start = 0;
+              textbox->window_end = 1;
             }
           }
         } else if (test) {

@@ -73,12 +73,12 @@ void GuiComponent::print () {
           );
           textbox->cursor_image.draw(
             this->glb, 
-            Dir2(cursor_pos + 2 * textbox->cursor_dev, textbox->dims.y * 0.5f)
+            Dir2(cursor_pos + textbox->cursor_dev , textbox->dims.y * 0.5f)
           );
         SDL_SetRenderTarget(this->glb->get_render(), actual_target);
 
         int xdevi = (textbox->config & 4) && (textbox->xdev > 0.f) ? 
-          static_cast<int>(textbox->xdev) + 3 * static_cast<int>(textbox->cursor_dev) : 
+          static_cast<int>(textbox->xdev) + 2*textbox->cursor_dev: 
           0;
         Dir2 Q = textbox->dims.nmadd(0.5f, aux);
         SDL_Rect src = SDL_Rect {
