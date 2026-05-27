@@ -34,6 +34,7 @@ enum VisualType {
 };
 
 class ImageModifier;
+class GlyphsSystem;
 
 /* This kind of Visualizer represents a bidimentional texture. */
 template <VisualType T>
@@ -56,6 +57,7 @@ class Visualizer {
     void draw (Global* glb, const AngDir2 & position, float scale = 1.0f) const;
 
     friend ImageModifier;
+    friend GlyphsSystem;
     friend Visualizer<D2FIG> chargePNG (Global* glb, const std::string& path);
 };
 

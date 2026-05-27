@@ -1,10 +1,7 @@
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/rasterizer.hpp"
+#include "./visualizer.hpp"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_stdinc.h>
-#include <cmath>
-#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
@@ -98,11 +95,11 @@ class GlyphsSystem {
     uint32_t print (std::string_view, uint16_t, SDL_Color, Dir2);
 
     /* functions meant to print a letter or string in a new texture. */
-    SDL_Texture* image (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
-    SDL_Texture* image (std::u16string_view, uint16_t, SDL_Color, Dir2);
-    SDL_Texture* image (std::string_view, uint16_t, SDL_Color, Dir2);
+    Visualizer<D2FIG> image (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
+    Visualizer<D2FIG> image (std::u16string_view, uint16_t, SDL_Color, Dir2);
+    Visualizer<D2FIG> image (std::string_view, uint16_t, SDL_Color, Dir2);
 
-    /* functions meant to print a letter or string in a given texture. */
+    /* functions meant to print a letter or string in a given SDL_Texture. */
     float fill (char16_t, uint16_t, SDL_Color, Dir2); // not implemented.
     float fill (std::u16string_view, uint16_t, SDL_Color, SDL_Texture*);
     float fill (std::string_view, uint16_t, SDL_Color, SDL_Texture*);

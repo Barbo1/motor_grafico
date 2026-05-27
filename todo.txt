@@ -123,6 +123,7 @@
               para poder escribir su contenido y otro 'std::string_view Read()' para leerlo.
       |X| - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
               cada una con un string que representa el significado.
+ |V| - agregar capacidad de printear letras en los visualizers 2D.
  | | - implementar los poligonos con colisiones:
         |V| + testeo.
         | | + reposicion.
@@ -133,7 +134,6 @@
         | | + la funcion project de image_modifier, y la function de print polygon,
         | | + rounded_square dentro de los constructores de figuras,
         | | + collition_point sq_sq,
- | | - agregar capacidad de printear letras en los visualizers 2D.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - mejorar el manejo de la memoria de la rasterizacion de letras.
  | | - re-implementar de nuevo el descompresor de imagenes png.

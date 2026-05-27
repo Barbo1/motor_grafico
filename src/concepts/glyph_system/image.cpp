@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <locale>
 
-SDL_Texture* GlyphsSystem::image (std::u16string_view str, uint16_t size, SDL_Color color, Dir2 dims) {
+Visualizer<D2FIG> GlyphsSystem::image (std::u16string_view str, uint16_t size, SDL_Color color, Dir2 dims) {
   float sizef = static_cast<float>(size), total_width = 0.f;
   Uint32 colori = 
     ((Uint32)color.r << 24) & 
@@ -43,7 +43,7 @@ SDL_Texture* GlyphsSystem::image (std::u16string_view str, uint16_t size, SDL_Co
   }
 
   if (total_glyphs == 0)
-    return nullptr;
+    return Visualizer<D2FIG>();
   else {
     SDL_Texture* texture = SDL_CreateTexture(
       this->glb->get_render(), 
@@ -57,6 +57,7 @@ SDL_Texture* GlyphsSystem::image (std::u16string_view str, uint16_t size, SDL_Co
     float xposition = 0.f;
 
     uint32_t i = 0;
+    total_width = 0.f;
     while (i < str.size() && total_width < dims.x) {
       const char16_t& character = str[i];
       uint32_t key = GlyphsSystem::get_key(character, size, colori);
@@ -91,11 +92,20 @@ SDL_Texture* GlyphsSystem::image (std::u16string_view str, uint16_t size, SDL_Co
     }
 
     SDL_SetRenderTarget(glb->get_render(), actual_target);
-    return texture;
+
+    Visualizer<D2FIG> ret;
+    ret.texture = std::shared_ptr<SDL_Texture>(
+      texture, 
+      [] (SDL_Texture* texture) { SDL_DestroyTexture (texture); }
+    );
+    ret.height = static_cast<int>(dims.y);
+    ret.width = static_cast<int>(dims.x);
+
+    return ret;
   }
 }
 
-SDL_Texture* GlyphsSystem::image (std::string_view str, uint16_t size, SDL_Color color, Dir2 dims) {
+Visualizer<D2FIG> GlyphsSystem::image (std::string_view str, uint16_t size, SDL_Color color, Dir2 dims) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
   return this->image(conv.from_bytes(std::string(str)), size, color, dims);
 }
