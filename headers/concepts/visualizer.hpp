@@ -13,21 +13,6 @@
 #include "../primitives/global.hpp"
 #include "../primitives/vectors.hpp"
 
-/* Shows in the render the points in the array. */
-void print_points (
-  Global* glb, std::vector<SDL_Point&> points, 
-  SDL_Color stcol, SDL_Color ndcol, int radio, int division = 3
-);
-
-/* Shows in the render the line between the two points. */
-void print_line (
-  Global* glb, SDL_Point point1, SDL_Point point2, SDL_Color color
-);
-
-/* Functions meant to print plain bidimentional figures. */
-void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color);
-void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
-
 enum VisualType {
   D2FIG,
   D3FIG,
@@ -67,14 +52,11 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
 
 Visualizer<D2FIG> chargePNG (Global* glb, const std::string& path);
 
-/* Function meant to print a bidimentional figures with a uv mapping. */
-void print_polygon_t (
-  Global* glb, 
-  std::vector<Dir2> points, 
-  std::vector<Dir2> uvs, 
-  const Visualizer<D2FIG>& texture
-);
+/* Functions meant to print plain bidimentional figures. */
+void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color);
+void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
 
+/* Function meant to print a bidimentional triangles with a uv mapping. */
 void print_triangle_t (
   Global* glb, 
   Dir2 point1, Dir2 point2, Dir2 point3, 

@@ -1,6 +1,8 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
+#include <SDL2/SDL_stdinc.h>
    
 ImageModifier ImageModifier::oval (int height, int base, SDL_Color color) {
+  Uint32* pixels = new Uint32[4 * base * height];
   int* bounds = new int[4*height- 4];
   int* biter = bounds;
 
@@ -24,7 +26,7 @@ ImageModifier ImageModifier::oval (int height, int base, SDL_Color color) {
     *(biter++) += sum;
   }
 
-  ImageModifier ret = ImageModifier::bounder(bounds, 2*height, 2*base, color);
+  ImageModifier ret = ImageModifier::bound_constructor(bounds, pixels, 2*height, 2*base, color);
   delete [] bounds;
   return ret;
 }

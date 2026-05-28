@@ -5,15 +5,12 @@
 #include "../headers/concepts/image_modifier.hpp"
 #include "../headers/concepts/visualizer.hpp"
 #include "../headers/primitives/global.hpp"
-#include "../headers/sp_objects/impulse.hpp"
-#include "../headers/sp_objects/particle_source.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
-#include <iostream>
 #include <cmath>
 
 int main () {

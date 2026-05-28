@@ -124,16 +124,16 @@
       |X| - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
               cada una con un string que representa el significado.
  |V| - agregar capacidad de printear letras en los visualizers 2D.
+ |T| - falta implementar: 
+        |X| + la funcion project de image_modifier, y la function de print polygon,
+        |V| + rounded_square dentro de los constructores de figuras,
+        |V| + collition_point sq_sq,
  | | - implementar los poligonos con colisiones:
         |V| + testeo.
         | | + reposicion.
         | | + resolucion.
         | | + punto de colision.
  | | - agregar una comprobacion de punteros nullos cada vez que se hace un new.
- | | - falta implementar: 
-        | | + la funcion project de image_modifier, y la function de print polygon,
-        | | + rounded_square dentro de los constructores de figuras,
-        | | + collition_point sq_sq,
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - mejorar el manejo de la memoria de la rasterizacion de letras.
  | | - re-implementar de nuevo el descompresor de imagenes png.

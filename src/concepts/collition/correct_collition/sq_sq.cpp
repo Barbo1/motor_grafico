@@ -2,13 +2,13 @@
 #include "../../../../headers/pr_objects/square.hpp"
 
 void correct_collition (Square& sq1, Square& sq2) {
-  AngDir2 diff = sq1.position - sq2.position;
-  AngDir2 size = Dir2 {sq1.width + sq2.width, sq2.height + sq1.height};
+  Dir2 diff = sq1.position - sq2.position;
+  Dir2 size = Dir2 {sq1.width + sq2.width, sq2.height + sq1.height};
 
   float q = static_cast<float>(size.pL(diff.abs()) < 0.f);
-  AngDir2 n(1.f - q, q, 0.f);
+  Dir2 n(1.f - q, q);
   float res = diff * n;
-  AngDir2 ns = n * std::copysignf(1.f, res);
+  Dir2 ns = n * std::copysignf(1.f, res);
 
   sq1._collition_normal = ns;
   sq2._collition_normal = -ns;

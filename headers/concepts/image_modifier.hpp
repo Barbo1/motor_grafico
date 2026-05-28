@@ -17,7 +17,7 @@ class ImageModifier {
     int aquired;
     
     ImageModifier (int height, int width, Uint32* pixels) noexcept;
-    static ImageModifier bounder (int* bounds, int height, int width, SDL_Color color);
+    static ImageModifier bound_constructor (int* bounds, Uint32* image_buffer, int height, int width, SDL_Color color);
     static void circle_bound_maker (int radio, int* bounds, int offset);
 
   public:
@@ -33,6 +33,7 @@ class ImageModifier {
 
     Visualizer<D2FIG> cast (Global*);
     SDL_Color operator() (uint32_t, uint32_t);
+    ImageModifier subimage(Dir2 pos, Dir2 dim);
 
     /* Modifications. */
     ImageModifier& resize (uint32_t hieght, uint32_t width);
@@ -51,7 +52,6 @@ class ImageModifier {
 
     ImageModifier& rbpp (uint32_t number_reduction); /* reduce bits per pixel. */
     ImageModifier& apply (Uint32 (*fun)(Uint32));
-    ImageModifier& project (Dir2 point1, Dir2 point2, Dir2 point3, Dir2 point4);
 
     /* Special constructors. */
     static ImageModifier square (int height, int base, SDL_Color color);

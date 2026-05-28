@@ -1,4 +1,5 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
+#include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 
 ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
@@ -41,6 +42,7 @@ ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SD
 
   int width = static_cast<int>(max.x);
   int height = static_cast<int>(max.y);
+  Uint32* pixels = new Uint32[height * width];
 
   std::vector<int> bounds;
   bounds.resize (2 * height + 1);
@@ -60,5 +62,5 @@ ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SD
 
   *biter = height * width + 1;
 
-  return ImageModifier::bounder(bounds.data(), height, width, color);
+  return ImageModifier::bound_constructor (bounds.data(), pixels, height, width, color);
 }

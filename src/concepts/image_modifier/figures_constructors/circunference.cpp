@@ -1,6 +1,11 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
+#include <SDL2/SDL_stdinc.h>
+#include <cstdint>
    
 ImageModifier ImageModifier::circunference (int radio, int width, SDL_Color color) {
+  uint32_t dim = 2*radio;
+  Uint32* pixels = new Uint32[dim * dim];
+
   std::size_t r1 = radio - width;
   std::size_t b1 = 4*radio - 4;
   std::size_t b2 = 4*r1 - 4;
@@ -24,12 +29,12 @@ ImageModifier ImageModifier::circunference (int radio, int width, SDL_Color colo
   }
   while (i < b1)
     bounds3[k++] = bounds1[i++];
+
+  bounds3[k] = dim * dim;
+  ImageModifier ret = ImageModifier::bound_constructor(bounds3, pixels, dim, dim, color);
+
   delete [] bounds1;
   delete [] bounds2;
-
-  bounds3[k] = 4*radio*radio;
-
-  ImageModifier ret = ImageModifier::bounder(bounds3, 2*radio, 2*radio, color);
   delete [] bounds3;
   return ret;
 }
