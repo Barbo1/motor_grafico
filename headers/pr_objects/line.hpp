@@ -52,4 +52,9 @@ class Line {
     friend void correct_collition (Square&, Line&);
     friend void correct_collition (Circle&, Line&);
     template<std::size_t N> friend void correct_collition (Line&, NEdge<N>&);
+    
+    Dir2 collition_point (const Line&, const Physical&);
+    Dir2 collition_point (const Line&, const Square&);
+    Dir2 collition_point (const Line&, const Circle&);
+    template<std::size_t N> Dir2 collition_point (const Line&, const NEdge<N>&);
 };

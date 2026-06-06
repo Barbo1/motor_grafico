@@ -1,4 +1,4 @@
-add_executable (fin ./prueba_collition_point.cpp)
+add_executable (fin ./pruebas_nedge/prueba_6.cpp)
 target_include_directories (fin PRIVATE ${CMAKE_SOURCE_DIR}/headers)
 target_link_libraries (fin PRIVATE 
   objsrc_concepts

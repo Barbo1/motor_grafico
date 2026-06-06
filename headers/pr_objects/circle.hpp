@@ -61,4 +61,9 @@ class Circle final: public Physical {
     friend void correct_collition (Square&, Circle&);
     template<std::size_t N> friend void correct_collition (Circle&, NEdge<N>&);
     template<std::size_t N> friend void correct_collition (NEdge<N>&, Circle&);
+
+    friend Dir2 collition_point (const Line&, const Circle&);
+    friend Dir2 collition_point (const Circle&, const Circle&);
+    friend Dir2 collition_point (const Circle&, const Square&);
+    template<std::size_t N> friend Dir2 collition_point (const Circle&, const NEdge<N>&);
 };

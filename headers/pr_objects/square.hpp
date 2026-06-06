@@ -60,4 +60,9 @@ class Square final: public Physical {
     friend void correct_collition (Square&, Square&);
     template<std::size_t N> friend void correct_collition (Square&, NEdge<N>&);
     template<std::size_t N> friend void correct_collition (NEdge<N>&, Square&);
+  
+    friend Dir2 collition_point (const Line&, const Square&);
+    friend Dir2 collition_point (const Circle&, const Square&);
+    friend Dir2 collition_point (const Square&, const Square&);
+    template<std::size_t N> friend Dir2 collition_point (const Square&, const NEdge<N>&);
 };

@@ -1,10 +1,10 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
 
-Dir2 collition_point (Square& sq1, Square& sq2) {
-  Dir2 pos1 = sq1.get_position(), pos2 = sq2.get_position();
-  float h1 = sq1.get_height(), h2 = sq2.get_height(); 
-  float w1 = sq1.get_width(), w2 = sq2.get_width(); 
+Dir2 collition_point (const Square& sq1, const Square& sq2) {
+  Dir2 pos1 = sq1.position, pos2 = sq2.position;
+  float h1 = sq1.height, h2 = sq2.height; 
+  float w1 = sq1.width, w2 = sq2.width; 
   Dir2 diff = pos1 - pos2;
   Dir2 size = Dir2 (w1 + w2, h1 + h2);
 

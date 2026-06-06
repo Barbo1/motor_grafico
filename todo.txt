@@ -137,8 +137,8 @@
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - mejorar el manejo de la memoria de la rasterizacion de letras.
  | | - re-implementar de nuevo el descompresor de imagenes png.
- | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan durante el codigo,
-        como las evaluaciones de ofuscamiento de lineas.
+ | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
+        durante el codigo, como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - cambios en las colisiones:
       | | + hacer una mezcla de movimiento y colision, que calcule el movimiento y 
@@ -182,3 +182,28 @@
  | | - mejorar eficiencia de figures_constructors:
         | | + cambiar algoritmo de dibujo de un circulo,
         | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.
+ | | - implementar quick_alloc en Global para poder manejar memoria dinamica en un buffer en
+          el stack. Consiste en una estructura de 4 MB de memoria con la capacidad de poder
+          allocar una cantidad maxima de N allocaciones, reduciendo el uso de malloc para 
+          poder acomodar la memoria mas comodamente. Tiene las siguientes partes:
+            | | - qalloc_id qalloc(std::size_t s): 
+                retorna la ID de un puntero a 's' bytes de memoria. 
+                Puede retorna -1 si no encuentra suficiente memoria o exsiten N allocaciones.
+            | | - void qfree(int): 
+                libera la memoria asociada al puntero 'p'.
+          para mentener un recuento de los lugares ocupados, se tiene un arreglo de la 
+          siguiente estructura:
+            struct _Qalloc_Management {
+              void* begin;
+              uint32_t size: 22;
+              uint32_t prev: M;
+              uint32_t next: M;
+              uint32_t config: 2; // -> 1 -> valid, 0 -> freed
+            };
+          donde M = menor potencia de 2 mas grande que 2*N + 1
+          Para el retorno de el allocamiento existe la estructura:
+            struct qalloc_id {
+              void* begin;
+              int id;
+            }
+          para darle soporte al allocamiento de varios hilos, voy a utilizar mutex.
