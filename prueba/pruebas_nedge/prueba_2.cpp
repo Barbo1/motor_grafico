@@ -62,13 +62,23 @@ int main () {
     std::exit(-1);
   }
 
+  /*
+    NEdge (
+      Global* glb, const Dir2 * points, std::size_t size, AngDir2 center, 
+      float density = 0, float f_k = 0, bool movible = true, bool colidable = true,
+      SDL_Color* color = nullptr, int* error = nullptr
+    ) noexcept;
+   * */
+
   std::array<Dir2, 7> points = set_points_1();
-  NEdge<7> poly(glb, points.data(), points.size(), nullptr, &error);
+  NEdge<7> poly(
+    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, true,
+    nullptr, &error
+  );
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
-  poly.set_position(Dir2 (100.f, 100.f));
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
   Square sq = Square (glb, 20, 40, Dir2 {0, 0}, 0, 0, true, true, &color);

@@ -63,12 +63,14 @@ int main () {
   }
 
   std::array<Dir2, 17> points = set_points_3();
-  NEdge<17> poly(glb, points.data(), points.size(), nullptr, &error);
+  NEdge<17> poly(
+    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, true,
+    nullptr, &error
+  );
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
-  poly.set_position(Dir2 (100.f, 100.f));
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
   Circle cir = Circle (glb, 20, Dir2 {0, 0}, 0, 0, true, true, &color);

@@ -16,14 +16,6 @@ void Physical::calculate_movement(const AngDir2 & extrenal_forces) {
           final_force = friction.normalize() * this->_acc_f_k * -direction;
         else
           final_force = AngDir2 {0.f, 0.f, 0.f};
-
-        AngDir2 coef_mult(this->glb->get_time() * DRAW_RATE);
-        final_force *= 20000.f / (this->_density * this->_area);
-
-        this->_velocity += final_force.dir_mul (coef_mult);
-        this->position += this->_velocity.dir_mul(coef_mult);
-
-        return;
       }
     }
 

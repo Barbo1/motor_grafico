@@ -133,12 +133,15 @@
         | | + reposicion.
         | | + resolucion.
         | | + punto de colision.
- | | - agregar una comprobacion de punteros nullos cada vez que se hace un new.
+ | | - mejoras en el codigo: 
+        | | + agregar una comprobacion de punteros nullos cada vez que se hace un new,
+        | | + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
+        | | + usar atributo [[assume()]] para que el compilador tenga en cuenta cierta informacion,
+        | | + mejorar el manejo de la memoria de la rasterizacion de letras.
+        | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
+                durante el codigo, como las evaluaciones de ofuscamiento de lineas.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
- | | - mejorar el manejo de la memoria de la rasterizacion de letras.
  | | - re-implementar de nuevo el descompresor de imagenes png.
- | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
-        durante el codigo, como las evaluaciones de ofuscamiento de lineas.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - cambios en las colisiones:
       | | + hacer una mezcla de movimiento y colision, que calcule el movimiento y 

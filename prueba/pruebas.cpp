@@ -37,7 +37,7 @@ int main () {
   circles.push_back(Circle(glb, 17, AngDir2 {490, 480, 0}, 2.1, 0, true, true, &color));
 
   for (auto& cir: circles) {
-    cir.set_velocity(AngDir2 {(float)(rand() % 40), (float)(rand() % 40), 0});
+    cir.set_velocity(AngDir2 ((float)(rand() % 40), (float)(rand() % 40), 0));
   }
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
@@ -160,7 +160,7 @@ int main () {
     for (auto& cir: circles)
       cir.calculate_movement (g + impulse.apply(cir) + impulse_1.apply(cir));
     c1.calculate_movement (g + impulse.apply(c1) + impulse_1.apply(c1));
-    impulse_1.apply(parts).calculate_movement (AngDir2 {0.f, 0.f, 0.f});
+    impulse_1.apply(parts).calculate_movement (AngDir2 (0.f, 0.f, 0.f));
     parts_1.calculate_movement(g_p);
 
     /* Testing of the collitions. */

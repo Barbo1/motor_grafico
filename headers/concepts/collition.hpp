@@ -6,6 +6,7 @@
 #include "../pr_objects/nedge.hpp"
 #include "../pr_objects/line.hpp"
 #include "../pr_objects/particle.hpp"
+#include "../primitives/math.hpp"
 #include <cstdint>
 
 
@@ -105,90 +106,14 @@ template<std::size_t N> Dir2 collition_point (const Square&, const NEdge<N>&);
 template<std::size_t N, std::size_t M> Dir2 collition_point (const NEdge<N>&, const NEdge<M>&);
 
 
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * 
- *  Implementation needed for template arguments  *
- * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos, float crad) {
-  const Dir2 vCB = vC - vB;
-  const Dir2 vDA = cpos - A;
-  const Dir2 vDB = cpos - (vB + A);
-  const Dir3 aux = Dir3 (
-    (vB * vDA) / vB.modulo2(), 
-    (vC * vDA) / vC.modulo2(), 
-    (vCB * vDB) / vCB.modulo2()
-  ).bound01();
-
-  __m128 op1 = _mm_set_ss (vB.msub(aux.x, vDA).modulo2());
-  __m128 op2 = _mm_set_ss (vC.msub(aux.y, vDA).modulo2());
-  __m128 op3 = _mm_set_ss (vCB.msub(aux.z, vDB).modulo2());
-  float minim = _mm_cvtss_f32 (_mm_min_ss (_mm_min_ss (op1, op2), op3));
-
-  float c1 = vC.pLd(vDA, vB);
-  float c2 = vB.pLd(vDA, vC);
-
-  return minim < crad * crad || (0.f < c1 && 0.f < c2 && c1 + c2 < 1.f);
-}
-
-inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE) {
-  float q1 = vB.pLd (vE, vC);
-  float q2 = vC.pLd (vE, vB);
-  Dir2 vAD = A - D;
-
-  float v1 = vB.pLd(vAD, vE);
-  float v2 = vC.pLd(vAD, vE);
-  float v3 = (vC - vB).pLd(vB + vAD, vE);
-
-  __m128 cond = _mm_set_ps (0.f, -(q1+q2), q2, q1);
-  __m128 vals = _mm_set_ps (0.f, v3, v2, v1);
-  __m128 aux = _mm_cmpgt_ps (cond, _mm_setzero_ps());
-  __m128 cmax = _mm_and_ps (aux, vals);
-  __m128 cmin = _mm_or_ps (_mm_andnot_ps(aux, vals), _mm_and_ps (aux, _mm_set1_ps(1.f)));
-  __m128 cI_aux = _mm_max_ps (cmax, _mm_shuffle_ps (cmax, cmax, 0b10101010));
-  __m128 cS_aux = _mm_min_ps (cmin, _mm_shuffle_ps (cmin, cmin, 0b10101010));
-  __m128 cI = _mm_max_ss (cI_aux, _mm_shuffle_ps (cI_aux, cI_aux, 1));
-  __m128 cS = _mm_min_ss (cS_aux, _mm_shuffle_ps (cS_aux, cS_aux, 1));
-
-  return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
-}
-
-inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
-  Dir2 PA = P - A;
-  float c1 = vC.pLd(PA, vB);
-  float c2 = vB.pLd(PA, vC);
-  return (c1 > 0.f) & (c2 > 0.f) & (c1+c2 < 1.f);
-}
-
-inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
-  Dir2 vAE = A - E;
-
-  __m128 dim_ext = _mm_shuffle_ps (dims.v, dims.v, 0b01010000);
-  __m128 vd_ext = _mm_rcp_ps(_mm_shuffle_ps (vD.v, vD.v, 0b01010000));
-  __m128 vae_ext = _mm_shuffle_ps (vAE.v, vAE.v, 0b01010000);
-  __m128 res1 = _mm_mul_ps (dim_ext, vd_ext);
-  __m128 vN_arr = _mm_fmaddsub_ps (vae_ext, vd_ext, res1); 
-  
-  __m128 cond = _mm_cmplt_ps (vN_arr, _mm_shuffle_ps (vN_arr, vN_arr, 0b10110001));
-  __m128 cmin = _mm_and_ps (cond, vN_arr);
-  __m128 cmax = _mm_or_ps(_mm_andnot_ps (cond, vN_arr), _mm_and_ps (cond, _mm_set1_ps(1.f)));
-  __m128 cI_1 = _mm_max_ps(cmin, _mm_shuffle_ps (cmin, cmin, 0b10110001));
-  __m128 cS_1 = _mm_min_ps(cmax, _mm_shuffle_ps (cmax, cmax, 0b10110001));
-  __m128 cI = _mm_max_ss(cI_1, _mm_shuffle_ps (cI_1, cI_1, 0b00000010));
-  __m128 cS = _mm_min_ss(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00000010));
-
-  return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
-}
-
-
 /* * * * * * * * * * * * * *
  *  Function definitions.  *
  * * * * * * * * * * * * * */
 
 template<std::size_t N> 
 bool test_collition (const Circle& cir, const NEdge<N>& poly) {
-  for (const auto& [A, vB, vC]: poly.triangles) {
-    if (test_collition_triangle_circle(A + poly.position, vB, vC, cir.position, cir.radio)) [[unlikely]] {
+  for (const auto& [A, vB, vC]: poly.placed_triangles) {
+    if (test_collition_triangle_circle(A, vB, vC, cir.position, cir.radio)) [[unlikely]] {
       return true;
     }
   }
@@ -196,8 +121,7 @@ bool test_collition (const Circle& cir, const NEdge<N>& poly) {
 }
 
 template<std::size_t N> bool test_collition (const Line& line, const NEdge<N>& poly) {
-  for (auto [A, vB, vC]: poly.triangles) {
-    A += poly.position;
+  for (auto [A, vB, vC]: poly.placed_triangles) {
     const Dir2 vL = line.v.percan();
     const float cond1 = vL * A;
     const float cond2 = vL * (A + vB);
@@ -211,8 +135,8 @@ template<std::size_t N> bool test_collition (const Line& line, const NEdge<N>& p
 
 template<std::size_t N> 
 bool test_collition (const Particle& par, const NEdge<N>& poly) {
-  for (const auto& [A, vB, vC]: poly.triangles) {
-    if (test_collition_triangle_circle(A + poly.position, vB, vC, par._position, par._radio)) [[unlikely]] {
+  for (const auto& [A, vB, vC]: poly.placed_triangles) {
+    if (test_collition_triangle_circle(A, vB, vC, par._position, par._radio)) [[unlikely]] {
       return true;
     }
   }
@@ -222,12 +146,11 @@ bool test_collition (const Particle& par, const NEdge<N>& poly) {
 template<std::size_t N> 
 bool test_collition (const Square& sq, const NEdge<N>& poly) {
   Dir2 dims = Dir2 (sq.width, sq.height);
-  for (const auto& [A, vB, vC]: poly.triangles) {
-    Dir2 At = A + poly.position;
-    bool eval1 = test_collition_square_segment (sq.position, dims, At, vB);
-    bool eval2 = test_collition_square_segment (sq.position, dims, At, vC);
-    bool eval3 = test_collition_square_segment (sq.position, dims, At + vB, vC - vB);
-    bool eval4 = test_collition_triangle_point (At, vB, vC, sq.position);
+  for (const auto& [A, vB, vC]: poly.placed_triangles) {
+    bool eval1 = test_collition_square_segment (sq.position, dims, A, vB);
+    bool eval2 = test_collition_square_segment (sq.position, dims, A, vC);
+    bool eval3 = test_collition_square_segment (sq.position, dims, A + vB, vC - vB);
+    bool eval4 = test_collition_triangle_point (A, vB, vC, sq.position);
     if (eval1 || eval2 || eval3 || eval4) [[unlikely]] {
       return true;
     }
@@ -237,14 +160,13 @@ bool test_collition (const Square& sq, const NEdge<N>& poly) {
 
 template<std::size_t N, std::size_t M> 
 bool test_collition (const NEdge<N>& poly1, const NEdge<M>& poly2) {
-  for (const auto& [A, vB, vC]: poly1.triangles) {
-    Dir2 At = A + poly1.position;
-    for (const auto& [D, vE, vF]: poly2.triangles) {
+  for (const auto& [A, vB, vC]: poly1.placed_triangles) {
+    for (const auto& [D, vE, vF]: poly2.placed_triangles) {
       Dir2 Dt = D + poly2.position;
-      bool eval1 = test_collition_triangle_segment (At, vB, vC, Dt, vE);
-      bool eval2 = test_collition_triangle_segment (At, vB, vC, Dt, vF);
-      bool eval3 = test_collition_triangle_segment (At, vB, vC, Dt + vE, vF - vE);
-      bool eval4 = test_collition_triangle_point (Dt, vE, vF, At);
+      bool eval1 = test_collition_triangle_segment (A, vB, vC, Dt, vE);
+      bool eval2 = test_collition_triangle_segment (A, vB, vC, Dt, vF);
+      bool eval3 = test_collition_triangle_segment (A, vB, vC, Dt + vE, vF - vE);
+      bool eval4 = test_collition_triangle_point (Dt, vE, vF, A);
       if (eval1 || eval2 || eval3 || eval4) [[unlikely]] {
         return true;
       }
@@ -253,21 +175,17 @@ bool test_collition (const NEdge<N>& poly1, const NEdge<M>& poly2) {
   return false;
 }
 
-template<std::size_t N> void correct_collition (Circle& cir, NEdge<N>& pol) {
+template<std::size_t N> void resolve_collition (Circle& cir, NEdge<N>& pol) {
   std::array<Dir2, N> considered;
-  std::array<std::pair<Dir2, Dir2>, N> lines;
-  for (uint32_t i = 0; i < N; i++)
-    lines[i] = std::pair<Dir2, Dir2>{
-      pol.points[(i+1)%N] - pol.points[i], 
-      pol.points[i] + pol.position
-    };
+  std::array<std::pair<Dir2, Dir2>, N> filtered_lines;
+
   uint32_t many = 0, filtered = 0;
   Dir2 d = Dir2();
 
   // testing points that contribute to the direction.
   for (uint32_t i = 0; i < N; i++) {
-    const Dir2 P1 = lines[i].second;
-    const Dir2 v = lines[i].first;
+    const Dir2 P1 = pol.placed_points[i].second;
+    const Dir2 v = pol.placed_points[i].first;
     const Dir2 coef = Dir2(v * (cir.position - P1) / v.modulo2(), 0.f).bound01();
     const Dir2 Col = v.madd(coef.x, P1) - cir.position;
     const float mod = Col.modulo2();
@@ -279,64 +197,201 @@ template<std::size_t N> void correct_collition (Circle& cir, NEdge<N>& pol) {
         considered[many] = Col;
         many++;
       }
-      lines[filtered] = lines[i];
+      filtered_lines[filtered] = pol.placed_points[i];
       filtered++;
     }
   }
 
-  // genereate the point base in the direction.
+  if (d.modulo2() == 0.f)
+    return;
+
+  // needed to calculate.
+  Dir2 reposition, collition_point = cir.position;
+
+  // calculate the reposition distance based on the direction d.
   float distance = 0.f;
-  Dir2 dn = d.normalize();
-  if (d != Dir2()) {
-    Dir2 dL = d.percan().normalize() * (1.f / cir.radio);
-    float r2 = cir.radio * cir.radio;
-    for (uint32_t i = 0; i < filtered; i++) {
-      Dir2 v = lines[i].first;
-      Dir2 K1 = lines[i].second;
+  const Dir2 dn = d.normalize();
+  const Dir2 dL = dn.percan() * (1.f / cir.radio);
+  const float r2 = cir.radio * cir.radio;
+  for (uint32_t i = 0; i < filtered; i++) {
+    const Dir2 v = filtered_lines[i].first;
+    const Dir2 K1 = filtered_lines[i].second;
 
-      Dir2 v2 = v / v.modulo2();
-      Dir2 b = cir.position - K1;
+    const Dir2 v2 = v / v.modulo2();
+    const Dir2 b = cir.position - K1;
 
-      float mult_dist_1 = dL * b;
-      if (std::abs(mult_dist_1) < 1.f) [[unlikely]] {
-        float q = b * dn;
-        float new_distance = -(std::sqrt(r2 - dn.msub(q, b).modulo2()) + q);
-        distance = std::min(distance, new_distance);
-      }
-      
-      float coef = std::max(0.f, std::min(1.f, v2 * b));
-      Dir2 u1 = cir.position - v.madd(coef, K1);
-      float mult_dist_M = dL * u1;
-      if (0.0001f < coef && coef < 0.9998f && std::abs(mult_dist_M) < 1.f) [[unlikely]] {
-        Dir2 u2_mid_1 = dn.madd((cir.radio - u1.modulo()) / (dn * u1.normalize()), b);
-        float u2_mid_2 = std::max(0.f, std::min(1.f, v2 * u2_mid_1));
-        Dir2 u2 = v.nmadd(u2_mid_2, b);
+    // case 1: the first point of the segment is on the margin.
+    const float mult_dist_1 = dL * b;
+    if (std::abs(mult_dist_1) < 1.f) [[unlikely]] {
+      const float q = b * dn;
+      const float new_distance = std::sqrt(r2 - dn.msub(q, b).modulo2()) + q;
+      distance = std::max(distance, new_distance);
+    }
+    
+    // case 2: the point in the middle of the segment is on the margin.
+    const float coef = std::max(0.f, std::min(1.f, v2 * b));
+    const Dir2 u1 = cir.position - v.madd(coef, K1);
+    const float mult_dist_M = dL * u1;
+    if (0.0001f < coef && coef < 0.9998f && std::abs(mult_dist_M) < 1.f) [[unlikely]] {
+      const Dir2 u2_mid_1 = dn.madd((cir.radio - u1.modulo()) / (dn * u1.normalize()), b);
+      const float u2_mid_2 = std::max(0.f, std::min(1.f, v2 * u2_mid_1));
+      const Dir2 u2 = v.nmadd(u2_mid_2, b);
 
-        float q = u2 * dn;
-        float new_distance = -(std::sqrt(r2 - dn.msub(q, u2).modulo2()) + q);
-        distance = std::min(distance, new_distance);
-      }
+      const float q = u2 * dn;
+      const float new_distance = std::sqrt(r2 - dn.msub(q, u2).modulo2()) + q;
+      distance = std::max(distance, new_distance);
+    }
+    
+    // case 3: the last point don't need calculation, 
+    //  the next segment will test it if needed.
+  }
+  reposition = dn.nmadd(distance + 0.1f, cir.position);
+
+
+  // genereate the point base in the direction.
+  auto test_suitable = [](const float& coef, const float& d_distance) {
+    return 
+      (0.f < d_distance && -0.0001f < coef && coef < 1.0001f);
+  };
+  Dir2 P1, v;
+  int32_t i = -1;
+  float coef, d_distance;
+
+  // finding the first suitable point.
+  do {
+    i++; 
+    v = pol.placed_points[i].first;
+    P1 = pol.placed_points[i].second;
+    coef = d.pLd(cir.position - P1, v);
+    d_distance = v.pLd(P1 - cir.position, d);
+  } while (i < static_cast<int32_t>(N) && !test_suitable(coef, d_distance));
+  if (-0.0001f < coef && coef < 1.0001f)
+    collition_point = v.madd(coef, P1);
+
+  // find the most suitable point.
+  while (i < static_cast<int32_t>(N)) {
+    i++; 
+    v = pol.placed_points[i].first;
+    P1 = pol.placed_points[i].second;
+    coef = d.pLd(cir.position - P1, v);
+    const float new_d_distance = v.pLd(P1 - cir.position, d);
+    if (new_d_distance < d_distance && test_suitable(coef, new_d_distance)) {
+      collition_point = v.madd(coef, P1);
+      d_distance = new_d_distance;
     }
   }
 
-  cir.position = dn.madd(distance, cir.position);
+  // calculate resolution.
+  Dir2 cir_v = Dir2(cir._velocity);
+  float cir_mass = 1.f / cir.get_mass();
+
+  Dir2 pol_r = collition_point - pol.position;
+  Dir2 pol_v = pol._velocity + pol_r.percan() * pol._velocity.a;
+  float pol_mass = 1.f / pol.get_mass();
+
+  float pol_coef = dn.pL(pol_r);
+  Dir2 v_diff = pol_v - cir_v;
+  Dir2 J = dn * (-2.f * (dn * v_diff) / (
+    cir_mass + 
+    pol_mass + 
+    pol_coef * pol_coef / pol._intertia
+  ));
+
+  cir._velocity -= J * cir_mass;
+  float pol_ang_vel = pol._velocity.a;
+  pol._velocity = pol._velocity + J * pol_mass;
+  pol._velocity.a = pol_ang_vel + J.pL(pol_r) / pol._intertia;
+
+  cir.position = reposition;
+  
+  cir._collition_normal = dn;
+  pol._collition_normal = -dn;
+  
+  cir._acc_f_k = cir._f_k * pol._f_k;
+  pol._acc_f_k = cir._acc_f_k;
+  
+  cir._normal_presence = true;
+  pol._normal_presence = true;
+}
+
+template<std::size_t N> void correct_collition (Circle& cir, NEdge<N>& pol) {
+  Dir2 d = Dir2(0.f, 0.f);
+  uint32_t many = 0, filtered = 0;
+  std::array<Dir2, N> considered;
+  std::array<std::pair<Dir2, Dir2>, N> lines;
+
+  // testing points that contribute to the direction.
+  for (uint32_t i = 0; i < N; i++) {
+    const Dir2 P1 = pol.placed_points[i].second;
+    const Dir2 v = pol.placed_points[i].first;
+    const Dir2 coef = Dir2(v * (cir.position - P1) / v.modulo2(), 0.f).bound01();
+    const Dir2 Col = v.madd(coef.x, P1) - cir.position;
+    const float mod = Col.modulo2();
+    if (mod < cir.radio * cir.radio) {
+      uint32_t j = 0;
+      while (j < many && considered[j] != Col) { j++; }
+      if (j == many) {
+        d += Col / mod;
+        considered[many] = Col;
+        many++;
+      }
+      lines[filtered] = pol.placed_points[i];
+      filtered++;
+    }
+  }
+
+  // calculate the reposition distance based on the direction d.
+  float distance = 0.f;
+  const Dir2 dn = d.normalize();
+  if (d != Dir2()) {
+    const Dir2 dL = dn.percan() * (1.f / cir.radio);
+    const float r2 = cir.radio * cir.radio;
+    for (uint32_t i = 0; i < filtered; i++) {
+      const Dir2 v = lines[i].first;
+      const Dir2 K1 = lines[i].second;
+
+      const Dir2 v2 = v / v.modulo2();
+      const Dir2 b = cir.position - K1;
+
+      // case 1: the first point of the segment is on the margin.
+      const float mult_dist_1 = dL * b;
+      if (std::abs(mult_dist_1) < 1.f) [[unlikely]] {
+        const float q = b * dn;
+        const float new_distance = std::sqrt(r2 - dn.msub(q, b).modulo2()) + q;
+        distance = std::max(distance, new_distance);
+      }
+      
+      // case 2: the point in the middle of the segment is on the margin.
+      const float coef = std::max(0.f, std::min(1.f, v2 * b));
+      const Dir2 u1 = cir.position - v.madd(coef, K1);
+      const float mult_dist_M = dL * u1;
+      if (0.0001f < coef && coef < 0.9998f && std::abs(mult_dist_M) < 1.f) [[unlikely]] {
+        const Dir2 u2_mid_1 = dn.madd((cir.radio - u1.modulo()) / (dn * u1.normalize()), b);
+        const float u2_mid_2 = std::max(0.f, std::min(1.f, v2 * u2_mid_1));
+        const Dir2 u2 = v.nmadd(u2_mid_2, b);
+
+        const float q = u2 * dn;
+        const float new_distance = std::sqrt(r2 - dn.msub(q, u2).modulo2()) + q;
+        distance = std::max(distance, new_distance);
+      }
+      
+      // case 3: the last point don't need calculation, 
+      //  the next segment will test it if needed.
+    }
+  }
+
+  cir.position = dn.nmadd(distance, cir.position);
 }
 
 template<std::size_t N> Dir2 collition_point (const Circle& cir, const NEdge<N>& pol) {
   std::array<Dir2, N> considered;
-  std::array<std::pair<Dir2, Dir2>, N> lines;
-  for (uint32_t i = 0; i < N; i++)
-    lines[i] = std::pair<Dir2, Dir2>{
-      pol.points[(i+1)%N] - pol.points[i], 
-      pol.points[i] + pol.position
-    };
   uint32_t many = 0;
   Dir2 d = Dir2();
 
   // testing points that contribute to the direction.
   for (uint32_t i = 0; i < N; i++) {
-    const Dir2 P1 = lines[i].second;
-    const Dir2 v = lines[i].first;
+    const Dir2 P1 = pol.placed_points[i].second;
+    const Dir2 v = pol.placed_points[i].first;
     const Dir2 coef = Dir2(v * (cir.position - P1) / v.modulo2(), 0.f).bound01();
     const Dir2 Col = v.madd(coef.x, P1) - cir.position;
     const float mod = Col.modulo2();
@@ -366,8 +421,8 @@ template<std::size_t N> Dir2 collition_point (const Circle& cir, const NEdge<N>&
     // finding the first suitable point.
     do {
       i++; 
-      v = lines[i].first;
-      P1 = lines[i].second;
+      v = pol.placed_points[i].first;
+      P1 = pol.placed_points[i].second;
       coef = d.pLd(cir.position - P1, v);
       d_distance = v.pLd(P1 - cir.position, d);
     } while (i < static_cast<int32_t>(N) && !test_suitable(coef, d_distance));
@@ -377,8 +432,8 @@ template<std::size_t N> Dir2 collition_point (const Circle& cir, const NEdge<N>&
     // find the most suitable point.
     while (i < static_cast<int32_t>(N)) {
       i++; 
-      v = lines[i].first;
-      P1 = lines[i].second;
+      v = pol.placed_points[i].first;
+      P1 = pol.placed_points[i].second;
       coef = d.pLd(cir.position - P1, v);
       const float new_d_distance = v.pLd(P1 - cir.position, d);
       if (new_d_distance < d_distance && test_suitable(coef, new_d_distance)) {

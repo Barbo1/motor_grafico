@@ -10,6 +10,7 @@ Square::Square (
   height(height)
 {
   this->glb = glb;
+  this->_intertia = Dir2(width, height).modulo2();
   if (color != nullptr) {
     this->texture = ImageModifier::square(2*height, 2*width, *color).cast(this->glb);
   }

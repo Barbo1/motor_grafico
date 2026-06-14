@@ -63,7 +63,10 @@ int main () {
   }
 
   std::array<Dir2, 17> points = set_points_3();
-  NEdge<17> poly(glb, points.data(), points.size(), nullptr, &error);
+  NEdge<17> poly(
+    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, true,
+    nullptr, &error
+  );
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
@@ -78,22 +81,19 @@ int main () {
     glb->begin_render();
 
     poly.print(glb, &gs);
-    std::string dial = "false";
     
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
     cir.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
 
-    cir.draw();
-
+    std::string dial = "false";
     if (test_collition(cir, poly)) {
       dial = "true";
-      Dir2 point = collition_point(cir, poly);
-      SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
-      SDL_RenderDrawPoint(glb->get_render(), point.x, point.y);
-      std::cout << "Col = (" << point.x << ", " << point.y << ")" << std::endl;
+      correct_collition(cir, poly);
     }
     std::cout << dial << std::endl;
+
+    cir.draw();
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

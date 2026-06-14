@@ -1,5 +1,6 @@
 #include "../concepts/glyph_system.hpp"
 #include "../concepts/visualizer.hpp"
+#include "../primitives/math.hpp"
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -32,13 +33,6 @@ struct GuiElement {
 };
 
 class GuiComponent;
-
-inline bool test_point_inside_square(const Dir2& P, const Dir2& SQP, const Dir2& SQD) {
-  __m128 opr = _mm_mul_ps(_mm_sub_ps(SQP.v, P.v), _mm_rcp_ps(SQD.v));
-  __m128i abs = _mm_and_si128(_mm_set1_epi32(0x7FFFFFFF), _mm_castps_si128(opr));
-  __m128i cmp = _mm_cmpgt_epi32(_mm_set1_epi32(0x3F800000), abs);
-  return (_mm_movemask_epi8(cmp) & 0xFF) == 0xFF;
-}
 
 class Button {
   private:

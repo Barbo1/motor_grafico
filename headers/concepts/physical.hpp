@@ -18,6 +18,7 @@ class Physical {
     float _density; /* kg/px^2 */
     float _f_k; /* kinetic fritction. */
     float _acc_f_k;
+    float _intertia;
 
     bool _movible; /* The external forces adn velocities don't affect it. */
     bool _colidalble; /* The colition with objects don't have effect. */

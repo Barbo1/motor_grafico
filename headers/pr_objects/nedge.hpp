@@ -8,6 +8,7 @@
 
 #include <SDL2/SDL.h>
 #include <codecvt>
+#include <cstdint>
 
 class Circle;
 class Line;
@@ -18,12 +19,20 @@ template<std::size_t N>
 class NEdge final: public Physical {
   private:
     std::array<Dir2, N> points;
+    std::array<std::pair<Dir2, Dir2>, N> placed_points;
     std::array<std::array<Dir2, 3>, N-2> triangles;
+    std::array<std::array<Dir2, 3>, N-2> placed_triangles;
     Visualizer<D2FIG> texture;
     Global* glb;
 
+    void reposition_polygon();
+
   public: 
-    NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* color = nullptr, int* error = nullptr) noexcept;
+    NEdge (
+      Global* glb, const Dir2 * points, std::size_t size, AngDir2 center, 
+      float density = 0, float f_k = 0, bool movible = true, bool colidable = true,
+      SDL_Color* color = nullptr, int* error = nullptr
+    ) noexcept;
     NEdge (const NEdge &) noexcept;
     NEdge & operator= (const NEdge &) noexcept;
 
@@ -33,6 +42,9 @@ class NEdge final: public Physical {
     void print (Global * glb, GlyphsSystem * gs);
 
     void draw ();
+
+    virtual void calculate_movement(const AngDir2 & extrenal_forces);
+    virtual void set_position (AngDir2);
 
     template<std::size_t M> friend bool test_collition (const Line&, const NEdge<M>&);
     template<std::size_t M> friend bool test_collition (const Particle&, const NEdge<M>&);
@@ -68,6 +80,28 @@ class NEdge final: public Physical {
  |                 Code                 |
  ----------------------------------------
 */
+
+/* This function is meant to reposition the polygon in the space to be able 
+ * to operate correctly. The structures mantained in for each one provides 
+ * the ability to save computation, only calculating when it moves.
+ *
+ * It assume this->position has been overriden.
+ * */
+template<std::size_t N>
+void NEdge<N>::reposition_polygon() {
+  for (uint32_t i = 0; i < N; i++)
+    this->placed_points[i] = std::pair{this->points[(i+1)%N] - this->points[i], this->points[i]};
+  rotate_segments(this->placed_points.data(), N, this->position.a);
+  for (uint32_t i = 0; i < N; i++)
+    this->placed_points[i].second += this->position;
+
+  for (uint32_t i = 0; i < N-2; i++)
+    this->placed_triangles[i] = {this->triangles[i][0], this->triangles[i][1], this->triangles[i][2]};
+  rotate_triangles(this->placed_triangles.data(), N-2, this->position.a);
+  for (uint32_t i = 0; i < N-2; i++)
+    this->placed_triangles[i][0] += this->position;
+}
+
 
 /* This function goes through all of the points in a division part of the polygon, 
  * and fills the 'parts' array with ternary elements, where the first corresponds 
@@ -110,9 +144,15 @@ static inline bool are_points_contiguous (int32_t i, int32_t j, int32_t M) {
 /* * * * * * * * *
  *  Constructor  *
  * * * * * * * * */
-
 template<std::size_t N>
-NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* color, int* error) noexcept {
+NEdge<N>::NEdge (
+  Global* glb, const Dir2 * points, std::size_t size, AngDir2 center, 
+  float density, float f_k, bool movible, bool colidable,
+  SDL_Color* color, int* error
+) noexcept:
+  Physical(glb, center, density, 0.f, f_k, movible, colidable)
+{
+  // Global* glb, AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
   if (size < N) {
     if (error != nullptr)
       *error = -1;
@@ -122,24 +162,31 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
   this->glb = glb;
 
   // writing points.
-  for (uint32_t i = 0; i < N; i++)
+  for (uint32_t i = 0; i < N; i++) {
     this->points[i] = points[i];
+    this->placed_points[i] = std::pair{points[(i+1)%N] - points[i], points[i]};
+  }
+  rotate_segments(this->placed_points.data(), N, center.a);
+  for (uint32_t i = 0; i < N; i++)
+    this->placed_points[i].second += center;
+
+  // clock order.
+  Dir2 mult = Dir2(-1.f, 1.f);
+  Dir2 mass_center = points[N-1];
+  float order = 0.f;
+  for (uint32_t i = 0; i < N; i++) {
+    mass_center += points[i];
+    const Dir2 aux = points[i].dir_mul(mult) + points[(i+1)%N];
+    order += aux.y * aux.x;
+  }
+  mass_center *= 1.f / static_cast<float>(N);
+  bool clockwise = order > 0.f;
 
   // finding triangles on the polygon.
   std::array<uint32_t, 3*N> parts_indexes;
   uint32_t total_parts = 1;
   {
-    bool state_1 = true;
-
-    // clock order.
-    Dir2 mult = Dir2(-1.f, 1.f);
-    Dir2 aux = points[N-1].dir_mul(mult) + points[0];
-    float order = aux.y * aux.x;
-    for (uint32_t i = 0; i < N-1; i++) {
-      aux = points[i].dir_mul(mult) + points[i+1];
-      order += aux.y * aux.x;
-    }
-    bool clockwise = order > 0.f;
+    bool state_2 = false;
 
     // structure definitions.
     std::array<std::pair<uint32_t, uint32_t>, N> parts_bounds;
@@ -161,28 +208,24 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
       uint32_t first, last;
       int32_t parts_size;
       int32_t index_l = 0, index_f = 0;
-      bool angle_cond;
 
       /* State 1: search for point inside a part that has obtuse angle. */
-      if (state_1) {
-        angle_cond = false;
+      if (!state_2) {
         for (uint32_t i = 0; i < parts_bounds_size; i++) {
           first = parts_bounds[i].first;
           last = parts_bounds[i].second;
-
           parts_size = get_parts (first, last, points, parts_indexes.data(), parts.data());
-
           for (int32_t j = 0; j < parts_size; j++) {
             Dir2 v1 = parts[j][1];
             Dir2 v2 = parts[j][2];
-            if ((std::atan2(v1.percan() * v2, v1 * v2) > 0.f) ^ clockwise) {
+            if ((std::atan2(v2.pL(v1), v1 * v2) > 0.f) ^ clockwise) {
               part_index = i;
               index_f = j;
               goto POLY_STATE_1_END_LOOP;
             }
           }
         }
-        state_1 = false;
+        state_2 = true;
         continue;
         POLY_STATE_1_END_LOOP:
       
@@ -206,9 +249,8 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
         for (int32_t i = 0; i < parts_size; i++) {
           const Dir2 vp = parts[i][1];
           const Dir2 vc = parts[i][2];
-          const float new_dist = (vp * vc) / (vp.modulo() * vc.modulo());
+          const float new_dist = (vp.normalize() * vc.normalize());
           if ((new_dist > distance) ^ clockwise) {
-            angle_cond = (std::atan2(vc.percan() * vp, vp * vc) > 0.f) ^ clockwise;
             distance = new_dist;
             index_f = i;
           }
@@ -226,7 +268,7 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
         Dir2 vec_new_try = parts[i][0] - given_point;
         float c1 = v1.pLd(vec_new_try, v2);
         float c2 = v2.pLd(vec_new_try, v1);
-        if (are_points_contiguous (i, index_f, parts_size-1) || ((c1 > 0.0001f && c2 > 0.0001f) ^ angle_cond))
+        if (are_points_contiguous (i, index_f, parts_size-1) || ((c1 > 0.0001f && c2 > 0.0001f) ^ state_2))
           continue;
 
         for (int32_t j = 0; j < parts_size; j++) {
@@ -252,7 +294,8 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
       }
 
       if (distance == INFINITY) {
-        *error = -1;
+        if (error != nullptr)
+          *error = -2;
         return;
       }
 
@@ -292,20 +335,52 @@ NEdge<N>::NEdge (Global* glb, const Dir2 * points, std::size_t size, SDL_Color* 
       uint32_t first = parts_bounds[i].first;
       uint32_t last = parts_bounds[i].second;
       if (last - first != 2) {
-        *error = -1;
+        if (error != nullptr)
+          *error = -3;
         return;
       }
     }
   }
 
-  // creating the triangles.
-  uint32_t* parts_indexes_pointer = parts_indexes.data();
-  for (uint32_t i = 0; i < total_parts; i++) {
-    Dir2 p = points[*(parts_indexes_pointer++)];
-    Dir2 v1 = points[*(parts_indexes_pointer++)] - p;
-    Dir2 v2 = points[*(parts_indexes_pointer++)] - p;
-    this->triangles[i] = {p, v1, v2};
+  if (total_parts != N-2) {
+    if (error != nullptr)
+      *error = -4;
+    return;
   }
+
+  if (error != nullptr)
+    *error = 0;
+
+  // creating the triangles, and calculating final area and inertia.
+  uint32_t* parts_indexes_pointer = parts_indexes.data();
+  float inertia_distance_acc = 0.f;
+  float inertia_deviation_acc = 0.f;
+  this->_area = 0.f;
+  for (uint32_t i = 0; i < N-2; i++) {
+    const Dir2 p1 = points[*(parts_indexes_pointer++)];
+    const Dir2 p2 = points[*(parts_indexes_pointer++)];
+    const Dir2 p3 = points[*(parts_indexes_pointer++)];
+    const Dir2 v1 = p2 - p1;
+    const Dir2 v2 = p3 - p1;
+    const Dir2 v3 = p3 - p2;
+
+    const float triangle_mass = 0.5f * this->_density * std::abs(v1.pL(v3));
+    this->_area += triangle_mass;
+    inertia_deviation_acc += ((p1 + p2 + p3) / 3.f - mass_center).modulo2() * triangle_mass;
+    inertia_distance_acc += (v1.modulo2() + v2.modulo2() + v3.modulo2()) * triangle_mass;
+
+    this->triangles[i] = {p1, v1, v2};
+  }
+  this->_intertia = 
+    (inertia_distance_acc / 36.f + inertia_deviation_acc) + 
+    (mass_center.modulo2() * this->_area * this->_density);
+   
+  // first initialization of the placed triangles to calculate collitions.
+  for (uint32_t i = 0; i < N-2; i++)
+    this->placed_triangles[i] = {this->triangles[i][0], this->triangles[i][1], this->triangles[i][2]};
+  rotate_triangles(this->placed_triangles.data(), N-2, center.a);
+  for (uint32_t i = 0; i < N-2; i++)
+    this->placed_triangles[i][0] += center;
 
   if (color != nullptr) {
     this->texture = ImageModifier::polygon(points, size, *color).cast(glb);
@@ -358,10 +433,11 @@ Visualizer<D2FIG> NEdge<N>::get_texture () const {
 
 template<std::size_t N>
 void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
-  for (uint32_t i = 0; i < N-2; i++) {
-    Dir2 point1 = this->triangles[i][0] + this->position;
-    Dir2 point2 = this->triangles[i][1] + point1;
-    Dir2 point3 = this->triangles[i][2] + point1;
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
+  uint32_t i = 0;
+  for (const auto& line: this->placed_points) {
+    const Dir2 point1 = line.second + line.first;
+    const Dir2 point2 = line.second;
     SDL_SetRenderDrawColor (glb->get_render(), 255, 0, 0, 255);
     SDL_RenderDrawLine (
       glb->get_render(), 
@@ -370,30 +446,47 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
       static_cast<uint32_t>(point2.x),
       static_cast<uint32_t>(point2.y)
     );
-    SDL_RenderDrawLine (
-      glb->get_render(), 
-      static_cast<uint32_t>(point1.x),
-      static_cast<uint32_t>(point1.y),
-      static_cast<uint32_t>(point3.x),
-      static_cast<uint32_t>(point3.y)
-    );
-    SDL_RenderDrawLine (
-      glb->get_render(), 
-      static_cast<uint32_t>(point2.x),
-      static_cast<uint32_t>(point2.y),
-      static_cast<uint32_t>(point3.x),
-      static_cast<uint32_t>(point3.y)
-    );
-  }
-
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  for (uint32_t i = 0; i < points.size(); i++) {
-    const Dir2& point = points[i] + this->position;
     gs->print(
       conv.from_bytes(std::to_string(i)), 
       20, 
       SDL_Color {.r = 255, .g = 255, .b = 255, .a = 255}, 
-      point + Dir2(5.f, 5.f)
+      point2 + Dir2(5.f, 5.f)
     );
+    i++;
   }
+}
+
+template<std::size_t N>
+void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
+  if (this->_movible) {
+    AngDir2 final_force = this->_force + extrenal_forces;
+    if (this->_normal_presence) {
+      this->_normal_presence = false;
+
+      float direction = final_force * this->_collition_normal;
+      if (direction < 0) {
+        float v_n = this->_velocity * this->_collition_normal;
+        AngDir2 friction = (this->_collition_normal * v_n) - this->_velocity;
+
+        if (friction.modulo2() > 0.0001)
+          final_force = friction.normalize() * this->_acc_f_k * -direction;
+        else
+          final_force = AngDir2 {0.f, 0.f, 0.f};
+      }
+    }
+
+    AngDir2 coef_mult(this->glb->get_time() * DRAW_RATE);
+
+    final_force *= 20000.f / (this->_density * this->_area);
+    this->_velocity += final_force.dir_mul (coef_mult);
+    this->position += this->_velocity.dir_mul (coef_mult);
+
+    this->reposition_polygon();
+  }
+}
+    
+template<std::size_t N>
+void NEdge<N>::set_position (AngDir2 center) {
+  this->position = center;
+  this->reposition_polygon();
 }
