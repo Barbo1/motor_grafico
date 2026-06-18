@@ -162,13 +162,8 @@ NEdge<N>::NEdge (
   this->glb = glb;
 
   // writing points.
-  for (uint32_t i = 0; i < N; i++) {
-    this->points[i] = points[i];
-    this->placed_points[i] = std::pair{points[(i+1)%N] - points[i], points[i]};
-  }
-  rotate_segments(this->placed_points.data(), N, center.a);
   for (uint32_t i = 0; i < N; i++)
-    this->placed_points[i].second += center;
+    this->points[i] = points[i];
 
   // clock order.
   Dir2 mult = Dir2(-1.f, 1.f);
@@ -346,10 +341,7 @@ NEdge<N>::NEdge (
     if (error != nullptr)
       *error = -4;
     return;
-  }
-
-  if (error != nullptr)
-    *error = 0;
+  } else *error = 0;
 
   // creating the triangles, and calculating final area and inertia.
   uint32_t* parts_indexes_pointer = parts_indexes.data();
@@ -375,13 +367,7 @@ NEdge<N>::NEdge (
     (inertia_distance_acc / 36.f + inertia_deviation_acc) + 
     (mass_center.modulo2() * this->_area * this->_density);
    
-  // first initialization of the placed triangles to calculate collitions.
-  for (uint32_t i = 0; i < N-2; i++)
-    this->placed_triangles[i] = {this->triangles[i][0], this->triangles[i][1], this->triangles[i][2]};
-  rotate_triangles(this->placed_triangles.data(), N-2, center.a);
-  for (uint32_t i = 0; i < N-2; i++)
-    this->placed_triangles[i][0] += center;
-
+  this->reposition_polygon();
   if (color != nullptr) {
     this->texture = ImageModifier::polygon(points, size, *color).cast(glb);
   }
@@ -392,10 +378,13 @@ NEdge<N>::NEdge (
  * * * * * * * * * * * */
 
 template<std::size_t N>
-NEdge<N>::NEdge (const NEdge & poly) noexcept {
-  this->points = poly.points;
+NEdge<N>::NEdge (const NEdge & poly) noexcept: Physical(poly) {
   this->texture = poly.texture;
+  this->points = poly.points;
+  this->placed_points = poly.placed_points;
   this->triangles = poly.triangles;
+  this->placed_triangles = poly.placed_triangles;
+  this->glb = poly.glb;
 }
 
 
@@ -405,9 +394,13 @@ NEdge<N>::NEdge (const NEdge & poly) noexcept {
 
 template<std::size_t N>
 NEdge<N> & NEdge<N>::operator= (const NEdge & poly) noexcept {
-  this->points = poly.points;
   this->texture = poly.texture;
+  this->points = poly.points;
+  this->placed_points = poly.placed_points;
   this->triangles = poly.triangles;
+  this->placed_triangles = poly.placed_triangles;
+  this->glb = poly.glb;
+  this->Physical::operator=(poly);
   return *this;
 }
 
@@ -435,9 +428,10 @@ template<std::size_t N>
 void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
   uint32_t i = 0;
-  for (const auto& line: this->placed_points) {
-    const Dir2 point1 = line.second + line.first;
-    const Dir2 point2 = line.second;
+  for (const auto& triangle: this->placed_triangles) {
+    const Dir2 point1 = triangle[0];
+    const Dir2 point2 = triangle[1] + triangle[0];
+    const Dir2 point3 = triangle[2] + triangle[0];
     SDL_SetRenderDrawColor (glb->get_render(), 255, 0, 0, 255);
     SDL_RenderDrawLine (
       glb->get_render(), 
@@ -445,6 +439,20 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
       static_cast<uint32_t>(point1.y),
       static_cast<uint32_t>(point2.x),
       static_cast<uint32_t>(point2.y)
+    );
+    SDL_RenderDrawLine (
+      glb->get_render(), 
+      static_cast<uint32_t>(point1.x),
+      static_cast<uint32_t>(point1.y),
+      static_cast<uint32_t>(point3.x),
+      static_cast<uint32_t>(point3.y)
+    );
+    SDL_RenderDrawLine (
+      glb->get_render(), 
+      static_cast<uint32_t>(point2.x),
+      static_cast<uint32_t>(point2.y),
+      static_cast<uint32_t>(point3.x),
+      static_cast<uint32_t>(point3.y)
     );
     gs->print(
       conv.from_bytes(std::to_string(i)), 

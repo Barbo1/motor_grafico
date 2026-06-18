@@ -1,5 +1,6 @@
 #include "./vectors.hpp"
 #include <cstdint>
+#include <immintrin.h>
 #include <pmmintrin.h>
 #include <utility>
 #include <cmath>
@@ -121,6 +122,62 @@ inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   __m128 cS = _mm_min_ss(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00000010));
 
   return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
+}
+
+/* Test if there is a collision between two triangles.
+ *
+ * 'A' is the center of the first triangle,
+ * 'vB' and 'vC' are the vectors from 'A' to the other two verteces,
+ * 'D' is the center of the second triangle,
+ * 'vE' and 'vF' are the vectors from 'D' to the other two verteces,
+ * */
+inline bool test_collision_triangle_triangle(Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE, Dir2 vF) {
+  __m128 D_ext = _mm_movelh_ps(D.v, D.v);
+  __m128 A_ext = _mm_movelh_ps(A.v, A.v);
+  __m128 vE_ext = _mm_movelh_ps(vE.v, vE.v);
+  __m128 vB_ext = _mm_movelh_ps(vB.v, vB.v);
+  __m128 AD_ext = _mm_sub_ps(A_ext, D_ext);
+  __m128 vEL_ext = _mm_shuffle_ps(vE.v, vE.v, 0b00010001);
+  __m128 vFL_ext = _mm_shuffle_ps(vF.v, vF.v, 0b00010001);
+  __m128 vBL_ext = _mm_shuffle_ps(vB.v, vB.v, 0b00010001);
+  __m128 vCL_ext = _mm_shuffle_ps(vC.v, vC.v, 0b00010001);
+
+  // direction collide.
+  __m128 denom_aux_1 = _mm_mul_ps(vFL_ext, vE_ext);
+  __m128 denom_aux_2 = _mm_mul_ps(vCL_ext, vB_ext);
+  __m256 denom_aux_3 = _mm256_setr_m128(denom_aux_1, denom_aux_1);
+  __m256 denom_aux_4 = _mm256_setr_m128(denom_aux_2, denom_aux_2);
+  __m256 denom = _mm256_hsub_ps(denom_aux_3, denom_aux_4);
+
+  __m256 AD_ext_256 = _mm256_setr_m128(AD_ext, AD_ext);
+  __m256 diffs_1 = _mm256_add_ps(
+    _mm256_setr_m128(_mm_setzero_ps(), _mm_movelh_ps(vC.v, vB.v)),
+    AD_ext_256
+  );
+  __m256 diffs_2 = _mm256_sub_ps(
+    _mm256_setr_m128(_mm_setzero_ps(), _mm_movelh_ps(vF.v, vE.v)),
+    AD_ext_256
+  );
+
+  // calculating x.
+  __m256 x_part_1 = _mm256_mul_ps(diffs_1, _mm256_setr_m128(vFL_ext, vFL_ext));
+  __m256 x_part_2 = _mm256_mul_ps(diffs_2, _mm256_setr_m128(vCL_ext, vCL_ext));
+  __m256 x_part = _mm256_hsub_ps(x_part_1, x_part_2);
+
+  // calculating y.
+  __m256 y_part_1 = _mm256_mul_ps(diffs_1, _mm256_setr_m128(vEL_ext, vEL_ext));
+  __m256 y_part_2 = _mm256_mul_ps(diffs_2, _mm256_setr_m128(vBL_ext, vBL_ext));
+  __m256 y_part = _mm256_hsub_ps(y_part_1, y_part_2);
+
+  // calculating condition.
+  __m256 cond1 = _mm256_xor_ps(x_part, denom);
+  __m256 cond2 = _mm256_xor_ps(y_part, denom);
+  __m256 cond3 = _mm256_cmp_ps(_mm256_sub_ps(x_part, y_part), denom, 2);
+  __m256 condf = _mm256_andnot_ps(
+    cond1, 
+    _mm256_and_ps(cond2, _mm256_xor_ps(cond3, denom))
+  );
+  return _mm256_movemask_ps(condf);
 }
 
 /* Return the direction from the square to the segment, and if they don't collide,

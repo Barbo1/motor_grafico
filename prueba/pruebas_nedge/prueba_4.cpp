@@ -71,7 +71,7 @@ int main () {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
-  poly.set_position(Dir2 (100.f, 100.f));
+  poly.set_position(AngDir2 (100.f, 100.f, 0.f));
 
   std::array<Dir2, 10> points1 = set_points_4();
   NEdge<10> mov (
@@ -96,7 +96,7 @@ int main () {
     
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
-    mov.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
+    mov.set_position(AngDir2(static_cast<float>(mouse_x), static_cast<float>(mouse_y), 0.f));
 
     poly.print(glb, &gs);
     mov.print(glb, &gs);

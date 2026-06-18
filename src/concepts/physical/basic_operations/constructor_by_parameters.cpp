@@ -13,4 +13,5 @@ Physical::Physical (
   this->_force = {0, 0, 0};
   this->_velocity = {0, 0, 0};
   this->glb = glb;
+  this->_intertia = 0.f;
 }

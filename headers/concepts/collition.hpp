@@ -162,12 +162,7 @@ template<std::size_t N, std::size_t M>
 bool test_collition (const NEdge<N>& poly1, const NEdge<M>& poly2) {
   for (const auto& [A, vB, vC]: poly1.placed_triangles) {
     for (const auto& [D, vE, vF]: poly2.placed_triangles) {
-      Dir2 Dt = D + poly2.position;
-      bool eval1 = test_collition_triangle_segment (A, vB, vC, Dt, vE);
-      bool eval2 = test_collition_triangle_segment (A, vB, vC, Dt, vF);
-      bool eval3 = test_collition_triangle_segment (A, vB, vC, Dt + vE, vF - vE);
-      bool eval4 = test_collition_triangle_point (Dt, vE, vF, A);
-      if (eval1 || eval2 || eval3 || eval4) [[unlikely]] {
+      if (test_collision_triangle_triangle(A, vB, vC, D, vE, vF)) [[unlikely]] {
         return true;
       }
     }
