@@ -130,19 +130,37 @@
         |V| + collition_point sq_sq,
  | | - implementar los poligonos con colisiones:
         |V| + testeo.
-        | | + reposicion.
-        | | + resolucion.
-        | | + punto de colision.
+        |V| + resposicion, resolucion y punto de colision para circulo-poligono.
+        | | + resposicion, resolucion y punto de colision para prisma-poligono.
+        | | + resposicion, resolucion y punto de colision para poligono-poligono.
+        | | + resposicion, resolucion y punto de colision para linea-poligono.
+ | | - implementar proyectiles:
+        | | + testeos.
+        | | + resposiciones.
+        | | + resoluciones.
+        | | + puntos de colision.
  | | - mejoras en el codigo: 
         | | + agregar una comprobacion de punteros nullos cada vez que se hace un new,
         | | + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
         | | + usar atributo [[assume()]] para que el compilador tenga en cuenta cierta informacion,
         | | + mejorar el manejo de la memoria de la rasterizacion de letras.
-        | | - hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
+        | | + hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
                 durante el codigo, como las evaluaciones de ofuscamiento de lineas.
+        | | + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
+              utilizarla mediente los siguientes metodos:
+               + Arena (std::size_t SIZE): crea una nueva arena de tamaño 'SIZE'
+               + void* alloc(std::size_t size, std::size_t alignment): 
+                      aloca 'size' bytes de memoria alineada 'alignment' bytes. retorna un 
+                      puntero si lo consigue, o nullptr si no.
+               + void restart(): libera todas las alocaciones.
+            tambien, quiero ser capaz de poder realizar alocamientos de ciertas estructuras, pudiendolas liberar
+            y realocar de manera continua, para poder representar entructuras como listas. Para esto, tendría que
+            generar metodos que sean particulares para cada tipo que necesite, pero tengo que hacer una analisis 
+            previo de los tipos de datos que tengan este comportamiento. Como minimo, voy a necesitar para los 
+            proyectiles(cuando los programe).
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
- | | - re-implementar de nuevo el descompresor de imagenes png.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
+ | | - re-implementar de nuevo el descompresor de imagenes png.
  | | - cambios en las colisiones:
       | | + hacer una mezcla de movimiento y colision, que calcule el movimiento y 
               verifique que en la linea de movimiento no hubo ninguna colision(
@@ -153,6 +171,19 @@
         + imagenes continuas(Visualizer<D2CON>) y,
         + imagenes continuas con mapeo(Visualizer<D2MAP>).
  | | - agregar utilizacion de audios.
+ | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
+        mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
+        | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
+              posicionarse en algun lugar de la pantalla,
+        | | + reducir la cantidad de pixeles que tienen que ser computados en las mascaras 
+              grandes,
+        | | + mantener solamente una mascara dinamica, que sea cambiada en funcion de las 
+              demas luces, para deducir alocaciones y computo innecesario,
+        | | + extender el manejo de luces para aceptar fuentes de luz fuera de la pantalla,
+      Estas cosas comprender:
+        Cambiar luces para que sean objetos, que cuando se inicializan calculen la distancia
+        maxima hasta la que llega la luz, que abarca todas las funcionalidades.
+        | | + ,
  | | - cambiar modelo de iluminación:
         | | + en vez de guardarse los lugares donde hay sombra, deberian guardarse los lugares con iluminacion. 
                 Esto permite que se obtengan los lugares por lo que pasa la luz para poder recorrerlos mediante 
@@ -168,45 +199,7 @@
         | | + view covering para un circulo, linea y square,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
         | | + creacion de mascara con luz en un objeto(circulo, linea y square),
- | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
-        mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
-        | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
-              posicionarse en algun lugar de la pantalla,
-        | | + reducir la cantidad de pixeles que tienen que ser computados en las mascaras 
-              grandes,
-        | | + mantener solamente una mascara dinamica, que sea cambiada en funcion de las 
-              demas luces, para deducir alocaciones y computo innecesario,
-        | | + extender el manejo de luces para aceptar fuentes de luz fuera de la pantalla,
-      Estas cosas comprender:
-        Cambiar luces para que sean objetos, que cuando se inicializan calculen la distancia
-        maxima hasta la que llega la luz, que abarca todas las funcionalidades.
-        | | + ,
  | | - implementar gear.
  | | - mejorar eficiencia de figures_constructors:
         | | + cambiar algoritmo de dibujo de un circulo,
         | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.
- | | - implementar quick_alloc en Global para poder manejar memoria dinamica en un buffer en
-          el stack. Consiste en una estructura de 4 MB de memoria con la capacidad de poder
-          allocar una cantidad maxima de N allocaciones, reduciendo el uso de malloc para 
-          poder acomodar la memoria mas comodamente. Tiene las siguientes partes:
-            | | - qalloc_id qalloc(std::size_t s): 
-                retorna la ID de un puntero a 's' bytes de memoria. 
-                Puede retorna -1 si no encuentra suficiente memoria o exsiten N allocaciones.
-            | | - void qfree(int): 
-                libera la memoria asociada al puntero 'p'.
-          para mentener un recuento de los lugares ocupados, se tiene un arreglo de la 
-          siguiente estructura:
-            struct _Qalloc_Management {
-              void* begin;
-              uint32_t size: 22;
-              uint32_t prev: M;
-              uint32_t next: M;
-              uint32_t config: 2; // -> 1 -> valid, 0 -> freed
-            };
-          donde M = menor potencia de 2 mas grande que 2*N + 1
-          Para el retorno de el allocamiento existe la estructura:
-            struct qalloc_id {
-              void* begin;
-              int id;
-            }
-          para darle soporte al allocamiento de varios hilos, voy a utilizar mutex.

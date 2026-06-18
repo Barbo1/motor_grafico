@@ -282,25 +282,26 @@ template<std::size_t N> void resolve_collition (Circle& cir, NEdge<N>& pol) {
   }
 
   // calculate resolution.
-  Dir2 cir_v = Dir2(cir._velocity);
   float cir_mass = 1.f / cir.get_mass();
-
-  Dir2 pol_r = collition_point - pol.position;
-  Dir2 pol_v = pol._velocity + pol_r.percan() * pol._velocity.a;
   float pol_mass = 1.f / pol.get_mass();
+  float pol_inertia = 1.f / pol._intertia;
+
+  Dir2 cir_v = cir._velocity;
+  Dir2 pol_r = collition_point - pol.position;
+  Dir2 pol_v = pol_r.percan().madd(pol._velocity.a, pol._velocity);
 
   float pol_coef = dn.pL(pol_r);
   Dir2 v_diff = pol_v - cir_v;
   Dir2 J = dn * (-2.f * (dn * v_diff) / (
     cir_mass + 
     pol_mass + 
-    pol_coef * pol_coef / pol._intertia
+    pol_coef * pol_coef * pol_inertia
   ));
 
-  cir._velocity -= J * cir_mass;
+  cir._velocity = J.nmadd(cir_mass, cir._velocity);
   float pol_ang_vel = pol._velocity.a;
-  pol._velocity = pol._velocity + J * pol_mass;
-  pol._velocity.a = pol_ang_vel + J.pL(pol_r) / pol._intertia;
+  pol._velocity = J.madd(pol_mass, pol._velocity);
+  pol._velocity.a = std::fmaf(J.pL(pol_r), pol_inertia, pol_ang_vel);
 
   cir.position = reposition;
   

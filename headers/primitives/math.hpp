@@ -1,11 +1,50 @@
 #include "./vectors.hpp"
 #include <cstdint>
+#include <pmmintrin.h>
 #include <utility>
 #include <cmath>
 
 void rotate_segments (std::pair<Dir2, Dir2>*, uint32_t, float);
 void rotate_triangles (std::array<Dir2, 3>*, uint32_t, float);
 
+/* Test if there is a collision between a triangle and a point.
+ *
+ * 'P' is a point,
+ * 'A' is a vertex of the triangle,
+ * 'vB' is a vector that goes from 'A' to another vertex,
+ * 'vC' is a vector that goes from 'A' to another vertex, 
+ *    different that the one pointed by 'vB'.
+ * */
+inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
+  Dir2 PA = P - A;
+  float c1 = vC.pLd(PA, vB);
+  float c2 = vB.pLd(PA, vC);
+  return (c1 > 0.f) & (c2 > 0.f) & (c1+c2 < 1.f);
+}
+
+/* Given a point, and the position and dimentions of a square, return true
+ * if the point is inside of the square.
+ *
+ * 'P' is the point,
+ * 'SQP' is the center of the square,
+ * 'SQD' are the dimentions of the square.
+ * */
+inline bool test_point_inside_square(const Dir2& P, const Dir2& SQP, const Dir2& SQD) {
+  __m128 opr = _mm_mul_ps(_mm_sub_ps(SQP.v, P.v), _mm_rcp_ps(SQD.v));
+  __m128i abs = _mm_and_si128(_mm_set1_epi32(0x7FFFFFFF), _mm_castps_si128(opr));
+  __m128i cmp = _mm_cmpgt_epi32(_mm_set1_epi32(0x3F800000), abs);
+  return (_mm_movemask_epi8(cmp) & 0xFF) == 0xFF;
+}
+
+/* Test if there is a collision between a triangle and a circle.
+ *
+ * 'cpos' is the position of the circle,
+ * 'crad' is the radio of the circle,
+ * 'A' is a vertex of the triangle,
+ * 'vB' is a vector that goes from 'A' to another vertex,
+ * 'vC' is a vector that goes from 'A' to another vertex, 
+ *    different that the one pointed by 'vB'.
+ * */
 inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos, float crad) {
   const Dir2 vCB = vC - vB;
   const Dir2 vDA = cpos - A;
@@ -27,6 +66,14 @@ inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos,
   return minim < crad * crad || (0.f < c1 && 0.f < c2 && c1 + c2 < 1.f);
 }
 
+/* Test if there is a collision between a triangle and a point.
+ *
+ * 'P' is a point,
+ * 'A' is a vertex of the triangle,
+ * 'vB' is a vector that goes from 'A' to another vertex,
+ * 'vC' is a vector that goes from 'A' to another vertex, 
+ *    different that the one pointed by 'vB'.
+ * */
 inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE) {
   float q1 = vB.pLd (vE, vC);
   float q2 = vC.pLd (vE, vB);
@@ -49,21 +96,21 @@ inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
   return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
 }
 
-inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
-  Dir2 PA = P - A;
-  float c1 = vC.pLd(PA, vB);
-  float c2 = vB.pLd(PA, vC);
-  return (c1 > 0.f) & (c2 > 0.f) & (c1+c2 < 1.f);
-}
-
+/* Test if there is a collision between a square and a segment.
+ *
+ * 'A' is the center of the square,
+ * 'dims' are the dimenions of the square,
+ * 'E' is the begining point of the segment,
+ * 'vD' is the direction of the segment(finishing in the last point of the segment).
+ * */
 inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
-  Dir2 vAE = A - E;
+  __m128 vAE = _mm_sub_ps(A.v, E.v);
 
   __m128 dim_ext = _mm_shuffle_ps (dims.v, dims.v, 0b01010000);
   __m128 vd_ext = _mm_rcp_ps(_mm_shuffle_ps (vD.v, vD.v, 0b01010000));
-  __m128 vae_ext = _mm_shuffle_ps (vAE.v, vAE.v, 0b01010000);
-  __m128 res1 = _mm_mul_ps (dim_ext, vd_ext);
-  __m128 vN_arr = _mm_fmaddsub_ps (vae_ext, vd_ext, res1); 
+  __m128 vae_ext = _mm_shuffle_ps (vAE, vAE, 0b01010000);
+  __m128 res1 = _mm_add_ps (vae_ext, dim_ext);
+  __m128 vN_arr = _mm_mul_ps (res1, vd_ext); 
   
   __m128 cond = _mm_cmplt_ps (vN_arr, _mm_shuffle_ps (vN_arr, vN_arr, 0b10110001));
   __m128 cmin = _mm_and_ps (cond, vN_arr);
@@ -76,9 +123,151 @@ inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
 }
 
-inline bool test_point_inside_square(const Dir2& P, const Dir2& SQP, const Dir2& SQD) {
-  __m128 opr = _mm_mul_ps(_mm_sub_ps(SQP.v, P.v), _mm_rcp_ps(SQD.v));
-  __m128i abs = _mm_and_si128(_mm_set1_epi32(0x7FFFFFFF), _mm_castps_si128(opr));
-  __m128i cmp = _mm_cmpgt_epi32(_mm_set1_epi32(0x3F800000), abs);
-  return (_mm_movemask_epi8(cmp) & 0xFF) == 0xFF;
+/* Return the direction from the square to the segment, and if they don't collide,
+ * return Dir2(0.f, 0.f).
+ *
+ * 'A' is the center of the square,
+ * 'dims' are the dimenions of the square,
+ * 'E' is the begining point of the segment,
+ * 'vD' is the direction of the segment(finishing in the last point of the segment).
+ * */
+inline Dir2 collision_direction_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
+  __m128 vAE = _mm_sub_ps(A.v, E.v);
+  __m128 vae_ext = _mm_shuffle_ps (vAE, vAE, 0b01010000);
+  __m128 dim_ext = _mm_xor_ps(
+    _mm_shuffle_ps (dims.v, dims.v, 0b01010000), 
+    _mm_set_ps(-0.f, 0.f, -0.f, 0.f)
+  );
+  __m128 vd_ext = _mm_rcp_ps(_mm_shuffle_ps (vD.v, vD.v, 0b01010000));
+  __m128 res1 = _mm_add_ps (vae_ext, dim_ext);
+  __m128 vN_arr = _mm_mul_ps (res1, vd_ext);
+
+  __m128 part_1 = _mm_shuffle_ps (vN_arr, vN_arr, 0b00001000);
+  __m128 part_2 = _mm_shuffle_ps (vN_arr, vN_arr, 0b00001101);
+
+  __m128 cI_prev = _mm_min_ps(part_1, part_2);
+  __m128 cS_prev = _mm_max_ps(part_1, part_2);
+  __m128 cI = _mm_max_ps(cI_prev, _mm_shuffle_ps (cI_prev, cI_prev, 0b00000001));
+  __m128 cS = _mm_min_ps(cS_prev, _mm_shuffle_ps (cS_prev, cS_prev, 0b00000001));
+
+  __m128 c_sum = _mm_mul_ps(_mm_add_ps(cI, cS), _mm_set1_ps(0.5f));
+
+  __m128 test_cond_fin = _mm_cmplt_ps(
+    _mm_max_ps(cI, _mm_setzero_ps()),
+    _mm_min_ps(cS, _mm_set1_ps(1.f))
+  );
+
+  __m128 c_sum_fin = _mm_max_ps (
+    _mm_setzero_ps(), 
+    _mm_min_ps(
+      _mm_set1_ps(1.f), 
+      c_sum
+    )
+  );
+
+  return Dir2(_mm_and_ps(
+    test_cond_fin, 
+    _mm_fmsub_ps(vD.v, c_sum_fin, vAE)
+  ));
+}
+
+/* This function recieves a square information, the segments known to 
+ * collide with it, and the direction of reposition, and calculate the
+ * distance(multiplicative distance) for the reposition through it.
+ *
+ * 'C' is the center of the square,
+ * 'dims' are the dimentions of the square,
+ * 'd' is the direction of the reposition,
+ * 'segments' are store segments,
+ * 'many' is the number of segments avaiable in 'segments'.
+ * */
+inline float directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 d, std::pair<Dir2, Dir2>* segments, uint32_t many) {
+
+  __m128 half = _mm_set1_ps(0.5f);
+  __m128 dim_sgn = _mm_xor_ps(dims.v, _mm_and_ps(_mm_set1_ps(-0.f), d.v));
+  __m128 dim_sgn_inverse = _mm_xor_ps(_mm_set_ps(-0.f, 0.f, -0.f, 0.f), dims.v);
+
+  __m128 D = _mm_add_ps(C.v, dim_sgn);
+  __m128 D_I = _mm_movelh_ps(D, _mm_sub_ps(C.v, dim_sgn));
+  __m128 P1_P2 = _mm_movelh_ps(_mm_add_ps(C.v, dim_sgn_inverse), _mm_sub_ps(C.v, dim_sgn_inverse));
+
+  __m128 d_ext = _mm_shuffle_ps(d.v, d.v, 0b00010001);
+  __m128 curr_min = _mm_setzero_ps();
+  for (uint32_t i = 0; i < many; i++) {
+    Dir2 A = segments[i].first;
+    Dir2 v = segments[i].second;
+
+    __m128 B = _mm_add_ps(A.v, v.v);
+    __m128 A2 = _mm_movelh_ps(A.v, A.v);
+
+    // part 1.
+    {
+      __m128 v_ext = _mm_shuffle_ps(v.v, v.v, 0b00010001);
+      __m128 M_mid = _mm_mul_ps(_mm_add_ps(A.v, B), half);
+      __m128 M = _mm_movelh_ps(M_mid, M_mid);
+      __m128 denom = _mm_rcp_ps(
+        _mm_set1_ps(
+          _mm_cvtss_f32(
+            _mm_hsub_ps(_mm_mul_ps(d.v, v_ext), _mm_undefined_ps())
+          )
+        )
+      );
+     
+      // calculating condition 1.
+      __m128 cond_1_middle_1 = _mm_mul_ps(_mm_sub_ps(D_I, M), d_ext);
+      __m128 cond_1_middle_2 = _mm_mul_ps(_mm_sub_ps(P1_P2, M), d_ext);
+      __m128 cond_1_middle = _mm_hsub_ps(cond_1_middle_1, cond_1_middle_2);
+      __m128 cond_1 = _mm_cmplt_ps(
+        _mm_and_ps(
+          _mm_mul_ps(cond_1_middle, denom),
+          _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF))
+        ),
+        half
+      );
+      
+      // calculating value 1.
+      __m128 value_1_middle_1 = _mm_mul_ps(_mm_sub_ps(A2, D_I), v_ext);
+      __m128 value_1_middle_2 = _mm_mul_ps(_mm_sub_ps(A2, P1_P2), v_ext);
+      __m128 value_1_middle = _mm_hsub_ps(value_1_middle_1, value_1_middle_2);
+      curr_min = _mm_min_ps(
+        _mm_and_ps(cond_1, _mm_mul_ps(value_1_middle, denom)), 
+        curr_min
+      );
+    }
+   
+    // part 2.
+    {
+      __m128 D2 = _mm_movelh_ps(D, D);
+      __m128 B2 = _mm_movelh_ps(B, B);
+      __m128 v12_ext = _mm_sub_ps(D2, P1_P2);
+      __m128 M_12 = _mm_add_ps(D2, P1_P2);
+      __m128 denom = _mm_mul_ps(v12_ext, d_ext);
+      v12_ext = _mm_shuffle_ps(v12_ext, v12_ext, 0b10110001);
+      denom = _mm_rcp_ps(_mm_hadd_ps(denom, denom));
+     
+      // calculating condition 2.
+      __m128 cond_2_middle_2 = _mm_mul_ps(_mm_fmsub_ps(M_12, half, B2), d_ext);
+      __m128 cond_2_middle = _mm_fmsub_ps(_mm_fmsub_ps(M_12, half, A2), d_ext, cond_2_middle_2);
+      __m128 cond_2 = _mm_cmplt_ps(
+        _mm_and_ps(
+          _mm_mul_ps(cond_2_middle, denom),
+          _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF))
+        ),
+        half
+      );
+      
+      // calculating value 2.
+      __m128 value_2_middle_1 = _mm_mul_ps(_mm_sub_ps(P1_P2, A2), v12_ext);
+      __m128 value_2_middle_2 = _mm_mul_ps(_mm_sub_ps(P1_P2, B2), v12_ext);
+      __m128 value_2_middle = _mm_hsub_ps(value_2_middle_1, value_2_middle_2);
+      curr_min = _mm_min_ps(
+        _mm_and_ps(cond_2, _mm_mul_ps(value_2_middle, denom)), 
+        curr_min
+      );
+    }
+  }
+
+  curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00001101));
+  curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00000001));
+  return _mm_cvtss_f32(curr_min);
 }
