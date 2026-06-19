@@ -17,10 +17,25 @@ void rotate_triangles (std::array<Dir2, 3>*, uint32_t, float);
  *    different that the one pointed by 'vB'.
  * */
 inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
-  Dir2 PA = P - A;
-  float c1 = vC.pLd(PA, vB);
-  float c2 = vB.pLd(PA, vC);
-  return (c1 > 0.f) & (c2 > 0.f) & (c1+c2 < 1.f);
+  __m128 PA = _mm_sub_ps(P.v, A.v);
+  __m128 PAL_ext = _mm_shuffle_ps(PA, PA, 0b00010001);
+  __m128 BC_ext = _mm_movelh_ps(vB.v, vC.v);
+  __m128 vCB = _mm_sub_ps(vC.v, vB.v);
+  
+  __m128 num_mult_1 = _mm_mul_ps(BC_ext, PAL_ext);
+  __m128 num_mult_2 = _mm_mul_ps(vCB, PAL_ext);
+  
+  __m128 den_mult_1 = _mm_shuffle_ps(vB.v, vB.v, 0b00010001);
+  __m128 den_mult_2 = _mm_movelh_ps(vC.v, vC.v);
+
+  __m128 num = _mm_hsub_ps(num_mult_1,  num_mult_2);
+  __m128 den = _mm_mul_ps(den_mult_1, den_mult_2);
+  den = _mm_hsub_ps(den, den);
+
+  __m128 cond_1 = _mm_xor_ps(num, den);
+  __m128 cond_2 = _mm_xor_ps(_mm_cmple_ps(num, den), den);
+  
+  return _mm_movemask_ps(_mm_shuffle_ps(cond_1, cond_2, 0b10100100)) == 0b1101;
 }
 
 /* Given a point, and the position and dimentions of a square, return true
@@ -141,19 +156,17 @@ inline bool test_collision_triangle_triangle(Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
   __m128 vCL_ext = _mm_shuffle_ps(vC.v, vC.v, 0b00010001);
 
   __m256 AD_ext_256 = _mm256_setr_m128(AD_ext, AD_ext);
+  __m256 vBL_ext_256 = _mm256_setr_m128(vBL_ext, vBL_ext);
+  __m256 vCL_ext_256 = _mm256_setr_m128(vCL_ext, vCL_ext);
 
   // calculating vector intersection.
   __m128 FE_ext = _mm_movelh_ps(vF.v, vE.v);
   __m128 FEL_ext = _mm_shuffle_ps(FE_ext, FE_ext, 0b10110001);
   __m256 FE_ext_256 = _mm256_setr_m128(FE_ext, FE_ext);
-  __m256 vBFE_ext_256 = _mm256_setr_m128(vBL_ext, FEL_ext);
-  __m256 vCFE_ext_256 = _mm256_setr_m128(vCL_ext, FEL_ext);
-  __m256 vBL_ext_256 = _mm256_setr_m128(vBL_ext, vBL_ext);
-  __m256 vCL_ext_256 = _mm256_setr_m128(vCL_ext, vCL_ext);
 
   __m256 numer_inter = _mm256_hsub_ps(
-    _mm256_mul_ps(vBFE_ext_256, AD_ext_256), 
-    _mm256_mul_ps(vCFE_ext_256, AD_ext_256)
+    _mm256_mul_ps(_mm256_setr_m128(vBL_ext, FEL_ext), AD_ext_256), 
+    _mm256_mul_ps(_mm256_setr_m128(vCL_ext, FEL_ext), AD_ext_256)
   );
   __m256 denom_inter = _mm256_hsub_ps(
     _mm256_mul_ps(vBL_ext_256, FE_ext_256), 
@@ -184,10 +197,10 @@ inline bool test_collision_triangle_triangle(Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
 
   // calculating parts.
   __m256 x_part_1 = _mm256_mul_ps(diffs_1, _mm256_setr_m128(vFL_ext, vFL_ext));
-  __m256 x_part_2 = _mm256_mul_ps(diffs_2, _mm256_setr_m128(vCL_ext, vCL_ext));
+  __m256 x_part_2 = _mm256_mul_ps(diffs_2, vCL_ext_256);
   __m256 x_part = _mm256_hsub_ps(x_part_1, x_part_2);
   __m256 y_part_1 = _mm256_mul_ps(diffs_1, _mm256_setr_m128(vEL_ext, vEL_ext));
-  __m256 y_part_2 = _mm256_mul_ps(diffs_2, _mm256_setr_m128(vBL_ext, vBL_ext));
+  __m256 y_part_2 = _mm256_mul_ps(diffs_2, vBL_ext_256);
   __m256 y_part = _mm256_hsub_ps(y_part_1, y_part_2);
 
   // calculating condition.
