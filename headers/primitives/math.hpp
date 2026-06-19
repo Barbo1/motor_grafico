@@ -16,7 +16,7 @@ void rotate_triangles (std::array<Dir2, 3>*, uint32_t, float);
  * 'vC' is a vector that goes from 'A' to another vertex, 
  *    different that the one pointed by 'vB'.
  * */
-inline bool test_collition_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
+inline bool test_collision_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
   __m128 PA = _mm_sub_ps(P.v, A.v);
   __m128 PAL_ext = _mm_shuffle_ps(PA, PA, 0b00010001);
   __m128 BC_ext = _mm_movelh_ps(vB.v, vC.v);
@@ -61,7 +61,7 @@ inline bool test_point_inside_square(const Dir2& P, const Dir2& SQP, const Dir2&
  * 'vC' is a vector that goes from 'A' to another vertex, 
  *    different that the one pointed by 'vB'.
  * */
-inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos, float crad) {
+inline bool test_collision_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos, float crad) {
   const Dir2 vCB = vC - vB;
   const Dir2 vDA = cpos - A;
   const Dir2 vDB = cpos - (vB + A);
@@ -90,7 +90,7 @@ inline bool test_collition_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos,
  * 'vC' is a vector that goes from 'A' to another vertex, 
  *    different that the one pointed by 'vB'.
  * */
-inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE) {
+inline bool test_collision_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, Dir2 vE) {
   float q1 = vB.pLd (vE, vC);
   float q2 = vC.pLd (vE, vB);
   Dir2 vAD = A - D;
@@ -119,7 +119,7 @@ inline bool test_collition_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
  * 'E' is the begining point of the segment,
  * 'vD' is the direction of the segment(finishing in the last point of the segment).
  * */
-inline bool test_collition_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
+inline bool test_collision_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   __m128 vAE = _mm_sub_ps(A.v, E.v);
 
   __m128 dim_ext = _mm_shuffle_ps (dims.v, dims.v, 0b01010000);

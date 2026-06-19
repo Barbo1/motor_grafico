@@ -12,7 +12,7 @@ class Physical {
     AngDir2 position;
     AngDir2 _velocity;
     AngDir2 _force;
-    AngDir2 _collition_normal;
+    AngDir2 _collision_normal;
 
     float _area; /* px^2 */
     float _density; /* kg/px^2 */
@@ -22,7 +22,7 @@ class Physical {
 
     bool _movible; /* The external forces adn velocities don't affect it. */
     bool _colidalble; /* The colition with objects don't have effect. */
-    bool _normal_presence; /* Denote if the collition was made, so the force 
+    bool _normal_presence; /* Denote if the collision was made, so the force 
                             * can be corrected and the friction applied */
 
     Global* glb;
@@ -48,8 +48,8 @@ class Physical {
 
     virtual void calculate_movement (const AngDir2 & extrenal_forces);
 
-    friend bool test_collition (Physical &, Physical &);
-    friend void resolve_collition (Physical &, Physical &);
-    friend void correct_collition (Physical &, Physical &);
-    friend Dir2 collition_point (Physical &, Physical &);
+    friend bool test_collision (Physical &, Physical &);
+    friend void resolve_collision (Physical &, Physical &);
+    friend void correct_collision (Physical &, Physical &);
+    friend Dir2 collision_point (Physical &, Physical &);
 };

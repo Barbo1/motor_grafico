@@ -35,26 +35,26 @@ class Line {
     Dir2 get_v () const;
     Dir2 get_p () const;
 
-    friend bool test_collition (const Line&, Physical&);
-    friend bool test_collition (const Line&, const Particle&);
-    friend bool test_collition (const Line&, const Circle&);
-    friend bool test_collition (const Line&, const Square&);
-    template<std::size_t N> friend bool test_collition (const Line&, const NEdge<N>&);
+    friend bool test_collision (const Line&, Physical&);
+    friend bool test_collision (const Line&, const Particle&);
+    friend bool test_collision (const Line&, const Circle&);
+    friend bool test_collision (const Line&, const Square&);
+    template<std::size_t N> friend bool test_collision (const Line&, const NEdge<N>&);
 
-    friend void resolve_collition (Physical&, Line&);
-    friend void resolve_collition (Particle&, Line&);
-    friend void resolve_collition (Circle&, Line&);
-    friend void resolve_collition (Square&, Line&);
-    template<std::size_t N> friend void resolve_collition (NEdge<N>&, Line&);
+    friend void resolve_collision (Physical&, Line&);
+    friend void resolve_collision (Particle&, Line&);
+    friend void resolve_collision (Circle&, Line&);
+    friend void resolve_collision (Square&, Line&);
+    template<std::size_t N> friend void resolve_collision (NEdge<N>&, Line&);
 
-    friend void correct_collition (Physical&, Line&);
-    friend void correct_collition (Particle&, Line&);
-    friend void correct_collition (Square&, Line&);
-    friend void correct_collition (Circle&, Line&);
-    template<std::size_t N> friend void correct_collition (Line&, NEdge<N>&);
+    friend void correct_collision (Physical&, Line&);
+    friend void correct_collision (Particle&, Line&);
+    friend void correct_collision (Square&, Line&);
+    friend void correct_collision (Circle&, Line&);
+    template<std::size_t N> friend void correct_collision (Line&, NEdge<N>&);
     
-    Dir2 collition_point (const Line&, const Physical&);
-    Dir2 collition_point (const Line&, const Square&);
-    Dir2 collition_point (const Line&, const Circle&);
-    template<std::size_t N> Dir2 collition_point (const Line&, const NEdge<N>&);
+    Dir2 collision_point (const Line&, const Physical&);
+    Dir2 collision_point (const Line&, const Square&);
+    Dir2 collision_point (const Line&, const Circle&);
+    template<std::size_t N> Dir2 collision_point (const Line&, const NEdge<N>&);
 };

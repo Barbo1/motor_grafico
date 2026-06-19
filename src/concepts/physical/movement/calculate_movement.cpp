@@ -7,10 +7,10 @@ void Physical::calculate_movement(const AngDir2 & extrenal_forces) {
     if (this->_normal_presence) {
       this->_normal_presence = false;
 
-      float direction = final_force * this->_collition_normal;
+      float direction = final_force * this->_collision_normal;
       if (direction < 0) {
-        float v_n = this->_velocity * this->_collition_normal;
-        AngDir2 friction = (this->_collition_normal * v_n) - this->_velocity;
+        float v_n = this->_velocity * this->_collision_normal;
+        AngDir2 friction = (this->_collision_normal * v_n) - this->_velocity;
 
         if (friction.modulo2() > 0.0001)
           final_force = friction.normalize() * this->_acc_f_k * -direction;

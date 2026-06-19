@@ -2,7 +2,7 @@
 #include "../headers/primitives/vectors.hpp"
 #include "../headers/pr_objects/nedge.hpp"
 #include "../headers/pr_objects/circle.hpp"
-#include "../headers/concepts/collition.hpp"
+#include "../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -27,7 +27,7 @@ int main () {
     glb->begin_render();
 
     std::string dial = "false";
-    if (test_collition_triangle_point (A, v1, v2, P)) {
+    if (test_collision_triangle_point (A, v1, v2, P)) {
       dial = "true";
     }
     std::cout << dial << std::endl;

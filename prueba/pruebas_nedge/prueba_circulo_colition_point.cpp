@@ -2,7 +2,7 @@
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
 #include "../../headers/pr_objects/circle.hpp"
-#include "../../headers/concepts/collition.hpp"
+#include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -89,9 +89,9 @@ int main () {
 
     cir.draw();
 
-    if (test_collition(cir, poly)) {
+    if (test_collision(cir, poly)) {
       dial = "true";
-      Dir2 point = collition_point(cir, poly);
+      Dir2 point = collision_point(cir, poly);
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
       SDL_RenderDrawPoint(glb->get_render(), point.x, point.y);
       std::cout << "Col = (" << point.x << ", " << point.y << ")" << std::endl;

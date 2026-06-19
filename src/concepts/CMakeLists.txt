@@ -1,7 +1,7 @@
 file(GLOB_RECURSE FILES_TEX "visualizer/*.cpp")
 file(GLOB_RECURSE FILES_IMF "image_modifier/*.cpp")
 file(GLOB_RECURSE FILES_PHY "physical/*.cpp")
-file(GLOB_RECURSE FILES_COL "collition/*.cpp")
+file(GLOB_RECURSE FILES_COL "collision/*.cpp")
 file(GLOB_RECURSE FILES_LGT "lights/*.cpp")
 file(GLOB_RECURSE FILES_GLY "glyph_system/*.cpp")
 file(GLOB_RECURSE FILES_GUI "gui/*.cpp")

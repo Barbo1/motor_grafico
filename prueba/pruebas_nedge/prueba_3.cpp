@@ -2,7 +2,7 @@
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
 #include "../../headers/pr_objects/circle.hpp"
-#include "../../headers/concepts/collition.hpp"
+#include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -81,7 +81,7 @@ int main () {
 
     poly.print(glb, &gs);
     std::string dial = "false";
-    if (test_collition(cir, poly)) {
+    if (test_collision(cir, poly)) {
       dial = "true";
     }
     std::cout << dial << std::endl;

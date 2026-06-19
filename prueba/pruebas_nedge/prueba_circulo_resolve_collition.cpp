@@ -2,7 +2,7 @@
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
 #include "../../headers/pr_objects/circle.hpp"
-#include "../../headers/concepts/collition.hpp"
+#include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -71,12 +71,12 @@ int main () {
       cir1.calculate_movement(AngDir2(0.f, 0.f, 0.f));
       poly.calculate_movement(AngDir2(0.f, 0.f, 0.f));
 
-      if (test_collition(cir, poly)) {
-        resolve_collition(cir, poly);
+      if (test_collision(cir, poly)) {
+        resolve_collision(cir, poly);
       }
 
-      if (test_collition(cir1, poly)) {
-        resolve_collition(cir1, poly);
+      if (test_collision(cir1, poly)) {
+        resolve_collision(cir1, poly);
       }
 
       aux_time_1 += 1;

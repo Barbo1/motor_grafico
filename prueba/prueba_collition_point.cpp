@@ -33,7 +33,7 @@ int main () {
   Square c2 = Square(glb, 30, 60, AngDir2 {100, 400, 0}, 4.6, 0.3, false, true, &color);
   c2.set_texture(img_mod_1.resize(120, 60).rotate180().cast(glb));
 
-  Dir2 point = collition_point(c1, c2);
+  Dir2 point = collision_point(c1, c2);
 
   while (cont) {
     glb->begin_render();

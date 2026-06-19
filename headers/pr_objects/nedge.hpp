@@ -46,32 +46,32 @@ class NEdge final: public Physical {
     virtual void calculate_movement(const AngDir2 & extrenal_forces);
     virtual void set_position (AngDir2);
 
-    template<std::size_t M> friend bool test_collition (const Line&, const NEdge<M>&);
-    template<std::size_t M> friend bool test_collition (const Particle&, const NEdge<M>&);
-    template<std::size_t M> friend bool test_collition (const Circle&, const NEdge<M>&);
-    template<std::size_t M> friend bool test_collition (const Square&, const NEdge<M>&);
-    template<std::size_t M, std::size_t L> friend bool test_collition (const NEdge<M>&, const NEdge<L>&);
+    template<std::size_t M> friend bool test_collision (const Line&, const NEdge<M>&);
+    template<std::size_t M> friend bool test_collision (const Particle&, const NEdge<M>&);
+    template<std::size_t M> friend bool test_collision (const Circle&, const NEdge<M>&);
+    template<std::size_t M> friend bool test_collision (const Square&, const NEdge<M>&);
+    template<std::size_t M, std::size_t L> friend bool test_collision (const NEdge<M>&, const NEdge<L>&);
 
-    template<std::size_t M> friend void resolve_collition (NEdge<M>&, Line&);
-    template<std::size_t M> friend void resolve_collition (Particle&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collition (Circle&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collition (Square&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collition (NEdge<M>&, Circle&);
-    template<std::size_t M> friend void resolve_collition (NEdge<M>&, Square&);
-    template<std::size_t M, std::size_t T> friend void resolve_collition (NEdge<M>&, NEdge<T>&);
+    template<std::size_t M> friend void resolve_collision (NEdge<M>&, Line&);
+    template<std::size_t M> friend void resolve_collision (Particle&, NEdge<M>&);
+    template<std::size_t M> friend void resolve_collision (Circle&, NEdge<M>&);
+    template<std::size_t M> friend void resolve_collision (Square&, NEdge<M>&);
+    template<std::size_t M> friend void resolve_collision (NEdge<M>&, Circle&);
+    template<std::size_t M> friend void resolve_collision (NEdge<M>&, Square&);
+    template<std::size_t M, std::size_t T> friend void resolve_collision (NEdge<M>&, NEdge<T>&);
 
-    template<std::size_t M> friend void correct_collition (NEdge<M>&, Line&);
-    template<std::size_t M> friend void correct_collition (Particle&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collition (Circle&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collition (Square&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collition (NEdge<M>&, Circle&);
-    template<std::size_t M> friend void correct_collition (NEdge<M>&, Square&);
-    template<std::size_t M, std::size_t T> friend void correct_collition (NEdge<M>&, NEdge<N>&);
+    template<std::size_t M> friend void correct_collision (NEdge<M>&, Line&);
+    template<std::size_t M> friend void correct_collision (Particle&, NEdge<M>&);
+    template<std::size_t M> friend void correct_collision (Circle&, NEdge<M>&);
+    template<std::size_t M> friend void correct_collision (Square&, NEdge<M>&);
+    template<std::size_t M> friend void correct_collision (NEdge<M>&, Circle&);
+    template<std::size_t M> friend void correct_collision (NEdge<M>&, Square&);
+    template<std::size_t M, std::size_t T> friend void correct_collision (NEdge<M>&, NEdge<N>&);
 
-    template<std::size_t M> friend Dir2 collition_point (const Line&, const NEdge<M>&);
-    template<std::size_t M> friend Dir2 collition_point (const Circle&, const NEdge<M>&);
-    template<std::size_t M> friend Dir2 collition_point (const Square&, const NEdge<M>&);
-    template<std::size_t M, std::size_t T> friend Dir2 collition_point (const NEdge<M>&, const NEdge<T>&);
+    template<std::size_t M> friend Dir2 collision_point (const Line&, const NEdge<M>&);
+    template<std::size_t M> friend Dir2 collision_point (const Circle&, const NEdge<M>&);
+    template<std::size_t M> friend Dir2 collision_point (const Square&, const NEdge<M>&);
+    template<std::size_t M, std::size_t T> friend Dir2 collision_point (const NEdge<M>&, const NEdge<T>&);
 };
 
 
@@ -471,10 +471,10 @@ void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
     if (this->_normal_presence) {
       this->_normal_presence = false;
 
-      float direction = final_force * this->_collition_normal;
+      float direction = final_force * this->_collision_normal;
       if (direction < 0) {
-        float v_n = this->_velocity * this->_collition_normal;
-        AngDir2 friction = (this->_collition_normal * v_n) - this->_velocity;
+        float v_n = this->_velocity * this->_collision_normal;
+        AngDir2 friction = (this->_collision_normal * v_n) - this->_velocity;
 
         if (friction.modulo2() > 0.0001)
           final_force = friction.normalize() * this->_acc_f_k * -direction;
