@@ -122,7 +122,10 @@ inline bool test_collision_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
 inline bool test_collision_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   __m128 vAE = _mm_sub_ps(A.v, E.v);
 
-  __m128 dim_ext = _mm_shuffle_ps (dims.v, dims.v, 0b01010000);
+  __m128 dim_ext = _mm_xor_ps(
+    _mm_shuffle_ps (dims.v, dims.v, 0b01010000), 
+    _mm_set_ps(0.f, -0.f, 0.f, -0.f)
+  );
   __m128 vd_ext = _mm_rcp_ps(_mm_shuffle_ps (vD.v, vD.v, 0b01010000));
   __m128 vae_ext = _mm_shuffle_ps (vAE, vAE, 0b01010000);
   __m128 res1 = _mm_add_ps (vae_ext, dim_ext);
@@ -276,8 +279,7 @@ inline Dir2 collision_direction_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 
  * 'segments' are store segments,
  * 'many' is the number of segments avaiable in 'segments'.
  * */
-inline float directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 d, std::pair<Dir2, Dir2>* segments, uint32_t many) {
-
+inline Dir2 directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 d, std::pair<Dir2, Dir2>* segments, uint32_t many) {
   __m128 half = _mm_set1_ps(0.5f);
   __m128 dim_sgn = _mm_xor_ps(dims.v, _mm_and_ps(_mm_set1_ps(-0.f), d.v));
   __m128 dim_sgn_inverse = _mm_xor_ps(_mm_set_ps(-0.f, 0.f, -0.f, 0.f), dims.v);
@@ -364,5 +366,5 @@ inline float directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 d, std
 
   curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00001101));
   curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00000001));
-  return _mm_cvtss_f32(curr_min);
+  return d * _mm_cvtss_f32(curr_min);
 }
