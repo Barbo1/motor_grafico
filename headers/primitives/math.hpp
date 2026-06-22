@@ -231,31 +231,32 @@ inline bool test_collision_triangle_triangle(Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
  * */
 inline Dir2 collision_direction_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   __m128 vAE = _mm_sub_ps(A.v, E.v);
-  __m128 vae_ext = _mm_shuffle_ps (vAE, vAE, 0b01010000);
-  __m128 dim_ext = _mm_xor_ps(
-    _mm_shuffle_ps (dims.v, dims.v, 0b01010000), 
-    _mm_set_ps(-0.f, 0.f, -0.f, 0.f)
+  __m128 vN_arr = _mm_div_ps (
+    _mm_add_ps (
+      _mm_movelh_ps (vAE, vAE), 
+      _mm_xor_ps(
+        _mm_movelh_ps (dims.v, dims.v), 
+        _mm_set_ps(-0.f,-0.f,0.f,0.f)
+      )
+    ), 
+    _mm_movelh_ps (vD.v, vD.v)
   );
-  __m128 vd_ext = _mm_rcp_ps(_mm_shuffle_ps (vD.v, vD.v, 0b01010000));
-  __m128 res1 = _mm_add_ps (vae_ext, dim_ext);
-  __m128 vN_arr = _mm_mul_ps (res1, vd_ext);
 
-  __m128 part_1 = _mm_shuffle_ps (vN_arr, vN_arr, 0b00001000);
-  __m128 part_2 = _mm_shuffle_ps (vN_arr, vN_arr, 0b00001101);
+  __m128 part_1 = _mm_movelh_ps(vN_arr, _mm_undefined_ps());
+  __m128 part_2 = _mm_movehl_ps(_mm_undefined_ps(), vN_arr);
 
   __m128 cI_prev = _mm_min_ps(part_1, part_2);
   __m128 cS_prev = _mm_max_ps(part_1, part_2);
-  __m128 cI = _mm_max_ps(cI_prev, _mm_shuffle_ps (cI_prev, cI_prev, 0b00000001));
-  __m128 cS = _mm_min_ps(cS_prev, _mm_shuffle_ps (cS_prev, cS_prev, 0b00000001));
-
-  __m128 c_sum = _mm_mul_ps(_mm_add_ps(cI, cS), _mm_set1_ps(0.5f));
+  __m128 cI = _mm_max_ps(cI_prev, _mm_shuffle_ps (cI_prev, _mm_undefined_ps(), 0b00000001));
+  __m128 cS = _mm_min_ps(cS_prev, _mm_shuffle_ps (cS_prev, _mm_undefined_ps(), 0b00000001));
 
   __m128 test_cond_fin = _mm_cmplt_ps(
     _mm_max_ps(cI, _mm_setzero_ps()),
     _mm_min_ps(cS, _mm_set1_ps(1.f))
   );
 
-  __m128 c_sum_fin = _mm_max_ps (
+  __m128 c_sum = _mm_mul_ps(_mm_add_ps(cI, cS), _mm_set1_ps(0.5f));
+  __m128 c_sum_fin = _mm_max_ps(
     _mm_setzero_ps(), 
     _mm_min_ps(
       _mm_set1_ps(1.f), 
@@ -279,40 +280,35 @@ inline Dir2 collision_direction_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 
  * 'segments' are store segments,
  * 'many' is the number of segments avaiable in 'segments'.
  * */
-inline Dir2 directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 d, std::pair<Dir2, Dir2>* segments, uint32_t many) {
+inline Dir2 directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 dn, std::pair<Dir2, Dir2>* segments, uint32_t many) {
   __m128 half = _mm_set1_ps(0.5f);
-  __m128 dim_sgn = _mm_xor_ps(dims.v, _mm_and_ps(_mm_set1_ps(-0.f), d.v));
-  __m128 dim_sgn_inverse = _mm_xor_ps(_mm_set_ps(-0.f, 0.f, -0.f, 0.f), dims.v);
+  __m128 dim_sgn = _mm_xor_ps(dims.v, _mm_and_ps(_mm_set1_ps(-0.f), dn.v));
+  __m128 dim_sgn_inverse = _mm_xor_ps(_mm_set_ps(-0.f, 0.f, -0.f, 0.f), dim_sgn);
 
   __m128 D = _mm_add_ps(C.v, dim_sgn);
   __m128 D_I = _mm_movelh_ps(D, _mm_sub_ps(C.v, dim_sgn));
   __m128 P1_P2 = _mm_movelh_ps(_mm_add_ps(C.v, dim_sgn_inverse), _mm_sub_ps(C.v, dim_sgn_inverse));
 
-  __m128 d_ext = _mm_shuffle_ps(d.v, d.v, 0b00010001);
+  __m128 dL_ext = _mm_shuffle_ps(dn.v, dn.v, 0b00010001);
   __m128 curr_min = _mm_setzero_ps();
   for (uint32_t i = 0; i < many; i++) {
-    Dir2 A = segments[i].first;
-    Dir2 v = segments[i].second;
+    Dir2 A = segments[i].second;
+    Dir2 v = segments[i].first;
 
     __m128 B = _mm_add_ps(A.v, v.v);
-    __m128 A2 = _mm_movelh_ps(A.v, A.v);
+    __m128 A_ext = _mm_movelh_ps(A.v, A.v);
 
     // part 1.
     {
-      __m128 v_ext = _mm_shuffle_ps(v.v, v.v, 0b00010001);
-      __m128 M_mid = _mm_mul_ps(_mm_add_ps(A.v, B), half);
+      __m128 vL_ext = _mm_shuffle_ps(v.v, v.v, 0b00010001);
+      __m128 M_mid = _mm_add_ps(A.v, B);
       __m128 M = _mm_movelh_ps(M_mid, M_mid);
-      __m128 denom = _mm_rcp_ps(
-        _mm_set1_ps(
-          _mm_cvtss_f32(
-            _mm_hsub_ps(_mm_mul_ps(d.v, v_ext), _mm_undefined_ps())
-          )
-        )
-      );
+      __m128 denom_prev = _mm_mul_ps(_mm_movelh_ps(dn.v, dn.v), vL_ext);
+      __m128 denom = _mm_rcp_ps(_mm_hsub_ps(denom_prev, denom_prev));
      
       // calculating condition 1.
-      __m128 cond_1_middle_1 = _mm_mul_ps(_mm_sub_ps(D_I, M), d_ext);
-      __m128 cond_1_middle_2 = _mm_mul_ps(_mm_sub_ps(P1_P2, M), d_ext);
+      __m128 cond_1_middle_1 = _mm_mul_ps(_mm_fnmadd_ps(M, half, D_I), dL_ext);
+      __m128 cond_1_middle_2 = _mm_mul_ps(_mm_fnmadd_ps(M, half, P1_P2), dL_ext);
       __m128 cond_1_middle = _mm_hsub_ps(cond_1_middle_1, cond_1_middle_2);
       __m128 cond_1 = _mm_cmplt_ps(
         _mm_and_ps(
@@ -323,48 +319,45 @@ inline Dir2 directional_distance_square_segment (Dir2 C, Dir2 dims, Dir2 d, std:
       );
       
       // calculating value 1.
-      __m128 value_1_middle_1 = _mm_mul_ps(_mm_sub_ps(A2, D_I), v_ext);
-      __m128 value_1_middle_2 = _mm_mul_ps(_mm_sub_ps(A2, P1_P2), v_ext);
-      __m128 value_1_middle = _mm_hsub_ps(value_1_middle_1, value_1_middle_2);
-      curr_min = _mm_min_ps(
-        _mm_and_ps(cond_1, _mm_mul_ps(value_1_middle, denom)), 
-        curr_min
-      );
+      __m128 value_1_middle_1 = _mm_mul_ps(_mm_sub_ps(A_ext, D_I), vL_ext);
+      __m128 value_1_middle_2 = _mm_mul_ps(_mm_sub_ps(A_ext, P1_P2), vL_ext);
+      __m128 value_1 = _mm_mul_ps(_mm_hsub_ps(value_1_middle_1, value_1_middle_2), denom);
+
+      curr_min = _mm_min_ps(_mm_and_ps(cond_1, value_1), curr_min);
     }
    
     // part 2.
     {
-      __m128 D2 = _mm_movelh_ps(D, D);
-      __m128 B2 = _mm_movelh_ps(B, B);
-      __m128 v12_ext = _mm_sub_ps(D2, P1_P2);
-      __m128 M_12 = _mm_add_ps(D2, P1_P2);
-      __m128 denom = _mm_mul_ps(v12_ext, d_ext);
-      v12_ext = _mm_shuffle_ps(v12_ext, v12_ext, 0b10110001);
-      denom = _mm_rcp_ps(_mm_hadd_ps(denom, denom));
+      __m128 D_ext = _mm_movelh_ps(D, D);
+      __m128 B_ext = _mm_movelh_ps(B, B);
+      __m128 v12_ext = _mm_sub_ps(D_ext, P1_P2);
+      __m128 M_12 = _mm_add_ps(D_ext, P1_P2);
+      __m128 denom = _mm_mul_ps(v12_ext, dL_ext);
+      denom = _mm_rcp_ps(_mm_hsub_ps(denom, denom));
+      
+      // calculating value 2.
+
+      __m128 v12L_ext = _mm_shuffle_ps(v12_ext, v12_ext, 0b10110001);
+      __m128 value_2_middle_1 = _mm_mul_ps(_mm_sub_ps(P1_P2, A_ext), v12L_ext);
+      __m128 value_2_middle_2 = _mm_mul_ps(_mm_sub_ps(P1_P2, B_ext), v12L_ext);
+      __m128 value_2 = _mm_mul_ps(_mm_hsub_ps(value_2_middle_1, value_2_middle_2), denom);
      
       // calculating condition 2.
-      __m128 cond_2_middle_2 = _mm_mul_ps(_mm_fmsub_ps(M_12, half, B2), d_ext);
-      __m128 cond_2_middle = _mm_fmsub_ps(_mm_fmsub_ps(M_12, half, A2), d_ext, cond_2_middle_2);
+      __m128 cond_2_middle_1 = _mm_mul_ps(_mm_fnmadd_ps(M_12, half, A_ext), dL_ext);
+      __m128 cond_2_middle_2 = _mm_mul_ps(_mm_fnmadd_ps(M_12, half, B_ext), dL_ext);
       __m128 cond_2 = _mm_cmplt_ps(
         _mm_and_ps(
-          _mm_mul_ps(cond_2_middle, denom),
+          _mm_mul_ps(_mm_hsub_ps(cond_2_middle_1, cond_2_middle_2), denom),
           _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF))
         ),
         half
       );
-      
-      // calculating value 2.
-      __m128 value_2_middle_1 = _mm_mul_ps(_mm_sub_ps(P1_P2, A2), v12_ext);
-      __m128 value_2_middle_2 = _mm_mul_ps(_mm_sub_ps(P1_P2, B2), v12_ext);
-      __m128 value_2_middle = _mm_hsub_ps(value_2_middle_1, value_2_middle_2);
-      curr_min = _mm_min_ps(
-        _mm_and_ps(cond_2, _mm_mul_ps(value_2_middle, denom)), 
-        curr_min
-      );
+
+      curr_min = _mm_min_ps(_mm_and_ps(cond_2, value_2), curr_min);
     }
   }
 
-  curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00001101));
+  curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00001110));
   curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00000001));
-  return d * _mm_cvtss_f32(curr_min);
+  return dn * (_mm_cvtss_f32(curr_min) - 0.1f);
 }

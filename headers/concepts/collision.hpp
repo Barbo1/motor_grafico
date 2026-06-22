@@ -210,6 +210,42 @@ static inline Dir2 get_direction_nedge_circle(
   return d;
 }
 
+/* Given the information of the circle and nedge, calculate the direction 
+ * of the collision. 
+ * */
+template<std::size_t N>
+static inline Dir2 get_direction_nedge_square(
+  Dir2 sq_dims, Dir2 sq_pos, 
+  std::array<std::pair<Dir2, Dir2>, N> placed_points, 
+  std::array<std::pair<Dir2, Dir2>, N>& segments,
+  uint32_t& many_segments 
+) {
+  many_segments = 0;
+  std::array<Dir2, N> considered;
+  uint32_t many_considered = 0; 
+  Dir2 d = Dir2();
+
+  // testing points that contribute to the direction.
+  for (const auto& line: placed_points) {
+    const Dir2 d_part = collision_direction_square_segment (sq_pos, sq_dims, line.second, line.first);
+    const float d_part_mod2 = d_part.modulo2();
+    if (d_part_mod2 > 0.f) {
+      segments[many_segments] = line;
+      many_segments++;
+
+      uint32_t j = 0;
+      while (j < many_considered && considered[j] != d_part) { j++; }
+      if (j == many_considered) {
+        d += d_part / d_part_mod2;
+        considered[many_considered] = d_part;
+        many_considered++;
+      }
+    }
+  }
+
+  return d;
+}
+
 /* Given to the information of the circle and nedge, calculate the movement
  * vector to the new position of elements. The vector must be added to
  * move the circle, and substracted to move the polygon. A small deviation
@@ -274,9 +310,9 @@ static inline Dir2 calculate_reposition_nedge_circle(
  * Precondition: d.modulo() != 0
  * */
 template<std::size_t N>
-static inline Dir2 collision_point_nedge_circle (
+static inline Dir2 collision_point_nedge_point_direction(
   Dir2 d, 
-  Dir2 cir_pos,
+  Dir2 position,
   std::array<std::pair<Dir2, Dir2>, N> placed_points
 ) {
 
@@ -285,30 +321,30 @@ static inline Dir2 collision_point_nedge_circle (
     return 
       (0.f < d_distance && -0.0001f < coef && coef < 1.0001f);
   };
-  Dir2 P1, v, collision_point;
+  float coef, d_distance, size = static_cast<int32_t>(N-1);
+  Dir2 P, v, collision_point;
   int32_t i = -1;
-  float coef, d_distance;
 
   // finding the first suitable point.
   do {
     i++; 
     v = placed_points[i].first;
-    P1 = placed_points[i].second;
-    coef = d.pLd(cir_pos - P1, v);
-    d_distance = v.pLd(P1 - cir_pos, d);
-  } while (i < static_cast<int32_t>(N) && !test_suitable(coef, d_distance));
+    P = placed_points[i].second;
+    coef = d.pLd(position - P, v);
+    d_distance = v.pLd(P - position, d);
+  } while (i < size && !test_suitable(coef, d_distance));
   if (-0.0001f < coef && coef < 1.0001f)
-    collision_point = v.madd(coef, P1);
+    collision_point = v.madd(coef, P);
 
   // find the most suitable point.
-  while (i < static_cast<int32_t>(N)) {
+  while (i < size) {
     i++; 
     v = placed_points[i].first;
-    P1 = placed_points[i].second;
-    coef = d.pLd(cir_pos - P1, v);
-    const float new_d_distance = v.pLd(P1 - cir_pos, d);
+    P = placed_points[i].second;
+    coef = d.pLd(position - P, v);
+    const float new_d_distance = v.pLd(P - position, d);
     if (new_d_distance < d_distance && test_suitable(coef, new_d_distance)) {
-      collision_point = v.madd(coef, P1);
+      collision_point = v.madd(coef, P);
       d_distance = new_d_distance;
     }
   }
@@ -330,7 +366,7 @@ template<std::size_t N> void resolve_collision (Circle& cir, NEdge<N>& pol) {
     d, cir.radio, cir.position, lines, filtered
   );
 
-  Dir2 collision_point = collision_point_nedge_circle (
+  Dir2 collision_point = collision_point_nedge_point_direction (
     d, cir.position, pol.placed_points
   );
 
@@ -384,7 +420,7 @@ template<std::size_t N> void resolve_collision (NEdge<N>& pol, Circle& cir) {
     d, cir.radio, cir.position, lines, filtered
   );
 
-  Dir2 collision_point = collision_point_nedge_circle (
+  Dir2 collision_point = collision_point_nedge_point_direction (
     d, cir.position, pol.placed_points
   );
 
@@ -480,43 +516,71 @@ template<std::size_t N> Dir2 collision_point (const Circle& cir, const NEdge<N>&
   if (d.modulo2() == 0.f)
     return d;
 
-  return collision_point_nedge_circle (
+  return collision_point_nedge_point_direction (
     d, cir.position, pol.placed_points
   );
 }
 
 template<std::size_t N> void correct_collision (Square& sq, NEdge<N>& pol) {
-  Dir2 d = Dir2();
-  uint32_t many = 0, many_considered = 0;
-  std::array<Dir2, N> considered;
-  std::array<std::pair<Dir2, Dir2>, N> segments;
-
   Dir2 sq_dims = Dir2(sq.width, sq.height);
-
-  for (const auto& line: pol.placed_points) {
-    const Dir2 d_part = collision_direction_square_segment (sq.position, sq_dims, line.second, line.first);
-    const float d_part_mod2 = d_part.modulo2();
-    if (d_part_mod2 != 0.f) {
-      uint32_t j = 0;
-      while (j < many && considered[j] != d_part) { j++; }
-      if (j == many) {
-        d += d_part / d_part_mod2;
-        considered[many_considered] = d_part;
-        many_considered++;
-      }
-      segments[many] = line;
-      many++;
-    }
-  }
+  uint32_t many_segments;
+  std::array<std::pair<Dir2, Dir2>, N> segments;
+  Dir2 d = get_direction_nedge_square (
+    sq_dims, sq.position, 
+    pol.placed_points, 
+    segments,
+    many_segments 
+  );
 
   if (d.modulo2() == 0.f)
     return;
 
-  sq.position -= directional_distance_square_segment (
+  sq.position += directional_distance_square_segment (
     sq.position, 
     sq_dims, 
     d.normalize(), 
     &segments[0], 
-    many
+    many_segments
+  );
+}
+
+template<std::size_t N> void correct_collision (NEdge<N>& pol, Square& sq) {
+  Dir2 sq_dims = Dir2(sq.width, sq.height);
+  uint32_t many_segments;
+  std::array<std::pair<Dir2, Dir2>, N> segments;
+  Dir2 d = get_direction_nedge_square (
+    sq_dims, sq.position, 
+    pol.placed_points, 
+    segments,
+    many_segments 
+  );
+
+  if (d.modulo2() == 0.f)
+    return;
+
+  pol.position -= directional_distance_square_segment (
+    sq.position, 
+    sq_dims, 
+    d.normalize(), 
+    &segments[0], 
+    many_segments
+  );
+}
+
+template<std::size_t N> Dir2 collision_point (const Square& sq, const NEdge<N>& pol) {
+  Dir2 sq_dims = Dir2(sq.width, sq.height);
+  uint32_t many_segments;
+  std::array<std::pair<Dir2, Dir2>, N> segments;
+  Dir2 d = get_direction_nedge_square (
+    sq_dims, sq.position, 
+    pol.placed_points, 
+    segments,
+    many_segments 
+  );
+
+  if (d.modulo2() == 0.f)
+    return d;
+  else return collision_point_nedge_point_direction (
+    d.normalize(), sq.position, pol.placed_points
   );
 }
