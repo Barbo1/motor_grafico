@@ -42,7 +42,7 @@ int main () {
 
   std::array<Dir2, 10> points = set_points_2();
   NEdge<10> poly(
-    glb, points.data(), points.size(), Dir2 (400.f, 200.f), 2.f, 0.f, true, true,
+    glb, points.data(), points.size(), Dir2 (400.f, 200.f), 2.f, 0.f, true,
     nullptr, &error
   );
   if (error < 0) {
@@ -51,10 +51,10 @@ int main () {
   }
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Circle cir = Circle (glb, 30, Dir2 {360.f, 450.f}, 2.f, 0.f, true, true, &color);
+  Circle cir = Circle (glb, 30, Dir2 {360.f, 450.f}, 2.f, 0.f, true, &color);
   cir.set_velocity(AngDir2(0.f, -30.f, 0.f));
   
-  Circle cir1 = Circle (glb, 20, Dir2 {460.f, 600.f}, 2.f, 0.f, true, true, &color);
+  Circle cir1 = Circle (glb, 20, Dir2 {460.f, 600.f}, 2.f, 0.f, true, &color);
   cir1.set_velocity(AngDir2(0.f, -50.f, 0.f));
   float aux_time_1 = 0.f, avg_time_1 = 0.f;
 

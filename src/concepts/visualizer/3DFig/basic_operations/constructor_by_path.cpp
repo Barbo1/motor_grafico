@@ -35,7 +35,7 @@ Visualizer<D3FIG>::Visualizer (std::string path, std::string img, bool uv_hiding
   };
         
   if (uv_hiding) {
-    this->info->mapping.push_back(Dir2({0,0}));
+    this->info->mapping.push_back(Dir2(0,0));
   }
 
   float elem1, elem2, elem3;

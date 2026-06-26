@@ -1,10 +1,10 @@
 #include "../../../../headers/pr_objects/particle.hpp"
 
-Particle::Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass) noexcept {
+Particle::Particle (Global* glb, uint32_t radio, const Dir2& center, float mass) noexcept {
   this->glb = glb;
-  this->_radio = radio;
-  this->_position = center;
-  this->_mass = mass;
-  this->_velocity = AngDir2();
-  this->_force = AngDir2();
+  this->position.store(center);
+  this->velocity.store(Dir2());
+  this->force.store(Dir2());
+  this->radio = radio;
+  this->mass = mass;
 }

@@ -64,7 +64,7 @@ int main () {
 
   std::array<Dir2, 7> points = set_points_1();
   NEdge<7> poly(
-    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, true,
+    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
     nullptr, &error
   );
   if (error < 0) {
@@ -74,7 +74,7 @@ int main () {
   poly.set_position(Dir2 (100.f, 100.f));
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Circle cir = Circle (glb, 50, Dir2 {0, 0}, 0, 0, true, true, &color);
+  Circle cir = Circle (glb, 50, Dir2 {0, 0}, 0, 0, true, &color);
 
   bool cont = true;
   while (cont) {

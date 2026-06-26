@@ -4,8 +4,8 @@
 #include <cmath>
 
 void resolve_collision (Particle& par, Line& line) {
-  AngDir2 u = AngDir2 {line.get_slope(), -1.f, par._position.a};
-  float num = par._position.y - std::fmaf(line.get_slope(), par._position.x, line.get_deviation());
+  Dir2 u = Dir2 (line.get_slope(), -1.f);
+  float num = par.position.y - std::fmaf(line.get_slope(), par.position.x, line.get_deviation());
   float denom = std::fmaf(line.get_slope(), line.get_slope(), 1.f);
   u *= num / denom;
   AngDir2 n = u.normalize();

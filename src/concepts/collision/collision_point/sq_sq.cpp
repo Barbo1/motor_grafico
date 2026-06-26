@@ -3,10 +3,10 @@
 
 Dir2 collision_point (const Square& sq1, const Square& sq2) {
   Dir2 pos1 = sq1.position, pos2 = sq2.position;
-  float h1 = sq1.height, h2 = sq2.height; 
-  float w1 = sq1.width, w2 = sq2.width; 
+  Dir2 sq1_dims = sq1.dims;
+  Dir2 sq2_dims = sq2.dims;
   Dir2 diff = pos1 - pos2;
-  Dir2 size = Dir2 (w1 + w2, h1 + h2);
+  Dir2 size = sq1_dims + sq2_dims;
 
   bool cond = size.pL(diff.abs()) < 0.f;
   float q = static_cast<float>(cond);
@@ -15,15 +15,15 @@ Dir2 collision_point (const Square& sq1, const Square& sq2) {
   Dir2 aux(q, 1.f - q);
   Dir2 A, B, C, D;
   if (cond) {
-    A = pos1 - u * h1 + aux * w1;
-    B = pos1 - u * h1 - aux * w1;
-    C = pos2 + u * h2 + aux * w2;
-    D = pos2 + u * h2 - aux * w2;
+    A = pos1 - u * sq1_dims.y + aux * sq1_dims.x;
+    B = pos1 - u * sq1_dims.y - aux * sq1_dims.x;
+    C = pos2 + u * sq2_dims.y + aux * sq2_dims.x;
+    D = pos2 + u * sq2_dims.y - aux * sq2_dims.x;
   } else {
-    A = pos1 - u * w1 + aux * h1;
-    B = pos1 - u * w1 - aux * h1;
-    C = pos2 + u * w2 + aux * h2;
-    D = pos2 + u * w2 - aux * h2;
+    A = pos1 - u * sq1_dims.x + aux * sq1_dims.y;
+    B = pos1 - u * sq1_dims.x - aux * sq1_dims.y;
+    C = pos2 + u * sq2_dims.x + aux * sq2_dims.y;
+    D = pos2 + u * sq2_dims.x - aux * sq2_dims.y;
   }
 
   Dir2 v = B-A;

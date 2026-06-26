@@ -13,35 +13,35 @@ template<std::size_t N> class NEdge;
 
 class Particle {
   private:
-    AngDir2 _position;
-    AngDir2 _velocity;
-    AngDir2 _force;
-    float _mass;
-    float _radio;
+    MemDir2 position;
+    MemDir2 velocity;
+    MemDir2 force;
+    float mass;
+    float radio;
     Global* glb;
 
   public: 
     Particle () noexcept;
-    Particle (Global* glb, uint32_t radio, const AngDir2& center, float mass) noexcept;
+    Particle (Global* glb, uint32_t radio, const Dir2& center, float mass) noexcept;
     Particle (const Particle &) noexcept;
     Particle (Particle &&) noexcept;
     Particle & operator= (const Particle &) noexcept;
     Particle & operator= (Particle &&) noexcept;
     
-    void add_position (const AngDir2&);
-    void add_velocity (const AngDir2 &);
-    void add_force (const AngDir2 &);
+    void add_position (const Dir2&);
+    void add_velocity (const Dir2 &);
+    void add_force (const Dir2 &);
 
     void set_radio (float);
-    void set_position (const AngDir2&);
-    void set_velocity (const AngDir2 &);
-    void set_force (const AngDir2 &);
+    void set_position (const Dir2&);
+    void set_velocity (const Dir2 &);
+    void set_force (const Dir2 &);
 
     float get_mass () const;
     float get_radio () const;
-    AngDir2 get_position () const;
-    AngDir2 get_velocity () const;
-    AngDir2 get_force () const;
+    Dir2 get_position () const;
+    Dir2 get_velocity () const;
+    Dir2 get_force () const;
 
     friend bool test_collision (const Line&, const Particle&);
     friend bool test_collision (const Particle&, Physical&);

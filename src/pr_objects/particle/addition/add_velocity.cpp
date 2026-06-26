@@ -1,5 +1,5 @@
 #include "../../../../headers/pr_objects/particle.hpp"
 
-void Particle::add_velocity(const AngDir2 & velocity) {
-  this->_velocity += velocity;
+void Particle::add_velocity(const Dir2 & velocity) {
+  this->velocity.store(velocity + Dir2(this->velocity));
 }

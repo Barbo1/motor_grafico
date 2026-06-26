@@ -3,7 +3,7 @@
 
 bool test_collision (const Particle& par, const Square& sq) {
   AngDir2 diff = AngDir2 {
-    (par._position - sq.position).abs() - AngDir2 {sq.width, sq.height, 0.f}
+    (Dir2(par.position) - Dir2(sq.position)).abs() - Dir2(sq.dims)
   }.max0();
-  return diff.modulo2() < par._radio * par._radio;
+  return diff.modulo2() < par.radio * par.radio;
 }

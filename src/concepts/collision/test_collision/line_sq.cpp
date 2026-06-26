@@ -4,6 +4,6 @@
 #include <cmath>
 
 bool test_collision (const Line& line, const Square& sq) {
-  Dir2 u = Dir2 (sq.width, -std::copysign(1.f, line.v.x * line.v.y) * sq.height) * 2.f;
-  return std::abs(line.v.pLd(line.p - sq.position, u)) < 0.5f;
+  Dir2 u = Dir2 (2.f, -std::copysign(2.f, line.v.x * line.v.y)).dir_mul(Dir2(sq.dims));
+  return std::abs(Dir2(line.v).pLd(Dir2(line.p) - Dir2(sq.position), u)) < 0.5f;
 }

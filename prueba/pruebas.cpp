@@ -1,7 +1,7 @@
 #include "../headers/pr_objects/square.hpp"
 #include "../headers/pr_objects/circle.hpp"
 #include "../headers/pr_objects/line.hpp"
-#include "../headers/concepts/collition.hpp"
+#include "../headers/concepts/collision.hpp"
 #include "../headers/concepts/image_modifier.hpp"
 #include "../headers/concepts/visualizer.hpp"
 #include "../headers/primitives/global.hpp"
@@ -31,10 +31,10 @@ int main () {
 
   std::vector<Circle> circles = std::vector<Circle>();
   Circle cir;
-  circles.push_back(Circle(glb, 19, AngDir2 {400, 400, 0}, 2.1, 0, true, true, &color));
-  circles.push_back(Circle(glb, 15, AngDir2 {470, 400, 0}, 2.1, 0, true, true, &color));
-  circles.push_back(Circle(glb, 25, AngDir2 {400, 470, 0}, 2.1, 0, true, true, &color));
-  circles.push_back(Circle(glb, 17, AngDir2 {490, 480, 0}, 2.1, 0, true, true, &color));
+  circles.push_back(Circle(glb, 19, AngDir2 {400, 400, 0}, 2.1, 0, true, &color));
+  circles.push_back(Circle(glb, 15, AngDir2 {470, 400, 0}, 2.1, 0, true, &color));
+  circles.push_back(Circle(glb, 25, AngDir2 {400, 470, 0}, 2.1, 0, true, &color));
+  circles.push_back(Circle(glb, 17, AngDir2 {490, 480, 0}, 2.1, 0, true, &color));
 
   for (auto& cir: circles) {
     cir.set_velocity(AngDir2 ((float)(rand() % 40), (float)(rand() % 40), 0));
@@ -42,7 +42,7 @@ int main () {
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::square(40, 40, color);
-  Square c1 = Square(glb, 20, 20, AngDir2 {50, 60, 0}, 2.1, 0.3, true, true);
+  Square c1 = Square(glb, 20, 20, AngDir2 {50, 60, 0}, 2.1, 0.3, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
   c1.set_velocity(AngDir2 {0, 34, 0});
 
@@ -52,7 +52,7 @@ int main () {
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6, 0.3, false, true, &color);
+  Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6, 0.3, false, &color);
   c2.set_texture(img_mod_1.resize(400, 60).rotate180().cast(glb));
 
 
@@ -165,25 +165,25 @@ int main () {
 
     /* Testing of the collitions. */
     for (auto& cir: circles) {
-      if (test_collition(c2, cir)) 
-        resolve_collition(cir, c2);
-      if (test_collition(c1, cir)) 
-        resolve_collition(cir, c1);
+      if (test_collision(c2, cir)) 
+        resolve_collision(cir, c2);
+      if (test_collision(c1, cir)) 
+        resolve_collision(cir, c1);
       for (Line& line: lines)
-        if (test_collition(line, cir))
-          resolve_collition(cir, line);
+        if (test_collision(line, cir))
+          resolve_collision(cir, line);
     }
 
     for (uint32_t i = 0; i < circles.size(); i++)
       for (uint32_t j = i + 1; j < circles.size(); j++)
-        if (test_collition(circles[i], circles[j]))
-          resolve_collition(circles[i], circles[j]);
+        if (test_collision(circles[i], circles[j]))
+          resolve_collision(circles[i], circles[j]);
 
-    if (test_collition(c1, c2)) 
-      resolve_collition(c1, c2);
+    if (test_collision(c1, c2)) 
+      resolve_collision(c1, c2);
     for (Line& line: lines)
-      if (test_collition(line, c1))
-        resolve_collition(c1, line);
+      if (test_collision(line, c1))
+        resolve_collision(c1, line);
     
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

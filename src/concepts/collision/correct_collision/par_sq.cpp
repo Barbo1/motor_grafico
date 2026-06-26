@@ -2,7 +2,7 @@
 #include "../../../../headers/pr_objects/square.hpp"
 
 void correct_collision (Particle& par, Square& sq) {
-  AngDir2 diff = sq.get_position() - par.get_position();
-  AngDir2 b = diff.bound (AngDir2 {sq.get_width(), sq.get_height(), 0.f}) - diff;
+  Dir2 diff = sq.get_position() - par.get_position();
+  Dir2 b = diff.bound (Dir2 (sq.dims)) - diff;
   par.add_position (b.normalize().msub(par.get_radio(), b));
 }

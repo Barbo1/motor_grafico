@@ -2,9 +2,9 @@
 
 Particle::Particle () noexcept {
   this->glb = nullptr;
-  this->_radio = 0;
-  this->_position = AngDir2();
-  this->_mass = 0;
-  this->_velocity = AngDir2();
-  this->_force = AngDir2();
+  this->position.store(Dir2());
+  this->velocity.store(Dir2());
+  this->force.store(Dir2());
+  this->radio = 0;
+  this->mass = 0;
 }

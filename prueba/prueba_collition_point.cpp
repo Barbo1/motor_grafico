@@ -23,14 +23,14 @@ int main () {
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::square(40, 40, color);
-  Square c1 = Square(glb, 20, 20, AngDir2 {100, 100, 0}, 2.1, 0.3, true, true);
+  Square c1 = Square(glb, 20, 20, AngDir2 {100, 100, 0}, 2.1, 0.3, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
 
   /* Creacion de estructura estatica. */
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(glb, 30, 60, AngDir2 {100, 400, 0}, 4.6, 0.3, false, true, &color);
+  Square c2 = Square(glb, 30, 60, AngDir2 {100, 400, 0}, 4.6, 0.3, false, &color);
   c2.set_texture(img_mod_1.resize(120, 60).rotate180().cast(glb));
 
   Dir2 point = collision_point(c1, c2);

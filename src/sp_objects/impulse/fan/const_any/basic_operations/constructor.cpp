@@ -3,7 +3,7 @@
 template <UnitType UT, Function F>
 Impulse<IT_FAN, UT, F>::Impulse (
   Global* glb, 
-  AngDir2 position, 
+  Dir2 position, 
   AngDir2 force, 
   float width, 
   float height
@@ -11,7 +11,7 @@ Impulse<IT_FAN, UT, F>::Impulse (
   this->glb = glb;
   this->force = force;
   this->position = position;
-  this->dimension = AngDir2 {width, height, 0};
+  this->dimension = Dir2(width, height);
 }
 
-template Impulse<IT_FAN, UT_NONE, FT_CONSTANT>::Impulse (Global*, AngDir2, AngDir2, float, float); 
+template Impulse<IT_FAN, UT_NONE, FT_CONSTANT>::Impulse (Global*, Dir2, AngDir2, float, float); 

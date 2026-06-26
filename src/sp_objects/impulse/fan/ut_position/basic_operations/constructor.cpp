@@ -3,7 +3,7 @@
 template <Function F>
 Impulse<IT_FAN, UT_POSITION, F>::Impulse (
   Global* glb, 
-  AngDir2 position, 
+  Dir2 position, 
   float width, 
   float height, 
   float gfc, 
@@ -33,8 +33,8 @@ Impulse<IT_FAN, UT_POSITION, F>::Impulse (
   }
 }
 
-template Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::Impulse (Global*, AngDir2, float, float, float, FanImpDir); 
-template Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::Impulse (Global*, AngDir2, float, float, float, FanImpDir); 
-template Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::Impulse (Global*, AngDir2, float, float, float, FanImpDir); 
-template Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::Impulse (Global*, AngDir2, float, float, float, FanImpDir); 
-template Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::Impulse (Global*, AngDir2, float, float, float, FanImpDir); 
+template Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::Impulse (Global*, Dir2, float, float, float, FanImpDir); 
+template Impulse<IT_FAN, UT_POSITION, FT_QUADRATIC>::Impulse (Global*, Dir2, float, float, float, FanImpDir); 
+template Impulse<IT_FAN, UT_POSITION, FT_CUBIC>::Impulse (Global*, Dir2, float, float, float, FanImpDir); 
+template Impulse<IT_FAN, UT_POSITION, FT_SINUSOIDAL>::Impulse (Global*, Dir2, float, float, float, FanImpDir); 
+template Impulse<IT_FAN, UT_POSITION, FT_EXPONENTIAL>::Impulse (Global*, Dir2, float, float, float, FanImpDir); 

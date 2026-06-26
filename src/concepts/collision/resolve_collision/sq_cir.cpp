@@ -1,24 +1,31 @@
 #include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
+#include "../../../../headers/primitives/types_definition.hpp"
 
 void resolve_collision (Square& sq, Circle& cir) {
+  Dir2 sq_pos = sq.position;
+  Dir2 cir_pos = cir.position;
+  Dir2 sq_vel= sq.velocity;
+  Dir2 cir_vel = cir.velocity;
   float mass_1 = sq.get_mass(), mass_2 = cir.get_mass();
-  AngDir2 diff = sq.position - cir.position;
-  AngDir2 b = diff.bound(AngDir2 {sq.width, sq.height, 0.f}) - diff;
+  AngDir2 diff = sq_pos - cir_pos;
+  AngDir2 b = diff.bound(Dir2 (sq.dims)) - diff;
   AngDir2 n = b.normalize(); 
-  float p = n * (sq._velocity - cir._velocity) * 2.f * ENERGY_DISIPATION / (mass_1 + mass_2);
+  float p = n * (sq_vel - cir_vel) * 2.f * ENERGY_DISIPATION / (mass_1 + mass_2);
 
-  sq._velocity = n.nmadd (p * mass_2 * sq._movible, sq._velocity);
-  cir._velocity = n.madd (p * mass_1 * cir._movible, cir._velocity);
+  float coef_1 = sq.config & PCO_MOVIBLE ? p * mass_2 : 0.f;
+  float coef_2 = cir.config & PCO_MOVIBLE ? p * mass_1 : 0.f;
+  sq.velocity.store(n.nmadd (coef_1, sq_vel));
+  cir.velocity.store(n.madd (coef_2, cir_vel));
 
-  sq.position += n.nmadd (cir.radio, b);
+  sq.position.store(n.nmadd (cir.radio, b + sq_pos));
 
-  sq._acc_f_k = sq._f_k * cir._f_k;
-  cir._acc_f_k = sq._acc_f_k;
+  sq.acc_f_k = sq.f_k * cir.f_k;
+  cir.acc_f_k = sq.acc_f_k;
 
-  cir._collision_normal = n;
-  sq._collision_normal = -n;
+  cir.collision_normal.store(n);
+  sq.collision_normal.store(-n);
 
-  sq._normal_presence = true;
-  cir._normal_presence = true;
+  sq.config |= PCO_IS_NORMAL;
+  cir.config |= PCO_IS_NORMAL;
 }

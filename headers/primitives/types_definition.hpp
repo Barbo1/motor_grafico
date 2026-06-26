@@ -45,3 +45,8 @@ enum AntiAliasingType {
   AAx8,
   AAx16
 };
+
+enum PhysicalConfigOptions {
+  PCO_MOVIBLE = 0b1,
+  PCO_IS_NORMAL = 0b10
+};

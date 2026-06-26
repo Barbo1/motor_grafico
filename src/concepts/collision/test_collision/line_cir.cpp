@@ -6,6 +6,5 @@
 
 bool test_collision (const Line& line, const Circle& cir) {
   return 
-    cir._colidalble && 
-    std::abs(line.v.percan().normalize() * (line.p - cir.position)) < cir.radio;
+    std::abs(Dir2(line.v).percan().normalize() * (Dir2(line.p) - Dir2(cir.position))) < cir.radio;
 }

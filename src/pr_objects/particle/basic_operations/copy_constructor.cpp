@@ -2,9 +2,9 @@
 
 Particle::Particle (const Particle & particle) noexcept {
   this->glb = particle.glb;
-  this->_radio = particle._radio;
-  this->_position = particle._position;
-  this->_mass = particle._mass;
-  this->_velocity = particle._velocity;
-  this->_force = particle._force;
+  this->position = particle.position;
+  this->velocity = particle.velocity;
+  this->force = particle.force;
+  this->radio = particle.radio;
+  this->mass = particle.mass;
 }

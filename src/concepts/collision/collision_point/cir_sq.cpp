@@ -2,5 +2,6 @@
 #include "../../../../headers/pr_objects/square.hpp"
 
 Dir2 collision_point (const Circle& cir, const Square& sq) {
-  return sq.position - (sq.position - cir.position).bound (AngDir2 {sq.width, sq.height, 0.f});
+  Dir2 sq_pos = sq.position;
+  return sq_pos - (sq_pos - Dir2(cir.position)).bound (Dir2(sq.dims));
 }

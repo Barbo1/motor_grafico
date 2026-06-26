@@ -15,8 +15,8 @@ class Square;
 
 class Line {
   private:
-    Dir2 v;
-    Dir2 p;
+    MemDir2 v;
+    MemDir2 p;
 
   public: 
     Line () noexcept;

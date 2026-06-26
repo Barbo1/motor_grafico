@@ -21,22 +21,22 @@
 template <ImpulseType IT, UnitType UT, Function F>
 class Impulse {
   private:
-    AngDir2 position;
+    Dir2 position;
     float generated_force_coef;
     float radio;
     Global* glb;
 
   public:
-    Impulse(Global*, AngDir2, float, float) noexcept;
+    Impulse(Global*, Dir2, float, float) noexcept;
 
     [[nodiscard]] float get_radio();
     [[nodiscard]] float get_gfcoef();
-    [[nodiscard]] AngDir2 get_position();
-    [[nodiscard]] AngDir2 get_direction();
+    [[nodiscard]] Dir2 get_position();
+    [[nodiscard]] Dir2 get_direction();
 
     void set_radio(float);
     void set_gfcoef(float);
-    void set_position(AngDir2&);
+    void set_position(Dir2&);
   
     float apply_coef (Square&);
     float apply_coef (Circle&);
@@ -59,22 +59,22 @@ class Impulse {
 template <UnitType UT, Function F>
 class Impulse<IT_FAN, UT, F> {
   private:
-    AngDir2 position;
+    Dir2 position;
+    Dir2 dimension;
     AngDir2 force;
-    AngDir2 dimension;
     Global* glb;
 
   public:
-    Impulse (Global*, AngDir2, AngDir2, float, float) noexcept;
+    Impulse (Global* glb, Dir2 position, AngDir2 force, float width, float height) noexcept;
 
     [[nodiscard]] float get_width();
     [[nodiscard]] float get_height();
-    [[nodiscard]] AngDir2 get_position();
+    [[nodiscard]] Dir2 get_position();
     [[nodiscard]] AngDir2 get_force();
 
     void set_width(float);
     void set_height(float);
-    void set_position(AngDir2&);
+    void set_position(Dir2&);
     void set_force(AngDir2&);
   
     [[nodiscard]] AngDir2 apply (Square&);
@@ -101,26 +101,26 @@ class Impulse<IT_FAN, UT, F> {
 template <Function F>
 class Impulse<IT_FAN, UT_POSITION, F> {
   private:
-    AngDir2 position;
-    AngDir2 dimension;
-    AngDir2 direction;
+    Dir2 position;
+    Dir2 dimension;
+    Dir2 direction;
     float generated_force_coef;
     float sign;
     Global* glb;
 
   public:
-    Impulse (Global*, AngDir2, float, float, float, FanImpDir) noexcept;
+    Impulse (Global*, Dir2, float, float, float, FanImpDir) noexcept;
 
     [[nodiscard]] float get_width();
     [[nodiscard]] float get_height();
     [[nodiscard]] float get_gfcoef();
-    [[nodiscard]] AngDir2 get_position();
-    [[nodiscard]] AngDir2 get_direction();
+    [[nodiscard]] Dir2 get_position();
+    [[nodiscard]] Dir2 get_direction();
 
     void set_width(float);
     void set_height(float);
     void set_gfcoef(float);
-    void set_position(AngDir2&);
+    void set_position(Dir2&);
     void set_direction(FanImpDir);
   
     [[nodiscard]] float apply_coef (Square&);
@@ -148,8 +148,8 @@ class Impulse<IT_FAN, UT_POSITION, F> {
 template <Function F>
 class Impulse<IT_FAN, UT_VELOCITY, F> {
   private:
-    AngDir2 position;
-    AngDir2 dimension;
+    Dir2 position;
+    Dir2 dimension;
     float generated_force_coef;
     Global* glb;
 
@@ -159,12 +159,12 @@ class Impulse<IT_FAN, UT_VELOCITY, F> {
     [[nodiscard]] float get_width();
     [[nodiscard]] float get_height();
     [[nodiscard]] float get_gfcoef();
-    [[nodiscard]] AngDir2 get_position();
+    [[nodiscard]] Dir2 get_position();
 
     void set_width(float);
     void set_height(float);
     void set_gfcoef(float);
-    void set_position(AngDir2&);
+    void set_position(Dir2&);
   
     [[nodiscard]] float apply_coef (Square&);
     [[nodiscard]] float apply_coef (Circle&);

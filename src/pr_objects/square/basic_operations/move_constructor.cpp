@@ -3,8 +3,7 @@
 
 Square::Square (Square && square) noexcept : Physical(square) {
   this->texture = std::exchange (square.texture, Visualizer<D2FIG>());
-  this->position = std::exchange (square.position, {0.f, 0.f, 0.f});
-  this->height = std::exchange (square.height, 0.f);
-  this->width = std::exchange (square.width, 0.f);
+  this->position = std::exchange (square.position, MemDir2());
+  this->dims = std::exchange (square.dims, MemDir2());
   this->glb = std::exchange(square.glb, nullptr);
 }

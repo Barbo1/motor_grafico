@@ -3,7 +3,6 @@
 Square::Square (const Square & square) noexcept : Physical(square) {
   this->position = square.position;
   this->texture = square.texture;
-  this->height = square.height;
-  this->width = square.width;
+  this->dims = square.dims;
   this->glb = square.glb;
 }

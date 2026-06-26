@@ -64,7 +64,7 @@ int main () {
 
   std::array<Dir2, 17> points = set_points_3();
   NEdge<17> poly(
-    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, true,
+    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
     nullptr, &error
   );
   if (error < 0) {
@@ -75,7 +75,7 @@ int main () {
 
   std::array<Dir2, 10> points1 = set_points_4();
   NEdge<10> mov (
-    glb, points1.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, true,
+    glb, points1.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
     nullptr, &error
   );
 

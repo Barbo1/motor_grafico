@@ -12,16 +12,14 @@ template<std::size_t N> class NEdge;
 
 class Square final: public Physical {
   private:
-    float width;
-    float height;
+    MemDir2 dims;
     Visualizer<D2FIG> texture;
-    Global* glb;
 
   public: 
     Square () noexcept;
     Square (
       Global* glb, uint32_t height, uint32_t width, AngDir2 center, 
-      float density = 0, float f_k = 0, bool movible = true, bool colidable = true, 
+      float density = 0, float f_k = 0, bool movible = true, 
       SDL_Color* color = nullptr
     ) noexcept;
     Square (const Square &) noexcept;
