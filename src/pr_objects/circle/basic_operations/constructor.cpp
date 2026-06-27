@@ -10,7 +10,7 @@ Circle::Circle (
   radio (radio)
 {
   this->glb = glb;
-  float mass = density / (M_PI * radio * radio);
+  float mass = density * (M_PI * radio * radio);
   this->inertia = 0.5f * mass * radio * radio;
   if (color != nullptr) {
     this->texture = ImageModifier::circle(radio, *color).cast(this->glb);

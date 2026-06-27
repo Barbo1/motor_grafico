@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 int main () {
   std::string name = "Ventana";
@@ -28,22 +29,23 @@ int main () {
   srand(102);
   SDL_Color color = SDL_Color {255,255,255,255};
 
-  std::vector<Circle> circles = std::vector<Circle>();
-  circles.push_back(Circle(glb, 19, AngDir2 (400.f, 400.f, 0.f), 2.1, 0.f, true, &color));
-  circles.push_back(Circle(glb, 15, AngDir2 (470.f, 400.f, 0.f), 2.1, 0.f, true, &color));
-  circles.push_back(Circle(glb, 25, AngDir2 (400.f, 470.f, 0.f), 2.1, 0.f, true, &color));
-  circles.push_back(Circle(glb, 17, AngDir2 (490.f, 480.f, 0.f), 2.1, 0.f, true, &color));
+  std::vector<Circle> circles = std::vector<Circle>{
+    Circle(glb, 19, AngDir2 (400.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
+    Circle(glb, 15, AngDir2 (470.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
+    Circle(glb, 25, AngDir2 (400.f, 470.f, 0.f), 2.1f, 0.f, true, &color),
+    Circle(glb, 10, AngDir2 (490.f, 480.f, 0.f), 2.1f, 0.f, true, &color)
+  };
 
   for (auto& cir: circles)
     cir.set_velocity(AngDir2 (
-      0.5f / (rand() % 4), 
-      0.5f / (rand() % 4), 
+      0.5f / (rand() % 4 + 1), 
+      0.5f / (rand() % 4 + 1), 
       0.f
     ));
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::square(40, 40, color);
-  Square c1 = Square(glb, 20, 20, AngDir2 (50.f, 60.f, 0.f), 2.1, 0.3, true);
+  Square c1 = Square(glb, 20, 20, AngDir2 (50.f, 60.f, 0.f), 2.1f, 0.3f, true);
   c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
 
 
@@ -52,7 +54,7 @@ int main () {
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6, 0.3, false, &color);
+  Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6f, 0.3f, false, &color);
   c2.set_texture(img_mod_1.resize(400, 60).rotate180().cast(glb));
 
 
@@ -64,14 +66,14 @@ int main () {
   lines.push_back(Line (Dir2 ((float)width, (float)height), Dir2 ((float)width, 0.f)));
   lines.push_back(Line (Dir2 ((float)width, (float)height), Dir2 (0.f, (float)height)));
 
-  AngDir2 g = AngDir2 (0, 0.98f, 0);
-  AngDir2 g_p = AngDir2 (0, 0.02f, 0);
+  AngDir2 g = AngDir2 (0.f, 0.98f, 0.f);
+  AngDir2 g_p = AngDir2 (0.f, 0.02f, 0.f);
 
   float b = 40;
   Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb, b, b, b);
   cube.set_texture(ImageModifier::chargePNG("../images/rubik.png"));
-  Dir3 cube_pos = Dir3 (500, 200, 100);
-  Dir3 cube_rot = Dir3 (0.01, 0.02, 0);
+  Dir3 cube_pos = Dir3 (500.f, 200.f, 100.f);
+  Dir3 cube_rot = Dir3 (0.01f, 0.02f, 0.f);
 
   std::vector<Dir2> polygon_points = std::vector<Dir2>({
     Dir2 (556.f, 464.f),
@@ -83,7 +85,7 @@ int main () {
   });
 
   /* Impulso. */
-  AngDir2 impulse_pos = AngDir2 (100.f, 100.f, 0);
+  AngDir2 impulse_pos = AngDir2 (100.f, 100.f, 0.f);
   float height_impulse = 100.f;
   float width_impulse = 100.f;
 
@@ -123,7 +125,7 @@ int main () {
   /* another particle soruce. */
   ParticleSource<PS_EXPLOSION, 10, FT_LINEAR_N, FT_LINEAR_N> parts_1 (
     glb,
-    AngDir2 (400.f, 400.f, 0),
+    AngDir2 (400.f, 400.f, 0.f),
     std::pair<float, float>{0.7853, M_PI - 0.7853},
     ImageModifier::square(5, 5, SDL_Color{0, 255, 0, 255}).cast(glb),
     5,
@@ -133,11 +135,10 @@ int main () {
   parts_1.burst();
 
   while (cont) {
-    /* The delay must be inside. */
-    SDL_Delay(2);
-
     /* Render of the objects. */
     glb->begin_render();
+      SDL_Delay(2);
+
       print_polygon_c(glb, polygon_points, SDL_Color {255, 255, 0, 255});
       behind.draw(glb, impulse_pos);
       behind_1.draw(glb, particles_position_1);

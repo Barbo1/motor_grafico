@@ -492,21 +492,21 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
 template<std::size_t N>
 void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
   if (this->config & PCO_MOVIBLE) {
-    AngDir2 final_force = AngDir2(this->force.x, this->force.y, this->ang_for) + extrenal_forces;
-    AngDir2 velocity_2 = AngDir2(this->velocity.x, this->velocity.y, this->ang_vel);
-    AngDir2 position_2 = AngDir2(this->position.x, this->position.y, this->ang_pos);
+    AngDir2 final_force = AngDir2(this->force, this->ang_for) + extrenal_forces;
+    AngDir2 velocity_2 = AngDir2(this->velocity, this->ang_vel);
+    AngDir2 position_2 = AngDir2(this->position, this->ang_pos);
+
     if (this->config & PCO_IS_NORMAL) {
       this->config &= ~PCO_IS_NORMAL;
       AngDir2 collision_2 = AngDir2(this->collision_normal);
       float direction = final_force * collision_2;
-      if (direction < 0) {
+      if (direction < 0.f) {
         float v_n = velocity_2 * collision_2;
-        AngDir2 friction = (collision_2 * v_n) - velocity_2;
+        AngDir2 friction = collision_2.nmadd(v_n, velocity_2);
 
-        if (friction.modulo2() > 0.001)
-          final_force = friction.normalize() * this->acc_f_k * -direction;
-        else
-          final_force = AngDir2 (0.f, 0.f, 0.f);
+        final_force = AngDir2 ();
+        if (friction.modulo2() > 0.001f)
+          final_force = friction.normalize() * this->acc_f_k * direction;
       }
     }
 

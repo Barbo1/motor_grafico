@@ -22,10 +22,7 @@ concept DirFin = std::is_same_v<std::remove_cvref_t<T>, AngDir2> || std::is_same
 
 struct MemDir2 {
   union {
-    struct {
-      float x;
-      float y;
-    };
+    struct { float x, y; };
     __m64 v;
   };
 
@@ -367,7 +364,7 @@ class alignas(16) Dir2 {
 class alignas(16) AngDir2 {
   public:
     union {
-      struct {float x, y, a, pad;};
+      struct { float x, y, a, pad; };
       __m128 v;
     };
     
@@ -386,6 +383,7 @@ class alignas(16) AngDir2 {
     /* Casting. */
     inline AngDir2 (const MemDir2& dir) noexcept;
     inline AngDir2 (const Dir2& dir) noexcept;
+    inline AngDir2 (const Dir2& dir, const float& angle) noexcept;
     inline AngDir2 (const Dir3& dir) noexcept;
 
     /* Comparations. */
@@ -891,31 +889,25 @@ AngDir2::AngDir2 (const MemDir2& dir) noexcept {
 }
 
 AngDir2::AngDir2 (const Dir2& dir) noexcept {
-  this->x = dir.x;
-  this->y = dir.y;
-  this->a = 0.f;
-  this->pad = 0.f;
+  this->v = _mm_movelh_ps(dir.v, _mm_setzero_ps());
+}
+
+
+AngDir2::AngDir2 (const Dir2& dir, const float& angle) noexcept {
+  __m128 m_angle = _mm_set_ss(angle);
+  this->v = _mm_insert_ps(dir.v, m_angle, 0b00100000);
 }
 
 AngDir2::AngDir2 (const Dir3& dir) noexcept {
-  this->x = dir.x;
-  this->y = dir.y;
-  this->a = 0.f;
-  this->pad = 0.f;
+  this->v = _mm_movelh_ps(dir.v, _mm_setzero_ps());
 }
 
 Dir3::Dir3 (const Dir2& dir) noexcept {
-  this->x = dir.x;
-  this->y = dir.y;
-  this->z = 0.f;
-  this->pad = 0.f;
+  this->v = _mm_movelh_ps(dir.v, _mm_setzero_ps());
 }
 
 Dir3::Dir3 (const AngDir2& dir) noexcept {
-  this->x = dir.x;
-  this->y = dir.y;
-  this->z = 0.f;
-  this->pad = 0.f;
+  this->v = _mm_movelh_ps(dir.v, _mm_setzero_ps());
 }
 
 
