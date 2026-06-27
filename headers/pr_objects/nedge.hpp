@@ -492,8 +492,9 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
 template<std::size_t N>
 void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
   if (this->config & PCO_MOVIBLE) {
-    AngDir2 final_force = AngDir2(this->force) + extrenal_forces;
-    AngDir2 velocity_2 = this->velocity;
+    AngDir2 final_force = AngDir2(this->force.x, this->force.y, this->ang_for) + extrenal_forces;
+    AngDir2 velocity_2 = AngDir2(this->velocity.x, this->velocity.y, this->ang_vel);
+    AngDir2 position_2 = AngDir2(this->position.x, this->position.y, this->ang_pos);
     if (this->config & PCO_IS_NORMAL) {
       this->config &= ~PCO_IS_NORMAL;
       AngDir2 collision_2 = AngDir2(this->collision_normal);
@@ -502,19 +503,23 @@ void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
         float v_n = velocity_2 * collision_2;
         AngDir2 friction = (collision_2 * v_n) - velocity_2;
 
-        if (friction.modulo2() > 0.0001)
+        if (friction.modulo2() > 0.001)
           final_force = friction.normalize() * this->acc_f_k * -direction;
         else
           final_force = AngDir2 (0.f, 0.f, 0.f);
       }
     }
 
-    float coef_mult = this->glb->get_time() * DRAW_RATE;
+    float coef_mult = (this->glb->get_time() + 1.f) * DRAW_RATE;
 
-    final_force *= 20000.f / (this->density * this->area);
+    final_force *= 2.f / (this->density * this->area);
     velocity_2 = final_force.madd(coef_mult, velocity_2);
+    position_2 = velocity_2.madd (coef_mult, position_2);
+
     this->velocity.store(velocity_2);
-    this->position.store(velocity_2.madd (coef_mult, AngDir2(this->position)));
+    this->ang_vel = velocity_2.a;
+    this->position.store(position_2);
+    this->ang_pos = position_2.a;
 
     this->reposition_polygon();
   }

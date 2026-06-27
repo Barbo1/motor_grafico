@@ -16,6 +16,8 @@ void GuiComponent::print () {
           case GUIStateQuiet: 
             button->quiet_fn(this->position + button->position); 
             break;
+          default:
+            std::unreachable();
         }
       } 
       break;
@@ -88,7 +90,7 @@ void GuiComponent::print () {
         SDL_RenderCopy (glb->get_render(), label->text_area, nullptr, &dst);
       }
       break;
-      default: break;
+      default: std::unreachable();
     }
   }
 }

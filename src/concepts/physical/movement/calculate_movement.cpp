@@ -21,9 +21,9 @@ void Physical::calculate_movement(const AngDir2 & extrenal_forces) {
       }
     }
 
-    float coef_mult = this->glb->get_time() * DRAW_RATE;
+    float coef_mult = (this->glb->get_time() + 1.f) * DRAW_RATE;
 
-    final_force *= 20000.f / (this->density * this->area);
+    final_force *= 2.f / (this->density * this->area);
     Dir2 new_vel = final_force.madd(coef_mult, velocity_2);
     this->velocity.store(new_vel);
     this->position.store(new_vel.madd(coef_mult, Dir2(this->position)));

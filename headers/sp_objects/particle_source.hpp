@@ -214,7 +214,7 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
         data.ticks += ticks;
     
         particle.add_velocity (
-          (particle.get_force () + external_force + std::exchange(data.force, AngDir2 ())) * 
+          (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
           draw_coef * (20000.f / particle.get_mass())
         );
         particle.add_position (particle.get_velocity () * draw_coef);
@@ -231,7 +231,7 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
         if (data.ticks <= this->ticks_to_live) [[likely]] {
           data.ticks += ticks;
           particle.add_velocity (
-            (particle.get_force () + external_force + std::exchange(data.force, AngDir2 ())) * 
+            (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
             draw_coef * (20000.f / particle.get_mass())
           );
           particle.add_position (particle.get_velocity () * draw_coef);
@@ -247,7 +247,7 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
         data.ticks += ticks;
 
         particle.add_velocity (
-          (particle.get_force () + external_force + std::exchange(data.force, AngDir2 ())) * 
+          (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
           draw_coef * (20000.f / particle.get_mass())
         );
         particle.add_position (particle.get_velocity () * draw_coef);
@@ -387,7 +387,7 @@ void ParticleSource<PS_EXPLOSION, N, F, T>::calculate_movement (const AngDir2 & 
     if (data.ticks <= this->ticks_to_live) [[likely]] {
       data.ticks += ticks;
       particle.add_velocity (
-        (particle.get_force () + external_force + std::exchange(data.force, AngDir2 ())) * 
+        (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
         draw_coef * (20000.f / particle.get_mass())
       );
       particle.add_position (particle.get_velocity () * draw_coef);

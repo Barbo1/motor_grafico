@@ -8,7 +8,7 @@ void resolve_collision (Particle& par, Line& line) {
   float num = par.position.y - std::fmaf(line.get_slope(), par.position.x, line.get_deviation());
   float denom = std::fmaf(line.get_slope(), line.get_slope(), 1.f);
   u *= num / denom;
-  AngDir2 n = u.normalize();
+  Dir2 n = u.normalize();
 
   par.add_velocity(n * (-2.f * (n * par.get_velocity())));
   par.add_position(n.nmadd(par.get_radio(), u));

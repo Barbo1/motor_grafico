@@ -289,7 +289,7 @@ void GuiComponent::test () {
       }
       break;
 
-      default: break;
+      default: std::unreachable();
     }
   }
 

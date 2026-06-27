@@ -141,10 +141,10 @@
         | | + puntos de colision.
  | | - mejoras en el codigo: 
         | | + agregar una comprobacion de punteros nullos cada vez que se hace un new,
-        | | + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
+        |V| + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
         | | + usar atributo [[assume()]] para que el compilador tenga en cuenta cierta informacion,
         | | + mejorar el manejo de la memoria de la rasterizacion de letras.
-        | | + hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
+        |V| + hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
                 durante el codigo, como las evaluaciones de ofuscamiento de lineas.
         | | + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
               utilizarla mediente los siguientes metodos:
@@ -158,6 +158,7 @@
             generar metodos que sean particulares para cada tipo que necesite, pero tengo que hacer una analisis 
             previo de los tipos de datos que tengan este comportamiento. Como minimo, voy a necesitar para los 
             proyectiles(cuando los programe).
+        | | + crear una function en math para rotar Dir3 y cambiar el rotate de 3DFig.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - rotaciones en las colisiones y rozamiento(todas las necesarias).
  | | - re-implementar de nuevo el descompresor de imagenes png.

@@ -12,7 +12,7 @@ void resolve_collision (Square& sq, Line& line) {
   Dir2 n = v.percan().normalize();
 
   sq.position.store(r.madd(coef - std::copysign(1.f, coef), sq_pos));
-  sq.velocity.store(n.nmadd (n * sq_vel * 2.f, sq_vel));
+  sq.velocity.store(n.nmadd ((n * sq_vel) * 2.f, sq_vel));
   sq.collision_normal.store(n);
 
   sq.acc_f_k = 1.f;

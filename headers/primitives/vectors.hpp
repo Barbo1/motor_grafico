@@ -443,14 +443,14 @@ class alignas(16) AngDir2 {
     template<typename Self>
     inline auto operator* (this Self&& self, const float& number) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_mul_ps(self.v, _mm_set_ps (0.f, 1.f, number, number));
+        self.v = _mm_mul_ps(self.v, _mm_set1_ps (number));
         return std::forward<Self>(self);
-      } else return AngDir2 (_mm_mul_ps(self.v, _mm_set_ps (0.f, 1.f, number, number)));
+      } else return AngDir2 (_mm_mul_ps(self.v, _mm_set1_ps (number)));
     }
 
     template<typename Self>
     inline auto operator/ (this Self&& self, const float& number) {
-      __m128 opr = _mm_mul_ps(self.v, _mm_rcp_ps(_mm_set_ps (1.f, 1.f, number, number)));
+      __m128 opr = _mm_mul_ps(self.v, _mm_rcp_ps(_mm_set1_ps (number)));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -458,7 +458,7 @@ class alignas(16) AngDir2 {
     }
 
     inline AngDir2& operator*= (const float& number) {
-      this->v = _mm_mul_ps (this->v, _mm_set_ps (0.f, 1.f, number, number));
+      this->v = _mm_mul_ps (this->v, _mm_set1_ps (number));
       return *this;
     }
 
@@ -562,9 +562,9 @@ class alignas(16) AngDir2 {
     template<typename Self>
     inline auto max0 (this Self&& self) {
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
-        self.v = _mm_max_ps (self.v, _mm_set1_ps(0.f));
+        self.v = _mm_max_ps (self.v, _mm_setzero_ps());
         return std::forward<Self>(self);
-      } else return AngDir2 (_mm_max_ps (self.v, _mm_set1_ps(0.f)));
+      } else return AngDir2 (_mm_max_ps (self.v, _mm_setzero_ps()));
     }
 
     template<typename Self, DirFin R>
@@ -586,7 +586,7 @@ class alignas(16) AngDir2 {
 
     template<typename Self>
     inline auto bound01 (this Self&& self) {
-      __m128 opr = _mm_max_ps (_mm_min_ps (self.v, _mm_set1_ps(1.f)), _mm_set1_ps(0.f));
+      __m128 opr = _mm_max_ps (_mm_min_ps (self.v, _mm_set1_ps(1.f)), _mm_setzero_ps());
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -875,8 +875,7 @@ MemDir2& MemDir2::store(R&& dir) {
 }
 
 Dir2::Dir2 (const MemDir2& dir) noexcept {
-  __m128 opr = _mm_loadl_pi(_mm_setzero_ps(), &dir.v);
-  this->v = _mm_movelh_ps(opr, opr);
+  this->v = _mm_castpd_ps(_mm_loaddup_pd((double*)&dir.v));
 }
 
 Dir2::Dir2 (const Dir3& dir3) noexcept {

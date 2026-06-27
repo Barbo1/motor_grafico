@@ -52,14 +52,14 @@ int main () {
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
   Circle cir = Circle (glb, 30, Dir2 {360.f, 450.f}, 2.f, 0.f, true, &color);
-  cir.set_velocity(AngDir2(0.f, -30.f, 0.f));
+  cir.set_velocity(AngDir2(0.f, -0.3f, 0.f));
   
   Circle cir1 = Circle (glb, 20, Dir2 {460.f, 600.f}, 2.f, 0.f, true, &color);
-  cir1.set_velocity(AngDir2(0.f, -50.f, 0.f));
-  float aux_time_1 = 0.f, avg_time_1 = 0.f;
+  cir1.set_velocity(AngDir2(0.f, -0.5f, 0.f));
 
   bool cont = true;
   while (cont) {
+    SDL_Delay(16);
     /* The delay must be inside. */
 
     glb->begin_render();
@@ -78,11 +78,6 @@ int main () {
       if (test_collision(cir1, poly)) {
         resolve_collision(cir1, poly);
       }
-
-      aux_time_1 += 1;
-      float a = glb->get_time();
-      avg_time_1 += (a - avg_time_1) / aux_time_1;
-      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
 
     glb->end_render();
 

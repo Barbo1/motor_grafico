@@ -443,6 +443,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
         }
       }
       break;
+    default: std::unreachable();
   }
 
   return surface;

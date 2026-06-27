@@ -328,7 +328,7 @@ template<std::size_t N>
 static inline Dir2 collision_point_nedge_point_direction(
   Dir2 d, 
   Dir2 position,
-  std::array<std::pair<MemDir2, MemDir2>, N> placed_points
+  std::array<std::pair<MemDir2, MemDir2>, N>& placed_points
 ) {
 
   // genereate the point base in the direction.
@@ -390,12 +390,12 @@ template<std::size_t N> void resolve_collision (Circle& cir, NEdge<N>& pol) {
 
   float cir_mass = 1.f / cir.get_mass();
   float pol_mass = 1.f / pol.get_mass();
-  float pol_inertia = 1.f / pol._intertia;
+  float pol_inertia = 1.f / pol.inertia;
 
   Dir2 cir_v = cir.velocity;
+  Dir2 pol_vel = pol.velocity;
   Dir2 pol_r = collision_point - Dir2(pol.position);
-  Dir2 pol_vel = pol._velocity;
-  Dir2 pol_v = pol_r.percan().madd(pol._velocity.a, pol_vel);
+  Dir2 pol_v = pol_r.percan().madd(pol.ang_vel, pol_vel);
 
   float pol_coef = dn.pL(pol_r);
   Dir2 v_diff = pol_v - cir_v;
@@ -406,9 +406,8 @@ template<std::size_t N> void resolve_collision (Circle& cir, NEdge<N>& pol) {
   ));
 
   cir.velocity.store(J.nmadd(cir_mass, cir_v));
-  float pol_ang_vel = pol._velocity.a;
-  pol._velocity = J.madd(pol_mass, pol_vel);
-  pol._velocity.a.store(std::fmaf(J.pL(pol_r), pol_inertia, pol_ang_vel));
+  pol.velocity.store(J.madd(pol_mass, pol_vel));
+  pol.ang_vel = std::fmaf(J.pL(pol_r), pol_inertia, pol.ang_vel);
 
   cir.position.store(reposition);
   

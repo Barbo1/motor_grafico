@@ -8,9 +8,9 @@ void resolve_collision (Circle& cir, Square& sq) {
   Dir2 sq_vel= sq.velocity;
   Dir2 cir_vel = cir.velocity;
   float mass_1 = sq.get_mass(), mass_2 = cir.get_mass();
-  AngDir2 diff = sq_pos - cir_pos;
-  AngDir2 b = diff.bound(Dir2 (sq.dims)) - diff;
-  AngDir2 n = b.normalize(); 
+  Dir2 diff = sq_pos - cir_pos;
+  Dir2 b = diff.bound(Dir2 (sq.dims)) - diff;
+  Dir2 n = b.normalize(); 
   float p = n * (sq_vel - cir_vel) * 2.f * ENERGY_DISIPATION / (mass_1 + mass_2);
 
   float coef_1 = sq.config & PCO_MOVIBLE ? p * mass_2 : 0.f;

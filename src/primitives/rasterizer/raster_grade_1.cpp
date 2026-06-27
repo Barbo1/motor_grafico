@@ -133,6 +133,7 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
         }
       }
       break;
+    default: std::unreachable();
   }
 
   return surface;

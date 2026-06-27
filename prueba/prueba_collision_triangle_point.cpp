@@ -1,14 +1,10 @@
 #include "../headers/primitives/global.hpp"
 #include "../headers/primitives/vectors.hpp"
-#include "../headers/pr_objects/nedge.hpp"
-#include "../headers/pr_objects/circle.hpp"
 #include "../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
-#include <cstdint>
 #include <cstdlib>
-#include <array>
 #include <iostream>
 #include <cmath>
 
