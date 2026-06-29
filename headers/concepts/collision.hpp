@@ -543,53 +543,75 @@ template<std::size_t N> Dir2 collision_point (const Circle& cir, const NEdge<N>&
 template<std::size_t N> void correct_collision (Square& sq, NEdge<N>& pol) {
   Dir2 sq_dims = Dir2(sq.dims);
   Dir2 sq_pos = Dir2(sq.position);
-  uint32_t many_segments;
-  std::array<std::pair<Dir2, Dir2>, N> segments;
   Dir2 d = calculate_direction_square_nedge (
     sq_pos, sq_dims, 
-    pol.placed_points,
-    segments, many_segments
+    pol.placed_triangles
   );
 
   if (d.modulo2() == 0.f)
     return;
-  
+
+  std::array<std::pair<Dir2, Dir2>, N> segments;
+  std::size_t many = 0;
+  for (const auto& segment: pol.placed_points) {
+    const Dir2 v = Dir2(segment.first);
+    const Dir2 P = Dir2(segment.second);
+    if (test_collision_square_segment(sq_pos, sq_dims, P, v)) {
+      segments[many].first = v;
+      segments[many].second = P;
+      many = many + 1;
+    }
+  }
+
   const Dir2 dn = d.normalize();
   sq.position.store(
-    dn.dir_mul(
+    sq_pos + dn.dir_mul(
       directional_distance_square_segment (
         sq_pos, 
         sq_dims, 
         dn, 
-        &segments[0], 
-        many_segments
+        segments, 
+        many
       )
-    ) + sq_pos
+    )
   );
 }
 
 template<std::size_t N> void correct_collision (NEdge<N>& pol, Square& sq) {
   Dir2 sq_dims = Dir2(sq.dims);
-  uint32_t many_segments;
-  std::array<std::pair<Dir2, Dir2>, N> segments;
+  Dir2 sq_pos = Dir2(sq.position);
   Dir2 d = calculate_direction_square_nedge (
-    sq.position, sq_dims, 
-    pol.placed_points,
-    &segments[0], many_segments
+    sq_pos, sq_dims, 
+    pol.placed_triangles
   );
 
   if (d.modulo2() == 0.f)
     return;
 
+  std::array<std::pair<Dir2, Dir2>, N> segments;
+  std::size_t many = 0;
+  for (const auto& segment: pol.placed_points) {
+    const Dir2 v = Dir2(segment.first);
+    const Dir2 P = Dir2(segment.second);
+    if (test_collision_square_segment(sq_pos, sq_dims, P, v)) {
+      segments[many].first = v;
+      segments[many].second = P;
+      many = many + 1;
+    }
+  }
+
   const Dir2 dn = d.normalize();
-  const Dir2 reposition = pol.position - Dir2(dn.dir_mul(directional_distance_square_segment (
-    sq.position, 
-    sq_dims, 
-    dn, 
-    &segments[0], 
-    many_segments
-  )));
-  pol.set_position(reposition);
+  sq.position.store(
+    Dir2(sq.position) - dn.dir_mul(
+      directional_distance_square_segment (
+        sq_pos, 
+        sq_dims, 
+        dn, 
+        segments, 
+        many
+      )
+    )
+  );
 }
 
 template<std::size_t N> Dir2 collision_point (const Square& sq, const NEdge<N>& pol) {
