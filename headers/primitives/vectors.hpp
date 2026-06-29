@@ -20,17 +20,21 @@ class Dir3;
 template<class T>
 concept DirFin = std::is_same_v<std::remove_cvref_t<T>, AngDir2> || std::is_same_v<std::remove_cvref_t<T>, Dir2>;
 
-struct MemDir2 {
-  union {
-    struct { float x, y; };
-    __m64 v;
-  };
+class MemDir2 {
+  public:
+    float x, y;
 
-  inline MemDir2() noexcept: x(0.f), y(0.f) {}
-  inline MemDir2(float x, float y) noexcept: x(x), y(y) {}
+    inline MemDir2() noexcept: x(0.f), y(0.f) {}
+    inline MemDir2(float x, float y) noexcept: x(x), y(y) {}
+    inline MemDir2(const MemDir2& dir) noexcept: x(dir.x), y(dir.y) {}
+    inline MemDir2& operator=(const MemDir2& dir) { 
+      this->x = dir.x; 
+      this->y = dir.y; 
+      return *this; 
+    }
 
-  template<DirFin T>
-  inline MemDir2& store(T&& dir);
+    template<DirFin T>
+    inline MemDir2& store(T&& dir);
 };
 
 class alignas(16) Dir2 {
@@ -165,7 +169,7 @@ class alignas(16) Dir2 {
 
     template<typename Self>
     inline auto operator/ (this Self&& self, const float& number) {
-      __m128 opr = _mm_mul_ps(self.v, _mm_rcp_ps(_mm_set1_ps (number)));
+      __m128 opr = _mm_div_ps(self.v, _mm_set1_ps (number));
       if constexpr (std::is_rvalue_reference_v<Self&&> && !std::is_const_v<Self&&>) {
         self.v = opr;
         return std::forward<Self>(self);
@@ -868,12 +872,12 @@ class alignas(16) Dir3 {
 
 template<DirFin R>
 MemDir2& MemDir2::store(R&& dir) {
-  _mm_storel_pi(&(this->v), dir.v);
+  _mm_storel_pi((__m64*)&(this->x), dir.v);
   return *this;
 }
 
 Dir2::Dir2 (const MemDir2& dir) noexcept {
-  this->v = _mm_castpd_ps(_mm_loaddup_pd((double*)&dir.v));
+  this->v = _mm_castpd_ps(_mm_loaddup_pd((double*)&dir.x));
 }
 
 Dir2::Dir2 (const Dir3& dir3) noexcept {
@@ -885,13 +889,12 @@ Dir2::Dir2 (const AngDir2& dir) noexcept {
 }
 
 AngDir2::AngDir2 (const MemDir2& dir) noexcept {
-  this->v = _mm_loadl_pi(_mm_setzero_ps(), &dir.v);
+  this->v = _mm_loadl_pi(_mm_setzero_ps(), (__m64*)&dir.x);
 }
 
 AngDir2::AngDir2 (const Dir2& dir) noexcept {
   this->v = _mm_movelh_ps(dir.v, _mm_setzero_ps());
 }
-
 
 AngDir2::AngDir2 (const Dir2& dir, const float& angle) noexcept {
   __m128 m_angle = _mm_set_ss(angle);

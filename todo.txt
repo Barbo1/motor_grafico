@@ -147,6 +147,10 @@
         |V| + mejorar el manejo de la memoria de los vectores.
         |V| + hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
                 durante el codigo, como las evaluaciones de ofuscamiento de lineas.
+        | | + re-implementar:
+              | | > testeo de colision entre linea y nedge.
+              | | > testeo de colision entre prisma y nedge.
+        | | + eliminar el coportamiento indefinido de las uniones en los vectores.
         | | + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
               utilizarla mediente los siguientes metodos:
                + Arena (std::size_t SIZE): crea una nueva arena de tamaño 'SIZE'

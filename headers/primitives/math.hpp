@@ -120,7 +120,7 @@ inline bool test_collision_triangle_segment (Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
  * 'E' is the begining point of the segment,
  * 'vD' is the direction of the segment(finishing in the last point of the segment).
  * */
-inline bool test_collision_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
+inline bool test_collision_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD, Dir2& coefs) {
   __m128 vAE = _mm_sub_ps(A.v, E.v);
 
   __m128 dim_ext = _mm_xor_ps(
@@ -137,10 +137,11 @@ inline bool test_collision_square_segment (Dir2 A, Dir2 dims, Dir2 E, Dir2 vD) {
   __m128 cmax = _mm_or_ps(_mm_andnot_ps (cond, vN_arr), _mm_and_ps (cond, _mm_set1_ps(1.f)));
   __m128 cI_1 = _mm_max_ps(cmin, _mm_shuffle_ps (cmin, cmin, 0b10110001));
   __m128 cS_1 = _mm_min_ps(cmax, _mm_shuffle_ps (cmax, cmax, 0b10110001));
-  __m128 cI = _mm_max_ss(cI_1, _mm_shuffle_ps (cI_1, cI_1, 0b00000010));
-  __m128 cS = _mm_min_ss(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00000010));
+  __m128 cI = _mm_max_ps(cI_1, _mm_shuffle_ps (cI_1, cI_1, 0b00001010));
+  __m128 cS = _mm_min_ps(cS_1, _mm_shuffle_ps (cS_1, cS_1, 0b00001010));
 
-  return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI)) & 1;
+  coefs = Dir2::from_well(_mm_blend_ps(cI, cS, 0b0101));
+  return _mm_movemask_ps(_mm_cmpgt_ps(cS, cI));
 }
 
 /* Test if there is a collision between two triangles.
@@ -230,8 +231,8 @@ inline bool test_collision_triangle_triangle(Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
  * */
 template<std::size_t N>
 inline Dir2 calculate_direction_square_nedge (
-    Dir2 D, Dir2 dims, 
-    std::array<std::array<MemDir2, 3>, N>& triangles
+  Dir2 D, Dir2 dims, 
+  const std::array<std::array<MemDir2, 3>, N>& triangles
 ) {
   __m128 xor_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0));
 
@@ -320,7 +321,7 @@ inline Dir2 calculate_direction_square_nedge (
 template<std::size_t N>
 inline Dir2 directional_distance_square_segment (
     Dir2 C, Dir2 dims, Dir2 d, 
-    std::array<std::pair<Dir2, Dir2>, N> segments, uint32_t many
+    const std::array<std::pair<Dir2, Dir2>, N>& segments, uint32_t many
 ) {
   __m128 half = _mm_set1_ps(0.5f);
 
