@@ -2,7 +2,7 @@
 
 template <Function F>
 void Impulse<IT_FAN, UT_VELOCITY, F>::set_height(float width) {
-  this->dimension.x = width;
+  this->dimension.x(width);
 }
 
 template void Impulse<IT_FAN, UT_VELOCITY, FT_LINEAR>::set_height(float); 

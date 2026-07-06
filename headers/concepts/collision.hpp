@@ -214,7 +214,7 @@ static inline Dir2 get_direction_nedge_circle(
     const Dir2 P1 = placed_points[i].second;
     const Dir2 v = placed_points[i].first;
     const Dir2 coef = Dir2(v * (cir_pos - P1) / v.modulo2(), 0.f).bound01();
-    const Dir2 Col = v.madd(coef.x, P1) - cir_pos;
+    const Dir2 Col = v.madd(coef.x(), P1) - cir_pos;
     const float mod = Col.modulo2();
     if (mod < cir_radio * cir_radio) {
       uint32_t j = 0;
@@ -374,6 +374,14 @@ static inline Dir2 collision_point_circle_nedge(
   return collision_point;
 }
 
+/* Given to the information of the square and nedge, calculate the movement
+ * vector to the new position of elements. The vector must be added to
+ * move the square, and substracted to move the polygon. A small deviation
+ * is added to the final vector to separate them enough before collition
+ * testing hit in the next frame.
+ *
+ * Precondition: d.modulo() != 0
+ * */
 template<std::size_t N>
 static inline Dir2 resposition_direction_square_nedge(
   Dir2 sq_pos, Dir2 sq_dims,
@@ -415,6 +423,10 @@ static inline Dir2 resposition_direction_square_nedge(
   );
 }
 
+/* Given to the information of the square and nedge, returns a point that
+ * represent the point of collition. This point is guarantied to be inside
+ * the square, but not the polygon.
+ * */
 template<std::size_t N>
 inline Dir2 collision_point_nedge_square (
   Dir2 sq_pos, Dir2 sq_dims,

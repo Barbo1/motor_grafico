@@ -10,8 +10,8 @@ void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
   SDL_Surface* surface = raster_grade_1(points.data(), points.size(), color, AAx8);
   SDL_Texture* tex = SDL_CreateTextureFromSurface(glb->get_render(), surface);
   SDL_Rect dst;
-  dst.x = std::round(min.x);
-  dst.y = std::round(min.y);
+  dst.x = std::round(min.x());
+  dst.y = std::round(min.y());
   dst.w = surface->w;
   dst.h = surface->h;
   SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);

@@ -14,7 +14,7 @@ Visualizer<D2FIG> GlyphsSystem::image (std::u16string_view str, uint16_t size, S
     ((Uint32)color.b << 8) & 
     (Uint32)color.a;
   uint32_t total_glyphs = 0, i = 0;
-  while (i < str.size() && total_width < dims.x) {
+  while (i < str.size() && total_width < dims.x()) {
     const char16_t& character = str[i];
     uint32_t key = GlyphsSystem::get_key(character, size, colori);
     auto founded = this->cached_glyphs.find(key);
@@ -49,8 +49,8 @@ Visualizer<D2FIG> GlyphsSystem::image (std::u16string_view str, uint16_t size, S
       this->glb->get_render(), 
       SDL_PIXELFORMAT_RGBA8888, 
       SDL_TEXTUREACCESS_TARGET, 
-      dims.x, 
-      dims.y
+      dims.x(), 
+      dims.y()
     );
     SDL_Texture* actual_target = SDL_GetRenderTarget(glb->get_render());
     SDL_SetRenderTarget(glb->get_render(), texture);
@@ -58,7 +58,7 @@ Visualizer<D2FIG> GlyphsSystem::image (std::u16string_view str, uint16_t size, S
 
     uint32_t i = 0;
     total_width = 0.f;
-    while (i < str.size() && total_width < dims.x) {
+    while (i < str.size() && total_width < dims.x()) {
       const char16_t& character = str[i];
       uint32_t key = GlyphsSystem::get_key(character, size, colori);
       auto founded = this->cached_glyphs.find(key);
@@ -67,14 +67,14 @@ Visualizer<D2FIG> GlyphsSystem::image (std::u16string_view str, uint16_t size, S
         uint16_t pos = this->mapping[character];
         const ttf_glyph_data& data = this->glyphs[pos];
 
-        int w = std::min(static_cast<int>(founded->second.w), static_cast<int>(dims.x)); 
-        int h = std::min(static_cast<int>(founded->second.h), static_cast<int>(dims.y)); 
+        int w = std::min(static_cast<int>(founded->second.w), static_cast<int>(dims.x())); 
+        int h = std::min(static_cast<int>(founded->second.h), static_cast<int>(dims.y())); 
         SDL_Rect src = SDL_Rect {.x = 0, .y = 0, .w = w, .h = h};
         SDL_Rect dst = SDL_Rect {
           .x = static_cast<int>(std::fmaf (data.left_bearing, sizef, xposition)),
           .y = static_cast<int>(std::lround(
-              dims.y * 0.5f - 
-              sizef * (data.bounding_box.second.y + 0.1f) + 
+              dims.y() * 0.5f - 
+              sizef * (data.bounding_box.second.y() + 0.1f) + 
               sizef * this->line_height * 0.25f
             )),
           .w = w,
@@ -98,8 +98,8 @@ Visualizer<D2FIG> GlyphsSystem::image (std::u16string_view str, uint16_t size, S
       texture, 
       [] (SDL_Texture* texture) { SDL_DestroyTexture (texture); }
     );
-    ret.height = static_cast<int>(dims.y);
-    ret.width = static_cast<int>(dims.x);
+    ret.height = static_cast<int>(dims.y());
+    ret.width = static_cast<int>(dims.x());
 
     return ret;
   }

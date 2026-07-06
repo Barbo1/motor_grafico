@@ -79,12 +79,12 @@ void GuiComponent::test () {
         float denom;
         switch (slider->direction) {
           case SliderDirectionX:
-            v = Dir2(slider->base_dims.x, 0.f);
-            denom = 1.f / (slider->base_dims.x * slider->base_dims.x);
+            v = Dir2(slider->base_dims.x(), 0.f);
+            denom = 1.f / (slider->base_dims.x() * slider->base_dims.x());
             break;
           case SliderDirectionY:
-            v = Dir2(0.f, slider->base_dims.y);
-            denom = 1.f / (slider->base_dims.y * slider->base_dims.y);
+            v = Dir2(0.f, slider->base_dims.y());
+            denom = 1.f / (slider->base_dims.y() * slider->base_dims.y());
             break;
           default:
             v = Dir2(1.f, 0.f);
@@ -186,10 +186,10 @@ void GuiComponent::test () {
                     textbox->get_text_16(), 
                     textbox->text_len,
                     textbox->letter_size,
-                    textbox->dims.x,
+                    textbox->dims.x(),
                     &xdev
                   );
-                  textbox->xdev = xdev - textbox->dims.x;
+                  textbox->xdev = xdev - textbox->dims.x();
                 } else if (textbox->config & TextBox::TextBoxConfig::TBCWinAgRight) {
                   if (textbox->window_end <= textbox->curr_pos) {
                     textbox->window_end = textbox->curr_pos + 1;
@@ -197,10 +197,10 @@ void GuiComponent::test () {
                       textbox->get_text_16(), 
                       textbox->curr_pos,
                       textbox->letter_size,
-                      textbox->dims.x,
+                      textbox->dims.x(),
                       &xdev
                     );
-                    textbox->xdev = xdev - textbox->dims.x;
+                    textbox->xdev = xdev - textbox->dims.x();
                   } else if (textbox->curr_pos <= textbox->window_start) {
                     textbox->config &= ~TextBox::TextBoxConfig::TBCWinAgRight;
                     textbox->window_start = textbox->curr_pos;
@@ -208,10 +208,10 @@ void GuiComponent::test () {
                       textbox->get_text_16(), 
                       textbox->curr_pos,
                       textbox->letter_size,
-                      textbox->dims.x,
+                      textbox->dims.x(),
                       &xdev
                     );
-                    textbox->xdev = xdev - textbox->dims.x;
+                    textbox->xdev = xdev - textbox->dims.x();
                   }
                 } else {
                   if (textbox->window_end <= textbox->curr_pos) {
@@ -221,20 +221,20 @@ void GuiComponent::test () {
                       textbox->get_text_16(),
                       textbox->curr_pos,
                       textbox->letter_size,
-                      textbox->dims.x,
+                      textbox->dims.x(),
                       &xdev
                     );
-                    textbox->xdev = xdev - textbox->dims.x;
+                    textbox->xdev = xdev - textbox->dims.x();
                   } else if (textbox->curr_pos <= textbox->window_start) {
                     textbox->window_start = textbox->curr_pos;
                     textbox->window_end = textbox->gs->get_right_window(
                       textbox->get_text_16(), 
                       textbox->curr_pos,
                       textbox->letter_size,
-                      textbox->dims.x,
+                      textbox->dims.x(),
                       &xdev
                     );
-                    textbox->xdev = xdev - textbox->dims.x;
+                    textbox->xdev = xdev - textbox->dims.x();
                   }
                 }
               } else if (textbox->text_len == 0) {
@@ -262,7 +262,7 @@ void GuiComponent::test () {
                 );
                 textbox->cursor_image.draw(
                   this->glb, 
-                  Dir2(cursor_pos + textbox->cursor_dev , textbox->dims.y * 0.5f)
+                  Dir2(cursor_pos + textbox->cursor_dev , textbox->dims.y() * 0.5f)
                 );
               SDL_SetRenderTarget(this->glb->get_render(), actual_target);
             }

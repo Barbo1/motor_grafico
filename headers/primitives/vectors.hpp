@@ -6,6 +6,7 @@
 #include <xmmintrin.h>
 #include <SDL2/SDL_cpuinfo.h>
 #include <type_traits>
+#include <bit>
 #include <utility>
 #include <array>
 #include <cmath>
@@ -39,15 +40,12 @@ class MemDir2 {
 
 class alignas(16) Dir2 {
   public:
-    union {
-      struct { float x, y, padx, pady; };
-      __m128 v;
-    };
+    __m128 v;
 
     /* Basic operations. */
     inline Dir2 () noexcept: v(_mm_setzero_ps()) {}
     inline Dir2 (__m128 m) noexcept { this->v = _mm_shuffle_ps(m, m, 0b01000100); }
-    inline Dir2 (float x, float y) noexcept: x(x), y(y), padx(x), pady(y) {}
+    inline Dir2 (float x, float y) noexcept{ this->v = _mm_set_ps(y, x, y, x); }
     inline Dir2 (const Dir2 & dir) noexcept: v(dir.v) {}
     inline Dir2 (Dir2 && dir) noexcept: v(dir.v) {}
     static inline Dir2 from_well(__m128 m) {
@@ -105,6 +103,30 @@ class alignas(16) Dir2 {
     
     inline bool operator<= (float bound) const {
       return _mm_movemask_ps(_mm_cmple_ps (this->v, _mm_set1_ps(bound))) == 0b1111;
+    }
+
+    /* Obtaining components. */
+    inline float y() const {
+      return std::bit_cast<float>(_mm_extract_ps(this->v, 1));
+    }
+    
+    inline float x() const {
+      return _mm_cvtss_f32(this->v);
+    }
+    
+    inline void y(float y) {
+      __m128 y_mm = _mm_set1_ps(y);
+      this->v = _mm_blend_ps(this->v, y_mm, 0b1010);
+    }
+    
+    inline void x(float x) {
+      __m128 x_mm = _mm_set1_ps(x);
+      this->v = _mm_blend_ps(this->v, x_mm, 0b0101);
+    }
+
+    inline Dir2& turn() {
+      this->v = _mm_shuffle_ps(this->v, this->v, 0b00010001);
+      return *this;
     }
 
     /* Operators by overloading. */
@@ -192,16 +214,6 @@ class alignas(16) Dir2 {
         self.v = opr;
         return std::forward<Self>(self);
       } else return Dir2 (opr);
-    }
-
-    inline void rotate (const float& angle) {
-      float sina = std::sin (angle);
-      float cosa = std::cos (angle);
-      float newx = this->x * cosa - this->y * sina;
-      this->y = this->x * sina + this->y * cosa;
-      this->x = newx;
-      this->padx = this->x;
-      this->pady = this->y;
     }
 
     template<typename Self>
@@ -367,17 +379,14 @@ class alignas(16) Dir2 {
 
 class alignas(16) AngDir2 {
   public:
-    union {
-      struct { float x, y, a, pad; };
-      __m128 v;
-    };
+    __m128 v;
     
     /* Basic operations. */
     inline AngDir2 () noexcept: v(_mm_setzero_ps())  {}
     inline AngDir2 (float coef) noexcept: v(_mm_set1_ps(coef)) {}
     inline AngDir2 (__m128 m) noexcept: v(m) {}
     inline AngDir2 (float x, float y, float a) noexcept: v(_mm_set_ps(0.f, a, y, x)) {}
-    inline AngDir2 (const AngDir2 & adir) noexcept: v(_mm_set_ps(0.f, adir.a, adir.y, adir.x)) {}
+    inline AngDir2 (const AngDir2 & adir) noexcept: v(adir.v) {}
 
     inline AngDir2 & operator= (const AngDir2 & adir) noexcept {
       this->v = adir.v;
@@ -405,6 +414,34 @@ class alignas(16) AngDir2 {
         return _mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) != 0b1111;
       else 
         return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, adir.v)) & 0b1100) != 0b1100;
+    }
+
+    /* Obtaining components. */
+    inline float a() const {
+      return std::bit_cast<float>(_mm_extract_ps(this->v, 2));
+    }
+
+    inline float y() const {
+      return std::bit_cast<float>(_mm_extract_ps(this->v, 1));
+    }
+    
+    inline float x() const {
+      return _mm_cvtss_f32(this->v);
+    }
+
+    inline void a(float a) {
+      __m128 a_mm = _mm_set1_ps(a);
+      this->v = _mm_blend_ps(this->v, a_mm, 0b0100);
+    }
+
+    inline void y(float y) {
+      __m128 y_mm = _mm_set1_ps(y);
+      this->v = _mm_blend_ps(this->v, y_mm, 0b0010);
+    }
+
+    inline void x(float x) {
+      __m128 x_mm = _mm_set1_ps(x);
+      this->v = _mm_move_ss(this->v, x_mm);
     }
 
     /* Operators by overloading. */
@@ -511,14 +548,6 @@ class alignas(16) AngDir2 {
         self.v = op;
         return std::forward<Self>(self);
       } else return AngDir2 (op);
-    }
-
-    inline void rotate (const float& angle) {
-      float sina = std::sin (angle);
-      float cosa = std::cos (angle);
-      float newx = this->x * cosa - this->y * sina;
-      this->y = this->x * sina + this->y * cosa;
-      this->x = newx;
     }
 
     template<typename Self>
@@ -685,16 +714,13 @@ class alignas(16) AngDir2 {
 
 class alignas(16) Dir3 {
   public:
-    union {
-      struct {float x, y, z, pad;};
-      __m128 v;
-    };
+    __m128 v;
 
     inline Dir3 () noexcept: v(_mm_setzero_ps()) {}
     inline Dir3 (__m128 m) noexcept: v(m) {}
-    inline Dir3 (float x, float y, float z) noexcept: x(x), y(y), z(z), pad(0.f) {}
-    inline Dir3 (const Dir3 & dir) noexcept: x(dir.x), y(dir.y), z(dir.z), pad(0.f) {}
-    inline Dir3 (Dir3 && dir) noexcept: x(dir.x), y(dir.y), z(dir.z), pad(0.f) {}
+    inline Dir3 (float x, float y, float z) noexcept { this->v = _mm_set_ps(0.f, z, y, x); }
+    inline Dir3 (const Dir3 & dir) noexcept { this->v = dir.v; }
+    inline Dir3 (Dir3 && dir) noexcept { this->v = dir.v; }
 
     inline Dir3& operator= (const Dir3 & dir) noexcept {
       this->v = dir.v;
@@ -717,6 +743,34 @@ class alignas(16) Dir3 {
 
     inline bool operator!= (const Dir3& dir) const {
       return (_mm_movemask_ps(_mm_cmpeq_ps (this->v, dir.v)) & 0b0111) != 0b0111;
+    }
+
+    /* Obtaining components. */
+    inline float z() const {
+      return std::bit_cast<float>(_mm_extract_ps(this->v, 2));
+    }
+
+    inline float y() const {
+      return std::bit_cast<float>(_mm_extract_ps(this->v, 1));
+    }
+    
+    inline float x() const {
+      return _mm_cvtss_f32(this->v);
+    }
+
+    inline void z(float z) {
+      __m128 z_mm = _mm_set1_ps(z);
+      this->v = _mm_blend_ps(this->v, z_mm, 0b0100);
+    }
+
+    inline void y(float y) {
+      __m128 y_mm = _mm_set1_ps(y);
+      this->v = _mm_blend_ps(this->v, y_mm, 0b0010);
+    }
+
+    inline void x(float x) {
+      __m128 x_mm = _mm_set1_ps(x);
+      this->v = _mm_move_ss(this->v, x_mm);
     }
 
     /* Operators by overloading. */
@@ -845,6 +899,7 @@ class alignas(16) Dir3 {
       } else return Dir3 (opr);
     }
 
+    /*
     inline void rotate_x (const float& angle) {
       float sina = std::sin (angle);
       float cosa = std::cos (angle);
@@ -868,6 +923,7 @@ class alignas(16) Dir3 {
       this->y = this->y * cosa - this->x * sina;
       this->x = newx;
     }
+    */
 };
 
 template<DirFin R>

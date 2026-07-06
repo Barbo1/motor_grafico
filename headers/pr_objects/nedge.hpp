@@ -195,7 +195,7 @@ NEdge<N>::NEdge (
   for (uint32_t i = 0; i < N; i++) {
     mass_center += points[i];
     const Dir2 aux = points[i].dir_mul(mult) + points[(i+1)%N];
-    order += aux.y * aux.x;
+    order += aux.y() * aux.x();
   }
   mass_center *= 1.f / static_cast<float>(N);
   bool clockwise = order > 0.f;
@@ -460,24 +460,24 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
     SDL_SetRenderDrawColor (glb->get_render(), 255, 0, 0, 255);
     SDL_RenderDrawLine (
       glb->get_render(), 
-      static_cast<uint32_t>(point1.x),
-      static_cast<uint32_t>(point1.y),
-      static_cast<uint32_t>(point2.x),
-      static_cast<uint32_t>(point2.y)
+      static_cast<uint32_t>(point1.x()),
+      static_cast<uint32_t>(point1.y()),
+      static_cast<uint32_t>(point2.x()),
+      static_cast<uint32_t>(point2.y())
     );
     SDL_RenderDrawLine (
       glb->get_render(), 
-      static_cast<uint32_t>(point1.x),
-      static_cast<uint32_t>(point1.y),
-      static_cast<uint32_t>(point3.x),
-      static_cast<uint32_t>(point3.y)
+      static_cast<uint32_t>(point1.x()),
+      static_cast<uint32_t>(point1.y()),
+      static_cast<uint32_t>(point3.x()),
+      static_cast<uint32_t>(point3.y())
     );
     SDL_RenderDrawLine (
       glb->get_render(), 
-      static_cast<uint32_t>(point2.x),
-      static_cast<uint32_t>(point2.y),
-      static_cast<uint32_t>(point3.x),
-      static_cast<uint32_t>(point3.y)
+      static_cast<uint32_t>(point2.x()),
+      static_cast<uint32_t>(point2.y()),
+      static_cast<uint32_t>(point3.x()),
+      static_cast<uint32_t>(point3.y())
     );
     gs->print(
       conv.from_bytes(std::to_string(i)), 
@@ -517,9 +517,9 @@ void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
     position_2 = velocity_2.madd (coef_mult, position_2);
 
     this->velocity.store(velocity_2);
-    this->ang_vel = velocity_2.a;
+    this->ang_vel = velocity_2.a();
     this->position.store(position_2);
-    this->ang_pos = position_2.a;
+    this->ang_pos = position_2.a();
 
     this->reposition_polygon();
   }
@@ -528,14 +528,14 @@ void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
 template<std::size_t N>
 void NEdge<N>::set_position (const AngDir2& center) {
   this->position.store(center);
-  this->ang_pos = center.a;
+  this->ang_pos = center.a();
   this->reposition_polygon();
 }
 
 template<std::size_t N>
 void NEdge<N>::set_velocity (const AngDir2 & velocity) {
   this->velocity.store(velocity);
-  this->ang_vel = velocity.a;
+  this->ang_vel = velocity.a();
 }
 
 template<std::size_t N>
@@ -556,17 +556,17 @@ float NEdge<N>::get_ang_force () const {
 template<std::size_t N>
 void NEdge<N>::set_force (const AngDir2 & force) {
   this->force.store(force);
-  this->ang_for += force.a;
+  this->ang_for += force.a();
 }
 
 template<std::size_t N>
 void NEdge<N>::add_force (const AngDir2 & force) {
   this->force.store(Dir2(force) + Dir2(this->force));
-  this->ang_for += force.a;
+  this->ang_for += force.a();
 }
 
 template<std::size_t N>
 void NEdge<N>::add_velocity (const AngDir2 & velocity) {
   this->velocity.store(Dir2(velocity) + Dir2(this->velocity));
-  this->ang_vel += velocity.a;
+  this->ang_vel += velocity.a();
 }

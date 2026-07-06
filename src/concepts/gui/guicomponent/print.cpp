@@ -37,10 +37,10 @@ void GuiComponent::print () {
         Dir2 delta;
         switch (slider->direction) {
           case SliderDirectionX:
-            delta = Dir2(slider->base_dims.x , 0.f);
+            delta = Dir2(slider->base_dims.x() , 0.f);
             break;
           case SliderDirectionY:
-            delta = Dir2(0.f, slider->base_dims.y);
+            delta = Dir2(0.f, slider->base_dims.y());
             break;
           default:
             delta = Dir2(1.f, 0.f);
@@ -61,14 +61,14 @@ void GuiComponent::print () {
         SDL_Rect src = SDL_Rect {
           .x = xdevi,
           .y = 0, 
-          .w = static_cast<int>(textbox->dims.x),
-          .h = static_cast<int>(textbox->dims.y) 
+          .w = static_cast<int>(textbox->dims.x()),
+          .h = static_cast<int>(textbox->dims.y()) 
         };
         SDL_Rect dst = SDL_Rect {
-          .x = static_cast<int>(Q.x),
-          .y = static_cast<int>(Q.y), 
-          .w = static_cast<int>(textbox->dims.x),
-          .h = static_cast<int>(textbox->dims.y) 
+          .x = static_cast<int>(Q.x()),
+          .y = static_cast<int>(Q.y()), 
+          .w = static_cast<int>(textbox->dims.x()),
+          .h = static_cast<int>(textbox->dims.y()) 
         };
         SDL_SetTextureBlendMode (textbox->text_area, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy (glb->get_render(), textbox->text_area, &src, &dst);
@@ -81,10 +81,10 @@ void GuiComponent::print () {
 
         Dir2 Q = label->dims.nmadd(0.5f, aux);
         SDL_Rect dst = SDL_Rect {
-          .x = static_cast<int>(Q.x),
-          .y = static_cast<int>(Q.y), 
-          .w = static_cast<int>(label->dims.x),
-          .h = static_cast<int>(label->dims.y) 
+          .x = static_cast<int>(Q.x()),
+          .y = static_cast<int>(Q.y()), 
+          .w = static_cast<int>(label->dims.x()),
+          .h = static_cast<int>(label->dims.y()) 
         };
         SDL_SetTextureBlendMode (label->text_area, SDL_BLENDMODE_BLEND);
         SDL_RenderCopy (glb->get_render(), label->text_area, nullptr, &dst);

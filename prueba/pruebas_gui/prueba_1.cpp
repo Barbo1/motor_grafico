@@ -148,8 +148,8 @@ int main () {
   );
   const Visualizer<D2FIG> textbox_background =
     ImageModifier::square(
-      textbox.get_dimentions().y, 
-      textbox.get_dimentions().x, 
+      textbox.get_dimentions().y(), 
+      textbox.get_dimentions().x(), 
       SDL_Color {.r=0, .g=0, .b=0, .a=255}
     ).
     cast(glb);

@@ -6,7 +6,7 @@ void Visualizer<D3FIG>::draw (Global* glb, const Dir3 & position) const {
   auto transformed = this->info->vectors 
     | std::views::transform([&] (const Dir3& vec) { return Dir2(vec + position); });
   auto iterable = this->info->indeces 
-    | std::views::filter([&] (const Face& face) { return this->info->normals[face.nor].z > 0.0f; });
+    | std::views::filter([&] (const Face& face) { return this->info->normals[face.nor].z() > 0.0f; });
   if (std::holds_alternative<SDL_Color>(this->texture)) {
     for (auto& face: iterable) {
       print_triangle_c (

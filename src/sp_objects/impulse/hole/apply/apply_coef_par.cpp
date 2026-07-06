@@ -2,7 +2,7 @@
 
 template <ImpulseType IT, UnitType UT, Function F>
 float Impulse<IT, UT, F>::apply_coef (Particle& par) {
-  AngDir2 diff = par.get_position() - this->position;
+  Dir2 diff = par.get_position() - this->position;
   uint32_t radio = this->radio + par.get_radio();
   float moddiff = diff.modulo();
   if (moddiff < radio) {

@@ -2,7 +2,7 @@
 
 template <Function F>
 float Impulse<IT_FAN, UT_VELOCITY, F>::get_width() {
-  return this->dimension.x;
+  return this->dimension.x();
 }
 
 template float Impulse<IT_FAN, UT_VELOCITY, FT_LINEAR>::get_width(); 

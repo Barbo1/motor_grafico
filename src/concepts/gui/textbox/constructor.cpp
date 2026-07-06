@@ -31,8 +31,8 @@ TextBox::TextBox (
     glb->get_render(), 
     SDL_PIXELFORMAT_RGBA8888, 
     SDL_TEXTUREACCESS_TARGET, 
-    this->dims.x + gs->get_max_advance(letter_size), 
-    dims.y
+    this->dims.x() + gs->get_max_advance(letter_size), 
+    dims.y()
   );
   float cursor_dev = log2(letter_size) * 0.63092975f;
   this->cursor_dev = cursor_dev;
@@ -46,7 +46,7 @@ TextBox::TextBox (
   SDL_SetRenderTarget(glb->get_render(), this->text_area);
     this->cursor_image.draw(
       glb, 
-      Dir2(this->cursor_dev , this->dims.y * 0.5f)
+      Dir2(this->cursor_dev , this->dims.y() * 0.5f)
     );
   SDL_SetRenderTarget(glb->get_render(), actual_target);
 

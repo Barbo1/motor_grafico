@@ -334,28 +334,28 @@ std::vector<MaskObject> generate_view_covering (const Dir2& position, const std:
             lipstick_marks
           );
 
-          if (lipstick_marks.y > lipstick_marks.x)
-            std::swap (lipstick_marks.x, lipstick_marks.y);
+          if (lipstick_marks.y() > lipstick_marks.x())
+            lipstick_marks.turn();
 
           switch (by_what) {
             case ViewGeneration::POINT:
               /* obfuscate one side. */
               if ((meet_cond & 0b11) == 0b10) {
                 if (meet_cond & 0b100)
-                  line_2.point1 += dir_v * lipstick_marks.x;
+                  line_2.point1 += dir_v * lipstick_marks.x();
                 else
-                  line_2.point1 += dir_v * lipstick_marks.y;
+                  line_2.point1 += dir_v * lipstick_marks.y();
 
               } else if ((meet_cond & 0b11) == 0b01) {
                 if (meet_cond & 0b100)
-                  line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
+                  line_2.point2 = dir_v.madd(lipstick_marks.y(), line_2.point1);
                 else
-                  line_2.point2 = dir_v.madd(lipstick_marks.x, line_2.point1);
+                  line_2.point2 = dir_v.madd(lipstick_marks.x(), line_2.point1);
 
                 /* obfuscate subsegment(divide the segment in two parts). */
               } else if (meet_cond == 0b100) {
-                Dir2 kiss_x = dir_v.madd(lipstick_marks.x, line_2.point1);
-                Dir2 kiss_y = dir_v.madd(lipstick_marks.y, line_2.point1);
+                Dir2 kiss_x = dir_v.madd(lipstick_marks.x(), line_2.point1);
+                Dir2 kiss_y = dir_v.madd(lipstick_marks.y(), line_2.point1);
 
                 if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
                   int32_t aux = buckets[pos_2].data.size();
@@ -394,15 +394,15 @@ std::vector<MaskObject> generate_view_covering (const Dir2& position, const std:
 
               /* obfuscate one side. */
               if ((meet_cond & 0b11) == 0b10) {
-                line_2.point1 = dir_v.madd(lipstick_marks.x, line_2.point1);
+                line_2.point1 = dir_v.madd(lipstick_marks.x(), line_2.point1);
 
               } else if ((meet_cond & 0b11) == 0b01) {
-                line_2.point2 = dir_v.madd(lipstick_marks.y, line_2.point1);
+                line_2.point2 = dir_v.madd(lipstick_marks.y(), line_2.point1);
 
                 /* obfuscate subsegment(divide the segment in two parts). */
               } else if (meet_cond == 0b100) {
-                Dir2 kiss_x = dir_v.madd(lipstick_marks.x, line_2.point1);
-                Dir2 kiss_y = dir_v.madd(lipstick_marks.y, line_2.point1);
+                Dir2 kiss_x = dir_v.madd(lipstick_marks.x(), line_2.point1);
+                Dir2 kiss_y = dir_v.madd(lipstick_marks.y(), line_2.point1);
 
                 if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
                   int32_t aux = buckets[pos_2].data.size();

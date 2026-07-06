@@ -25,13 +25,10 @@ inline bool test_collision_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
   
   __m128 num_mult_1 = _mm_mul_ps(BC_ext, PAL_ext);
   __m128 num_mult_2 = _mm_mul_ps(vCB, PAL_ext);
-  
-  __m128 den_mult_1 = _mm_shuffle_ps(vB.v, vB.v, 0b00010001);
-  __m128 den_mult_2 = _mm_movelh_ps(vC.v, vC.v);
 
   __m128 num = _mm_hsub_ps(num_mult_1,  num_mult_2);
-  __m128 den = _mm_mul_ps(den_mult_1, den_mult_2);
-  den = _mm_hsub_ps(den, den);
+  __m128 den_prev = _mm_mul_ps(_mm_shuffle_ps(vB.v, vB.v, 0b00010001), vC.v);
+  __m128 den = _mm_hsub_ps(den_prev, den_prev);
 
   __m128 cond_1 = _mm_xor_ps(num, den);
   __m128 cond_2 = _mm_xor_ps(_mm_cmple_ps(num, den), den);
@@ -47,10 +44,8 @@ inline bool test_collision_triangle_point (Dir2 A, Dir2 vB, Dir2 vC, Dir2 P) {
  * 'SQD' are the dimentions of the square.
  * */
 inline bool test_point_inside_square (const Dir2& P, const Dir2& SQP, const Dir2& SQD) {
-  __m128 opr = _mm_mul_ps (_mm_sub_ps (SQP.v, P.v), _mm_rcp_ps (SQD.v));
-  __m128i abs = _mm_and_si128 (_mm_set1_epi32 (0x7FFFFFFF), _mm_castps_si128 (opr));
-  __m128i cmp = _mm_cmpgt_epi32 (_mm_set1_epi32 (0x3F800000), abs);
-  return (_mm_movemask_epi8 (cmp) & 0xFF) == 0xFF;
+  __m128 abs_opr = _mm_andnot_ps(_mm_set1_ps(-0.f), _mm_sub_ps (SQP.v, P.v));
+  return _mm_movemask_ps(_mm_cmplt_ps(abs_opr, SQD.v)) == 0b1111;
 }
 
 /* Test if there is a collision between a triangle and a circle.
@@ -63,25 +58,48 @@ inline bool test_point_inside_square (const Dir2& P, const Dir2& SQP, const Dir2
  *    different that the one pointed by 'vB'.
  * */
 inline bool test_collision_triangle_circle (Dir2 A, Dir2 vB, Dir2 vC, Dir2 cpos, float crad) {
-  const Dir2 vCB = vC - vB;
-  const Dir2 vDA = cpos - A;
-  const Dir2 vDB = cpos - (vB + A);
-  const Dir3 aux = Dir3 (
-    (vB * vDA) / vB.modulo2(), 
-    (vC * vDA) / vC.modulo2(), 
-    (vCB * vDB) / vCB.modulo2()
-  ).bound01();
+  __m128 vCB = _mm_sub_ps(vC.v, vB.v);
+  __m128 vDA = _mm_sub_ps(cpos.v, A.v);
+  __m128 vDB = _mm_sub_ps(vDA, vB.v);
 
-  __m128 op1 = _mm_set_ss (vB.msub(aux.x, vDA).modulo2());
-  __m128 op2 = _mm_set_ss (vC.msub(aux.y, vDA).modulo2());
-  __m128 op3 = _mm_set_ss (vCB.msub(aux.z, vDB).modulo2());
-  float minim = _mm_cvtss_f32 (_mm_min_ss (_mm_min_ss (op1, op2), op3));
+  __m128 vC_vB = _mm_movelh_ps(vC.v, vB.v);
+  __m128 vBL_vCL = _mm_shuffle_ps(vC_vB, vC_vB, 0b00011011);
 
-  float c1 = vC.pLd(vDA, vB);
-  float c2 = vB.pLd(vDA, vC);
+  __m128 norms2 = _mm_hadd_ps(_mm_mul_ps(vC_vB, vC_vB), _mm_mul_ps(vCB, vCB));
 
-  return minim < crad * crad || (0.f < c1 && 0.f < c2 && c1 + c2 < 1.f);
+  __m128 aux_1 = _mm_mul_ps(vDA, vC_vB);
+  __m128 aux_2 = _mm_mul_ps(vDB, vCB);
+  __m128 aux = _mm_max_ps(
+    _mm_setzero_ps(),
+    _mm_min_ps(
+      _mm_set1_ps(1.f),
+      _mm_div_ps(_mm_hadd_ps(aux_1, aux_2), norms2)
+    )
+  );
+
+  __m128 op1_prev = _mm_fmsub_ps(vC_vB, _mm_shuffle_ps(aux, aux, 0b01010000), vDA);
+  __m128 op1 = _mm_mul_ps(op1_prev, op1_prev);
+
+  __m128 op2_prev = _mm_fmsub_ps(vCB, _mm_shuffle_ps(aux, aux, 0b10101010), vDB);
+  __m128 op2 = _mm_mul_ps(op2_prev, op2_prev);
+
+  __m128 radios = _mm_set1_ps(crad);
+  __m128 cond1 = _mm_cmplt_ps(
+    _mm_hadd_ps(op1, op2), 
+    _mm_mul_ps(radios, radios)
+  );
+
+  __m128 denom_1 = _mm_mul_ps(vC_vB, vBL_vCL);
+  __m128 denom = _mm_hsub_ps(denom_1, denom_1);
+
+  __m128 numer_1 = _mm_mul_ps(vDA, vBL_vCL);
+  __m128 numer_2 = _mm_mul_ps(vDA, _mm_shuffle_ps(vCB, vCB, 0b00010001));
+  __m128 numer = _mm_hsub_ps(numer_1, numer_2);
+  __m128 cond2 = _mm_cmpgt_ps(_mm_div_ps(numer, denom), _mm_set_ps(1.f, 0.f, 0.f, 0.f));
+
+  return ((_mm_movemask_ps(cond1) & 0b111) != 0b000) || ((_mm_movemask_ps(cond2) & 0b1011) == 0b11); 
 }
+
 
 /* Test if there is a collision between a triangle and a point.
  *

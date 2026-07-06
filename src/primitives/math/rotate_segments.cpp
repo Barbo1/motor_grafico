@@ -7,7 +7,7 @@ void rotate_segments (std::pair<Dir2, Dir2>* segments, uint32_t many, float angl
   Dir2 v_y = Dir2(-sin, cos);
   for (uint32_t i = 0; i < many; i++) {
     std::pair<Dir2, Dir2>& segment = segments[i];
-    segment.first = v_x * segment.first.x + v_y * segment.first.y;
-    segment.second = v_x * segment.second.x + v_y * segment.second.y;
+    segment.first = v_x * segment.first.x() + v_y * segment.first.y();
+    segment.second = v_x * segment.second.x() + v_y * segment.second.y();
   }
 }

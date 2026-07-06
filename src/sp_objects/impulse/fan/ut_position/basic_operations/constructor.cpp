@@ -15,19 +15,19 @@ Impulse<IT_FAN, UT_POSITION, F>::Impulse (
   this->generated_force_coef = gfc;
   switch (dir) {
     case FanImpDir::FID_UP:
-      this->direction = AngDir2 {0, 1, 0};
+      this->direction = Dir2(0.f, 1.f);
       this->sign = 1;
       break;
     case FanImpDir::FID_DOWN:
-      this->direction = AngDir2 {0, 1, 0};
+      this->direction = Dir2(0.f, 1.f);
       this->sign = -1;
       break;
     case FanImpDir::FID_RIGHT:
-      this->direction = AngDir2 {1, 0, 0};
+      this->direction = Dir2(1.f, 0.f);
       this->sign = 1;
       break;
     case FanImpDir::FID_LEFT:
-      this->direction = AngDir2 {1, 0, 0};
+      this->direction = Dir2(1.f, 0.f);
       this->sign = -1;
       break;
   }

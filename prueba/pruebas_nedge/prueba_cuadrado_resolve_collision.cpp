@@ -51,10 +51,10 @@ int main () {
   }
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Square sq = Square(glb, 20, 50, Dir2 {0, 0}, 0, 0, true, &color);
-  sq.set_velocity(AngDir2(0.f, -0.3f, 0.f));
+  Square sq = Square(glb, 20, 50, Dir2 {310.f, 450.f}, 2.f, 0, true, &color);
+  sq.set_velocity(AngDir2(0.f, -0.5f, 0.f));
   
-  Square sq1 = Square(glb, 50, 30, Dir2 {0, 0}, 0, 0, true, &color);
+  Square sq1 = Square(glb, 50, 30, Dir2 {460.f, 600.f}, 2.f, 0, true, &color);
   sq1.set_velocity(AngDir2(0.f, -0.5f, 0.f));
 
   bool cont = true;
@@ -72,10 +72,12 @@ int main () {
       poly.calculate_movement(AngDir2(0.f, 0.f, 0.f));
 
       if (test_collision(sq, poly)) {
+        std::cout << 1 << std::endl;
         resolve_collision(sq, poly);
       }
 
       if (test_collision(sq1, poly)) {
+        std::cout << 2 << std::endl;
         resolve_collision(sq1, poly);
       }
 

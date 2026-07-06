@@ -2,7 +2,7 @@
 
 template <Function F>
 float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Particle& par) {
-  AngDir2 diffa = ((par.get_position() - this->position).abs() - this->dimension).max0();
+  Dir2 diffa = ((par.get_position() - this->position).abs() - this->dimension).max0();
   if (diffa.modulo2() < par.get_radio() * par.get_radio()) {
     float coef = par.get_velocity().modulo() * this->generated_force_coef;
     

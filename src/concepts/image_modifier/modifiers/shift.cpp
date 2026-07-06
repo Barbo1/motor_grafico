@@ -2,8 +2,8 @@
 #include <cstdint>
 
 ImageModifier& ImageModifier::shift (const Dir2& offset) {
-  uint32_t w_off = static_cast<uint32_t>(offset.x);
-  uint32_t h_off = static_cast<uint32_t>(offset.y);
+  uint32_t w_off = static_cast<uint32_t>(offset.x());
+  uint32_t h_off = static_cast<uint32_t>(offset.y());
   uint32_t h = this->texture->h;
   uint32_t w = this->texture->w;
 

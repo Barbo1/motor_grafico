@@ -2,8 +2,8 @@
 
 template <Function F>
 inline float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Particle& cir) {
-  AngDir2 diff = cir.get_position() - this->position;
-  AngDir2 diffa = (diff.abs() - this->dimension).max0();
+  Dir2 diff = cir.get_position() - this->position;
+  Dir2 diffa = (diff.abs() - this->dimension).max0();
   if (diffa.modulo2() < cir.get_radio() * cir.get_radio()) {
     float coef = (
       (diff * this->sign + this->dimension) * this->direction + cir.get_radio()

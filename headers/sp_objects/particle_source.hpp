@@ -215,7 +215,7 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
     
         particle.add_velocity (
           (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-          draw_coef * (20000.f / particle.get_mass())
+          draw_coef * (2.f / particle.get_mass())
         );
         particle.add_position (particle.get_velocity () * draw_coef);
       }
@@ -232,7 +232,7 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
           data.ticks += ticks;
           particle.add_velocity (
             (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-            draw_coef * (20000.f / particle.get_mass())
+            draw_coef * (2.f / particle.get_mass())
           );
           particle.add_position (particle.get_velocity () * draw_coef);
         } else {
@@ -248,7 +248,7 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
 
         particle.add_velocity (
           (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-          draw_coef * (20000.f / particle.get_mass())
+          draw_coef * (2.f / particle.get_mass())
         );
         particle.add_position (particle.get_velocity () * draw_coef);
       }
@@ -388,7 +388,7 @@ void ParticleSource<PS_EXPLOSION, N, F, T>::calculate_movement (const AngDir2 & 
       data.ticks += ticks;
       particle.add_velocity (
         (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-        draw_coef * (20000.f / particle.get_mass())
+        draw_coef * (2.f / particle.get_mass())
       );
       particle.add_position (particle.get_velocity () * draw_coef);
     }

@@ -2,7 +2,7 @@
 
 template <Function F>
 float Impulse<IT_FAN, UT_POSITION, F>::get_height() {
-  return this->dimension.y;
+  return this->dimension.y();
 }
 
 template float Impulse<IT_FAN, UT_POSITION, FT_LINEAR>::get_height(); 

@@ -142,7 +142,6 @@
  | | - mejoras en el codigo: 
         | | + agregar una comprobacion de punteros nullos cada vez que se hace un new,
         |V| + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
-        | | + usar atributo [[assume()]] para que el compilador tenga en cuenta cierta informacion,
         | | + mejorar el manejo de la memoria de la rasterizacion de letras.
         |V| + mejorar el manejo de la memoria de los vectores.
         |V| + hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
@@ -150,7 +149,7 @@
         | | + re-implementar:
               | | > testeo de colision entre linea y nedge.
               | | > testeo de colision entre prisma y nedge.
-        | | + eliminar el coportamiento indefinido de las uniones en los vectores.
+        |V| + eliminar el coportamiento indefinido de las uniones en los vectores.
         | | + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
               utilizarla mediente los siguientes metodos:
                + Arena (std::size_t SIZE): crea una nueva arena de tamaño 'SIZE'

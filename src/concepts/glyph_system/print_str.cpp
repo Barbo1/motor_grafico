@@ -33,10 +33,10 @@ uint32_t GlyphsSystem::print (std::u16string_view str, uint16_t size, SDL_Color 
       const ttf_glyph_data& data = this->glyphs[pos];
 
       SDL_Rect dst = SDL_Rect {
-        .x = static_cast<int>(std::fmaf (data.left_bearing, sizef, position.x)),
+        .x = static_cast<int>(std::fmaf (data.left_bearing, sizef, position.x())),
         .y = static_cast<int>(std::lround(
-          position.y - 
-          sizef * (data.bounding_box.second.y + 0.1f) + 
+          position.y() - 
+          sizef * (data.bounding_box.second.y() + 0.1f) + 
           sizef * this->line_height * 0.25f
         )), 
         .w = static_cast<int>(w),

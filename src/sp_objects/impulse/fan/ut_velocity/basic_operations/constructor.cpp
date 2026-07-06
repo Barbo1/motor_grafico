@@ -10,7 +10,7 @@ Impulse<IT_FAN, UT_VELOCITY, F>::Impulse (
 ) noexcept {
   this->glb = glb;
   this->position = position;
-  this->dimension = AngDir2 {width, height, 0};
+  this->dimension = Dir2(width, height);
   this->generated_force_coef = gfc;
 }
 

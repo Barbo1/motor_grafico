@@ -15,15 +15,15 @@ Dir2 collision_point (const Square& sq1, const Square& sq2) {
   Dir2 aux(q, 1.f - q);
   Dir2 A, B, C, D;
   if (cond) {
-    A = pos1 - u * sq1_dims.y + aux * sq1_dims.x;
-    B = pos1 - u * sq1_dims.y - aux * sq1_dims.x;
-    C = pos2 + u * sq2_dims.y + aux * sq2_dims.x;
-    D = pos2 + u * sq2_dims.y - aux * sq2_dims.x;
+    A = pos1 - u * sq1_dims.y() + aux * sq1_dims.x();
+    B = pos1 - u * sq1_dims.y() - aux * sq1_dims.x();
+    C = pos2 + u * sq2_dims.y() + aux * sq2_dims.x();
+    D = pos2 + u * sq2_dims.y() - aux * sq2_dims.x();
   } else {
-    A = pos1 - u * sq1_dims.x + aux * sq1_dims.y;
-    B = pos1 - u * sq1_dims.x - aux * sq1_dims.y;
-    C = pos2 + u * sq2_dims.x + aux * sq2_dims.y;
-    D = pos2 + u * sq2_dims.x - aux * sq2_dims.y;
+    A = pos1 - u * sq1_dims.x() + aux * sq1_dims.y();
+    B = pos1 - u * sq1_dims.x() - aux * sq1_dims.y();
+    C = pos2 + u * sq2_dims.x() + aux * sq2_dims.y();
+    D = pos2 + u * sq2_dims.x() - aux * sq2_dims.y();
   }
 
   Dir2 v = B-A;

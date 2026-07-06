@@ -33,8 +33,8 @@ uint32_t GlyphsSystem::print (char16_t character, uint16_t size, SDL_Color color
 
   if (tex != nullptr) {
     SDL_Rect dst;
-    dst.x = position.x;
-    dst.y = position.y; 
+    dst.x = position.x();
+    dst.y = position.y(); 
     dst.w = w;
     dst.h = h;
     SDL_RenderCopyEx (glb->get_render(), tex, nullptr, &dst, 0, nullptr, SDL_FLIP_NONE);

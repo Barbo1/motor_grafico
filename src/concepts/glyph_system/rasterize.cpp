@@ -9,7 +9,7 @@
 
 static inline void resposition (Dir2& vec, const Dir2& min, const Dir2& dims_resposition, const float& sizef) {
   vec = vec.msub(sizef, min);
-  vec.y = (dims_resposition - vec).y;
+  vec.y((dims_resposition - vec).y());
 }
 
 static Dir2 get_mn (Dir2 m1, Dir2 m2) {
@@ -17,8 +17,8 @@ static Dir2 get_mn (Dir2 m1, Dir2 m2) {
   m2 = m2.abs();
   Dir2 mmax = Dir2(_mm_max_ps(m1.v, m2.v));
   return Dir2 (
-    (std::abs(m1.x - m1.y) <= 33.f / 65536.f ? 2.f : 1.f) * mmax.x,
-    (std::abs(m2.x - m2.y) <= 33.f / 65536.f ? 2.f : 1.f) * mmax.y  
+    (std::abs(m1.x() - m1.y()) <= 33.f / 65536.f ? 2.f : 1.f) * mmax.x(),
+    (std::abs(m2.x() - m2.y()) <= 33.f / 65536.f ? 2.f : 1.f) * mmax.y()  
   );
 }
 

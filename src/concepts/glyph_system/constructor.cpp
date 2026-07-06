@@ -283,11 +283,11 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
     int16_t num_contours = std::bit_cast<int16_t>(file.read16());
 
     Dir2 min, max;
-    min.x = u16tof(file.read16()) * inv_units_per_em_f;
-    min.y = u16tof(file.read16()) * inv_units_per_em_f;
+    min.x(u16tof(file.read16()) * inv_units_per_em_f);
+    min.y(u16tof(file.read16()) * inv_units_per_em_f);
 
-    max.x = u16tof(file.read16()) * inv_units_per_em_f;
-    max.y = u16tof(file.read16()) * inv_units_per_em_f;
+    max.x(u16tof(file.read16()) * inv_units_per_em_f);
+    max.y(u16tof(file.read16()) * inv_units_per_em_f);
 
     /******************/
     /*  simple glyph  */
@@ -327,11 +327,11 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
       }
 
       // x coordenates.
-      data_ri.points[0].x = inv_units_per_em_f * (
+      data_ri.points[0].x(inv_units_per_em_f * (
         data_ri.flags[0] & 0b10 ?
           (data_ri.flags[0] & 0b10000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
           (data_ri.flags[0] & 0b10000 ? 0.f: u16tof(file.read16()))
-      );
+      ));
       for (uint32_t i = 1; i < num_points; i++) {
         uint32_t flag = data_ri.flags[i];
         float coord = (
@@ -339,15 +339,15 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
             (flag & 0b10000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
             (flag & 0b10000 ? 0.f: u16tof(file.read16()))
         );
-        data_ri.points[i].x = std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].x);
+        data_ri.points[i].x(std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].x()));
       }
 
       // y coordenates.
-      data_ri.points[0].y = (
+      data_ri.points[0].y((
         data_ri.flags[0] & 0b100 ?
           (data_ri.flags[0] & 0b100000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
           (data_ri.flags[0] & 0b100000 ? 0.f: u16tof(file.read16()))
-      ) * inv_units_per_em_f;
+      ) * inv_units_per_em_f);
       for (uint32_t i = 1; i < num_points; i++) {
         uint32_t flag = data_ri.flags[i];
         float coord = (
@@ -355,7 +355,7 @@ GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
             (flag & 0b100000 ? 1.f : -1.f) * static_cast<float>(file.read8 ()) : 
             (flag & 0b100000 ? 0.f: u16tof(file.read16()))
         );
-        data_ri.points[i].y = std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].y);
+        data_ri.points[i].y(std::fmaf(coord, inv_units_per_em_f, data_ri.points[i-1].y()));
       }
 
     /********************/

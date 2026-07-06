@@ -11,8 +11,8 @@ void rotate_triangles (std::array<Dir2, 3>* triangles, uint32_t many, float angl
     Dir2& point = triangle[0]; 
     Dir2& vec1 = triangle[1]; 
     Dir2& vec2 = triangle[2]; 
-    point = v_x * point.x + v_y * point.y;
-    vec1 = v_x * vec1.x + v_y * vec1.y;
-    vec2 = v_x * vec2.x + v_y * vec2.y;
+    point = v_x * point.x() + v_y * point.y();
+    vec1 = v_x * vec1.x() + v_y * vec1.y();
+    vec2 = v_x * vec2.x() + v_y * vec2.y();
   }
 }

@@ -10,11 +10,11 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   /* Searching maximum and minimum coordenates. */
   float maxy = Dir2 {_mm_max_ps (points[0].v, _mm_max_ps (points[1].v, _mm_max_ps(points[2].v,
     _mm_max_ps(points[3].v, _mm_max_ps(points[4].v, points[5].v))
-  )))}.y;
+  )))}.y();
 
   float miny = Dir2{_mm_min_ps (points[0].v, _mm_min_ps (points[1].v, _mm_min_ps(points[2].v,
     _mm_min_ps(points[3].v, _mm_min_ps(points[4].v, points[5].v))
-  )))}.y;
+  )))}.y();
 
   auto bound_inside = [&] (int32_t num, int32_t up) {
     return std::max<int32_t> (std::min<int32_t> (num, up), 0);
@@ -29,11 +29,11 @@ void cast_shadow (Uint32*& buffer, int32_t width, int32_t height, const std::arr
   uint32_t many_segments = 0;
   for (std::size_t i = 1; i <= many_points; i++) {
     const Dir2 p1_p2 = points[i+1] - points[i];
-    if (p1_p2.y != 0) {
-      float q = 1.f / p1_p2.y;
-      float mi = p1_p2.x * q;
-      float ci = std::fmaf (-mi, points[i+1].y, points[i+1].x);
-      float p = -points[i].y * q;
+    if (p1_p2.y() != 0) {
+      float q = 1.f / p1_p2.y();
+      float mi = p1_p2.x() * q;
+      float ci = std::fmaf (-mi, points[i+1].y(), points[i+1].x());
+      float p = -points[i].y() * q;
       coef[many_segments++] = {
         {mi, std::fmaf(mi, bot, ci), q, std::fmaf(q, bot, p)}
       };

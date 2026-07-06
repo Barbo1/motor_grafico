@@ -6,16 +6,16 @@
 
 /* function that evaluates if the component element is a straight horizontal line. */
 static inline bool is_horizontal_line (const ComponentElement& elem) {
-  return elem.t == ComponentElementType::LINE && (elem.start.round() - elem.end.round()).y == 0.f;
+  return elem.t == ComponentElementType::LINE && (elem.start.round() - elem.end.round()).y() == 0.f;
 }
 
 static inline float get_direction_line (const Dir2& curr, const Dir2& next) {
-  return (curr - next).y;
+  return (curr - next).y();
 };
 
 static inline float get_direction_quad (const Dir2& curr, const Dir2& next, const Dir2& need) {
-  float ret = (curr - next).y;
-  return (ret == 0.f ? (curr - need).y : ret);
+  float ret = (curr - next).y();
+  return (ret == 0.f ? (curr - need).y() : ret);
 }
 
 /* for every component, there are two of them for which one is the previous(prev) 
@@ -58,12 +58,12 @@ static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, const float& prev_di
   Dir2 P1r = P1.round();
   Dir2 P2r = P2.round();
   Dir2 diff21 = P2 - P1;
-  int32_t P2ry = static_cast<int32_t>(P2r.y);
-  int32_t P1ry = static_cast<int32_t>(P1r.y);
-  int32_t P2rx = static_cast<int32_t>(P2r.x);
-  int32_t P1rx = static_cast<int32_t>(P1r.x);
-  uint64_t prev_point_disapears = (diff21.y * prev_direction < 0.f ? 1ULL : 0ULL);
-  uint64_t next_point_disapears = (diff21.y * next_direction < 0.f ? 1ULL : 0ULL);
+  int32_t P2ry = static_cast<int32_t>(P2r.y());
+  int32_t P1ry = static_cast<int32_t>(P1r.y());
+  int32_t P2rx = static_cast<int32_t>(P2r.x());
+  int32_t P1rx = static_cast<int32_t>(P1r.x());
+  uint64_t prev_point_disapears = (diff21.y() * prev_direction < 0.f ? 1ULL : 0ULL);
+  uint64_t next_point_disapears = (diff21.y() * next_direction < 0.f ? 1ULL : 0ULL);
 
   switch (std::abs(P2ry - P1ry)) {
     case 0:
@@ -76,8 +76,8 @@ static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, const float& prev_di
       bound.change (P2ry, P2rx, (next_point_disapears & bound(P2ry, P2rx)) ^ 1ULL);
       break;
     default: {
-        Dir2 x_diff = Dir2 (diff21.x / diff21.y, 0.f);
-        if (P1.y > P2.y) {
+        Dir2 x_diff = Dir2 (diff21.x() / diff21.y(), 0.f);
+        if (P1.y() > P2.y()) {
           std::swap (P1r, P2r);
           std::swap (P1ry, P2ry);
           std::swap (P1rx, P2rx);
@@ -87,14 +87,14 @@ static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, const float& prev_di
         const uint64_t mid = (P2ry + P1ry) >> 1;
         Dir2 x = P1r;
         for (uint64_t yi = P1ry; yi <= mid; yi++) {
-          uint64_t xi = static_cast<int64_t>(x.round().x);
+          uint64_t xi = static_cast<int64_t>(x.round().x());
           bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
           x += x_diff;
         }
           
         x = P2r;
         for (uint64_t yi = P2ry; yi > mid; yi--) {
-          uint64_t xi = static_cast<int64_t>(x.round().x);
+          uint64_t xi = static_cast<int64_t>(x.round().x());
           bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
           x -= x_diff;
         }
@@ -128,18 +128,18 @@ static void print_bezier_part (
 ) {
   float t = bezier_config & BezierConfig::TRule;
   const Dir2 fround = first.round();
-  uint64_t xi = static_cast<uint64_t> (fround.x);
-  const int64_t first_height = static_cast<int64_t> (fround.y);
+  uint64_t xi = static_cast<uint64_t> (fround.x());
+  const int64_t first_height = static_cast<int64_t> (fround.y());
   const int64_t middle_height = (first_height + last_height) >> 1;
-  const float iavy = 1.f / av.y;
+  const float iavy = 1.f / av.y();
 
   auto print_points = [&] (uint64_t yi, uint64_t yin, uint64_t disappearance_cond) {
     bound.change (yi, xi, (disappearance_cond & bound(yi, xi)) ^ 1ULL);
-    float sqrt_cond = std::sqrt (av.madd(static_cast<float>(yin), rem_sqrt).max0().y);
+    float sqrt_cond = std::sqrt (av.madd(static_cast<float>(yin), rem_sqrt).max0().y());
 
     // founding t(could be better?).
-    float t1 = iavy * (bv.y - sqrt_cond);
-    float t2 = iavy * (bv.y + sqrt_cond);
+    float t1 = iavy * (bv.y() - sqrt_cond);
+    float t2 = iavy * (bv.y() + sqrt_cond);
     bool print1 = (0.f < t1) && (t1 < 1.f);
     if (print1 && (0.f < t2) && (t2 < 1.f)) {
       if (bezier_config & BezierConfig::TRule)
@@ -152,7 +152,7 @@ static void print_bezier_part (
       t = t2;
 
     // founding x.
-    xi = std::lround (av.madd(t, bv).madd(t, cv).x);
+    xi = std::lround (av.madd(t, bv).madd(t, cv).x());
   };
 
   int64_t yi = first_height;
@@ -182,10 +182,10 @@ static void print_bezier_part (
 
 static inline void get_directions_for_quad (const Dir2& P1, const Dir2& P2, const Dir2& P3, const float prev_direction, const float next_direction, uint64_t& ret1, uint64_t& ret2, uint64_t& ret3) {
   float direction_calc_3, direction_calc_1;
-  direction_calc_1 = (P2 - P1).y;
-  direction_calc_1 = (float_is_zero (direction_calc_1) ? (P3 - P1).y : direction_calc_1);
-  direction_calc_3 = (P3 - P2).y;
-  direction_calc_3 = (float_is_zero (direction_calc_3) ? (P3 - P1).y : direction_calc_3);
+  direction_calc_1 = (P2 - P1).y();
+  direction_calc_1 = (float_is_zero (direction_calc_1) ? (P3 - P1).y() : direction_calc_1);
+  direction_calc_3 = (P3 - P2).y();
+  direction_calc_3 = (float_is_zero (direction_calc_3) ? (P3 - P1).y() : direction_calc_3);
   ret1 = (direction_calc_1 * prev_direction < 0.f ? 1ULL : 0ULL);
   ret2 = (direction_calc_3 * next_direction < 0.f ? 1ULL : 0ULL);
   ret3 = (direction_calc_3 * direction_calc_1 < 0.f ? 1ULL : 0ULL);
@@ -195,10 +195,10 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
   Dir2 P3r = P3.round();
   Dir2 P1r = P1.round();
   Dir2 cond = P3r - P1r;
-  int64_t P3ry = static_cast<int64_t>(P3r.y);
-  int64_t P1ry = static_cast<int64_t>(P1r.y);
-  int64_t P3rx = static_cast<int64_t>(P3r.x);
-  int64_t P1rx = static_cast<int64_t>(P1r.x);
+  int64_t P3ry = static_cast<int64_t>(P3r.y());
+  int64_t P1ry = static_cast<int64_t>(P1r.y());
+  int64_t P3rx = static_cast<int64_t>(P3r.x());
+  int64_t P1rx = static_cast<int64_t>(P1r.x());
   Dir2 av = P3 + P1 - P2 * 2.f;
   Dir2 bv = (P1 - P2).dir_mul(Dir2 {-2.f, 1.f});
 
@@ -208,11 +208,11 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
     prev_point_disapears, next_point_disapears, mid_point_dissapears
   );
 
-  if (float_is_zero (av.y)) {
-    if (float_is_zero (bv.y) || cond.y == 0.f) {
+  if (float_is_zero (av.y())) {
+    if (float_is_zero (bv.y()) || cond.y() == 0.f) {
       draw_line (bound, P1, P3, prev_direction, next_direction);
     } else {
-      if (P1.y > P3.y) {
+      if (P1.y() > P3.y()) {
         std::swap (prev_point_disapears, next_point_disapears);
         std::swap (P1ry, P3ry);
         std::swap (P1rx, P3rx);
@@ -220,46 +220,46 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
 
       int64_t mid = (P1ry + P3ry) >> 1;
       uint64_t xi = P1rx;
-      float const_t = 0.5f / bv.y;
+      float const_t = 0.5f / bv.y();
       for (int64_t yi = P1ry; yi <= mid; yi++) {
         bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
-        float t = (P1.y - static_cast<float>(yi + 1)) * const_t;
-        xi = static_cast<uint64_t>(av.madd(t, bv).madd(t, P1).round().x);
+        float t = (P1.y() - static_cast<float>(yi + 1)) * const_t;
+        xi = static_cast<uint64_t>(av.madd(t, bv).madd(t, P1).round().x());
       }
 
       xi = P3rx;
       for (int64_t yi = P3ry; yi > mid; yi--) {
         bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
-        float t = (P1.y - static_cast<float>(yi - 1)) * const_t;
-        xi = static_cast<uint64_t>(av.madd(t, bv).madd(t, P1).round().x);
+        float t = (P1.y() - static_cast<float>(yi - 1)) * const_t;
+        xi = static_cast<uint64_t>(av.madd(t, bv).madd(t, P1).round().x());
       }
     }
 
   } else {
     uint64_t yim = (P1ry + P3ry) >> 1;
     uint64_t bzc1 = 0, bzc2 = BezierConfig::TRule, yim2 = yim;
-    if (!float_is_zero ((P1 - P2).y) && !float_is_zero ((P3 - P2).y) && (P1 - P2).dir_mul(P3 - P2).y > 0.f) {
-      float t_bound = bv.y / av.y;
-      yim = static_cast<uint64_t>(av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y);
+    if (!float_is_zero ((P1 - P2).y()) && !float_is_zero ((P3 - P2).y()) && (P1 - P2).dir_mul(P3 - P2).y() > 0.f) {
+      float t_bound = bv.y() / av.y();
+      yim = static_cast<uint64_t>(av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y());
       yim2 = yim;
-      if ((P3 - P2).y < 0.f) {
+      if ((P3 - P2).y() < 0.f) {
         bzc1 |= BezierConfig::PrintDIR;
         bzc2 |= BezierConfig::PrintDIR;
       }
     } else {
       yim = (P1ry + P3ry) >> 1;
-      if (cond.y == 0.f) {
-        if (cond.x != 0.f && prev_direction * next_direction > 0.f)
+      if (cond.y() == 0.f) {
+        if (cond.x() != 0.f && prev_direction * next_direction > 0.f)
           bound.change (P1ry, P1rx, 0ULL);
         return;
-      } else if (cond.abs().y == 1.f) {
+      } else if (cond.abs().y() == 1.f) {
         bound.change (P1ry, P1rx, (prev_point_disapears & bound(P1ry, P1rx)) ^ 1ULL);
         bound.change (P3ry, P3rx, (next_point_disapears & bound(P3ry, P3rx)) ^ 1ULL);
         return;
-      } else if (0.f < cond.y) {
+      } else if (0.f < cond.y()) {
         bzc1 |= BezierConfig::PrintDIR;
         yim2 = yim + 1;
-      } else if (cond.y < 0.f) {
+      } else if (cond.y() < 0.f) {
         bzc2 |= BezierConfig::PrintDIR;
         yim2 = yim - 1;
       }
@@ -292,8 +292,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
   Dir2 dims = dims_l.madd (antialias_multiplier, Dir2{16.f, 16.f});
 
   // creating the matrix for the bounds.
-  int32_t matrix_height = std::lround (dims.y) + 2;
-  int32_t matrix_width = std::lround (dims.x) + 2;
+  int32_t matrix_height = std::lround (dims.y()) + 2;
+  int32_t matrix_width = std::lround (dims.x()) + 2;
   BoolMatrix bound = BoolMatrix (matrix_height, matrix_width);
 
   // drawing.
@@ -322,13 +322,13 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
         continue;
 
       // rule 2.
-      bool this_component_is_hl = diff31r.y == 0.f;
+      bool this_component_is_hl = diff31r.y() == 0.f;
       if (elem.t == ComponentElementType::CURVE) {
         const Dir2 av = P3 + P1 - P2 * 2.f;
         const Dir2 bv = P1 - P2;
-        const float t_bound = bv.y / av.y;
-        const float yim = av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y;
-        this_component_is_hl &= P1.round().y == yim;
+        const float t_bound = bv.y() / av.y();
+        const float yim = av.madd(t_bound, bv * -2.f).madd(t_bound, P1).round().y();
+        this_component_is_hl &= P1.round().y() == yim;
       }
 
       // rule 3.
@@ -365,7 +365,7 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     auto elem = filtered_elements[0];
     const std::size_t many = filtered_elements.size ();
     std::size_t pos = 0;
-    while ((elem.start.round() - elem.end.round()).y == 0.f && elem.t == ComponentElementType::LINE && pos < many)
+    while ((elem.start.round() - elem.end.round()).y() == 0.f && elem.t == ComponentElementType::LINE && pos < many)
       elem = filtered_elements[++pos];
 
     // assuming that no glyph can be compound only on straight lines.
@@ -405,8 +405,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
   }
 
   // creating the image filled with the data.
-  const uint32_t height = std::lround (dims_l.y) + 1;
-  const uint32_t width = std::lround (dims_l.x) + 1;
+  const uint32_t height = std::lround (dims_l.y()) + 1;
+  const uint32_t width = std::lround (dims_l.x()) + 1;
   SDL_Surface* surface = SDL_CreateRGBSurface (0, width, height, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
   Uint32* pixels = (Uint32*)(surface->pixels), pixel_color;
   uint32_t pos = 0;
