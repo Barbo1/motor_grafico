@@ -160,13 +160,13 @@ int main () {
 
     /* Testing of the collitions. */
     for (auto& cir: circles) {
-      if (test_collision(c2, cir)) 
-        resolve_collision(cir, c2);
-      if (test_collision(c1, cir)) 
-        resolve_collision(cir, c1);
+      if (test_collision(cir, c2)) 
+        resolve_collision(cir, c2, true);
+      if (test_collision(cir, c1)) 
+        resolve_collision(cir, c1, true);
       for (Line& line: lines)
         if (test_collision(line, cir))
-          resolve_collision(cir, line);
+          resolve_collision(line, cir);
     }
 
     for (uint32_t i = 0; i < circles.size(); i++)
@@ -178,7 +178,7 @@ int main () {
       resolve_collision(c1, c2);
     for (Line& line: lines)
       if (test_collision(line, c1))
-        resolve_collision(c1, line);
+        resolve_collision(line, c1);
     
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../concepts/physical.hpp"
 #include "../primitives/global.hpp"
 #include "../primitives/vectors.hpp"
 
@@ -44,19 +43,16 @@ class Particle {
     Dir2 get_force () const;
 
     friend bool test_collision (const Line&, const Particle&);
-    friend bool test_collision (const Particle&, Physical&);
     friend bool test_collision (const Particle&, const Circle&);
     friend bool test_collision (const Particle&, const Square&);
     template<std::size_t N> friend bool test_collision (const Particle&, const NEdge<N>&);
 
-    friend void resolve_collision (Particle&, Line&);
-    friend void resolve_collision (Particle&, Physical&);
+    friend void resolve_collision (Line&, Particle&);
     friend void resolve_collision (Particle&, Square&);
     friend void resolve_collision (Particle&, Circle&);
     template<std::size_t N> friend void resolve_collision (Particle&, NEdge<N>&);
 
-    friend void correct_collision (Particle&, Line&);
-    friend void correct_collision (Particle&, Physical&);
+    friend void correct_collision (Line&, Particle&);
     friend void correct_collision (Particle&, Square&);
     friend void correct_collision (Particle&, Circle&);
     template<std::size_t N> friend void correct_collision (Particle&, NEdge<N>&);

@@ -954,7 +954,7 @@ AngDir2::AngDir2 (const Dir2& dir) noexcept {
 
 AngDir2::AngDir2 (const Dir2& dir, const float& angle) noexcept {
   __m128 m_angle = _mm_set_ss(angle);
-  this->v = _mm_insert_ps(dir.v, m_angle, 0b00100000);
+  this->v = _mm_insert_ps(dir.v, m_angle, 0b00101000);
 }
 
 AngDir2::AngDir2 (const Dir3& dir) noexcept {

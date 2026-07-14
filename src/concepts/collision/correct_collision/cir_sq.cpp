@@ -2,14 +2,18 @@
 #include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
 
-void correct_collision (Circle& cir, Square& sq) {
+void correct_collision (Circle& cir, Square& sq, bool move_first) {
   Dir2 sq_pos = sq.position;
   Dir2 cir_pos = cir.position;
   Dir2 diff = sq_pos - cir_pos;
   Dir2 b = diff.bound(Dir2(sq.dims)) - diff;
-  Dir2 n = b.normalize(); 
+  Dir2 n = b.normalize();
 
-  cir.position.store(n.nmadd(cir.radio, cir_pos - b));
+  if (move_first)
+    cir.position.store(n.nmadd(cir.radio, cir_pos - b));
+  else
+    sq.position.store(n.msub(cir.radio, b + sq_pos));
+
   cir.collision_normal.store(n);
   sq.collision_normal.store(-n);
 

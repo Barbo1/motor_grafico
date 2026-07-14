@@ -131,8 +131,8 @@
  | | - implementar los poligonos con colisiones:
         |V| + testeo.
         |V| + resposicion, resolucion y punto de colision para circulo-poligono.
-        | | + resposicion, resolucion y punto de colision para prisma-poligono.
-        | | + resposicion, resolucion y punto de colision para linea-poligono.
+        |V| + resposicion, resolucion y punto de colision para prisma-poligono.
+        |V| + resposicion, resolucion y punto de colision para linea-poligono.
         | | + resposicion, resolucion y punto de colision para poligono-poligono.
  | | - implementar proyectiles:
         | | + testeos.

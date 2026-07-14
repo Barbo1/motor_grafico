@@ -43,22 +43,18 @@ class Square final: public Physical {
     friend bool test_collision (const Square&, const Square&);
     template<std::size_t N> friend bool test_collision (const Square&, const NEdge<N>&);
 
-    friend void resolve_collision (Square&, Line&);
+    friend void resolve_collision (Line&, Square&);
     friend void resolve_collision (Particle&, Square&);
-    friend void resolve_collision (Circle&, Square&);
-    friend void resolve_collision (Square&, Circle&);
+    friend void resolve_collision (Circle&, Square&, bool);
     friend void resolve_collision (Square&, Square&);
-    template<std::size_t N> friend void resolve_collision (Square&, NEdge<N>&);
-    template<std::size_t N> friend void resolve_collision (NEdge<N>&, Square&);
+    template<std::size_t N> friend void resolve_collision (Square&, NEdge<N>&, bool);
 
-    friend void correct_collision (Square&, Line&);
+    friend void correct_collision (Line&, Square&);
     friend void correct_collision (Particle&, Square&);
-    friend void correct_collision (Circle&, Square&);
-    friend void correct_collision (Square&, Circle&);
+    friend void correct_collision (Circle&, Square&, bool);
     friend void correct_collision (Square&, Square&);
-    template<std::size_t N> friend void correct_collision (Square&, NEdge<N>&);
-    template<std::size_t N> friend void correct_collision (NEdge<N>&, Square&);
-  
+    template<std::size_t N> friend void correct_collision (Square&, NEdge<N>&, bool);
+
     friend Dir2 collision_point (const Line&, const Square&);
     friend Dir2 collision_point (const Circle&, const Square&);
     friend Dir2 collision_point (const Square&, const Square&);

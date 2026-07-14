@@ -93,8 +93,8 @@ int main () {
       dial = "true";
       Dir2 point = collision_point(sq, poly);
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
-      SDL_RenderDrawPoint(glb->get_render(), point.x, point.y);
-      std::cout << "Col = (" << point.x << ", " << point.y << ")" << std::endl;
+      SDL_RenderDrawPoint(glb->get_render(), point.x(), point.y());
+      std::cout << "Col = (" << point.x() << ", " << point.y() << ")" << std::endl;
     }
     std::cout << dial << std::endl;
 

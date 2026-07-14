@@ -51,10 +51,10 @@ int main () {
   }
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Circle cir = Circle (glb, 30, Dir2 {360.f, 450.f}, 2.f, 0.f, true, &color);
+  Circle cir = Circle (glb, 30, Dir2(360.f, 450.f), 2.f, 0.f, true, &color);
   cir.set_velocity(AngDir2(0.f, -0.3f, 0.f));
   
-  Circle cir1 = Circle (glb, 20, Dir2 {460.f, 600.f}, 2.f, 0.f, true, &color);
+  Circle cir1 = Circle (glb, 20, Dir2(480.f, 600.f), 2.f, 0.f, true, &color);
   cir1.set_velocity(AngDir2(0.f, -0.5f, 0.f));
 
   bool cont = true;
@@ -72,11 +72,11 @@ int main () {
       poly.calculate_movement(AngDir2(0.f, 0.f, 0.f));
 
       if (test_collision(cir, poly)) {
-        resolve_collision(cir, poly);
+        resolve_collision(cir, poly, true);
       }
 
       if (test_collision(cir1, poly)) {
-        resolve_collision(cir1, poly);
+        resolve_collision(cir1, poly, true);
       }
 
     glb->end_render();

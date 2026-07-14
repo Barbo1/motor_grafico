@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../concepts/physical.hpp"
 #include "nedge.hpp"
 
 class Circle;
@@ -35,26 +34,22 @@ class Line {
     Dir2 get_v () const;
     Dir2 get_p () const;
 
-    friend bool test_collision (const Line&, Physical&);
     friend bool test_collision (const Line&, const Particle&);
     friend bool test_collision (const Line&, const Circle&);
     friend bool test_collision (const Line&, const Square&);
     template<std::size_t N> friend bool test_collision (const Line&, const NEdge<N>&);
 
-    friend void resolve_collision (Physical&, Line&);
-    friend void resolve_collision (Particle&, Line&);
-    friend void resolve_collision (Circle&, Line&);
-    friend void resolve_collision (Square&, Line&);
-    template<std::size_t N> friend void resolve_collision (NEdge<N>&, Line&);
+    friend void resolve_collision (Line&, Particle&);
+    friend void resolve_collision (Line&, Circle&);
+    friend void resolve_collision (Line&, Square&);
+    template<std::size_t N> friend void resolve_collision (Line&, NEdge<N>&);
 
-    friend void correct_collision (Physical&, Line&);
-    friend void correct_collision (Particle&, Line&);
-    friend void correct_collision (Square&, Line&);
-    friend void correct_collision (Circle&, Line&);
+    friend void correct_collision (Line&, Particle&);
+    friend void correct_collision (Line&, Square&);
+    friend void correct_collision (Line&, Circle&);
     template<std::size_t N> friend void correct_collision (Line&, NEdge<N>&);
-    
-    Dir2 collision_point (const Line&, const Physical&);
-    Dir2 collision_point (const Line&, const Square&);
-    Dir2 collision_point (const Line&, const Circle&);
-    template<std::size_t N> Dir2 collision_point (const Line&, const NEdge<N>&);
+
+    friend Dir2 collision_point (const Line&, const Square&);
+    friend Dir2 collision_point (const Line&, const Circle&);
+    template<std::size_t N> friend Dir2 collision_point (const Line&, const NEdge<N>&);
 };

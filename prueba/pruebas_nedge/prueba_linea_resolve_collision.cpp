@@ -62,38 +62,36 @@ int main () {
     std::exit(-1);
   }
 
-  std::array<Dir2, 17> points = set_points_3();
-  NEdge<17> poly(
-    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, 
+  Dir2 line_point_1 = Dir2(100.f, 100.f);
+  Dir2 line_point_2 = Dir2(200.f, 200.f);
+  Line line = Line(line_point_2, line_point_1);
+
+  std::array<Dir2, 10> points1 = set_points_4();
+  NEdge<10> mov (
+    glb, points1.data(), points1.size(), Dir2 (400.f, 0.f), 2.f, 0.f, true,
     nullptr, &error
   );
+  mov.set_velocity(AngDir2(-0.001f, 0.005f, 0.f));
+
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
-  poly.set_position(Dir2 (100.f, 100.f));
-
-  SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Circle cir = Circle (glb, 50, Dir2 {0, 0}, 0, 0, true, &color);
 
   bool cont = true;
   while (cont) {
     glb->begin_render();
 
-    poly.print(glb, &gs);
-    
-    int mouse_x, mouse_y;
-    SDL_GetMouseState(&mouse_x, &mouse_y);
-    cir.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
+    SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
+    SDL_RenderDrawLine(glb->get_render(), 0.f, 0.f, 600.f, 600.f);
 
-    std::string dial = "false";
-    if (test_collision(cir, poly)) {
-      dial = "true";
-      correct_collision(cir, poly, true);
+    mov.calculate_movement(AngDir2());
+
+    if (test_collision(line, mov)) {
+      std::cout << 1 << std::endl;
+      resolve_collision(line, mov);
     }
-    std::cout << dial << std::endl;
-
-    cir.draw();
+    mov.print(glb, &gs);
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

@@ -89,7 +89,7 @@ int main () {
     std::string dial = "false";
     if (test_collision(sq, poly)) {
       dial = "true";
-      correct_collision(sq, poly);
+      correct_collision(sq, poly, true);
     }
     std::cout << dial << std::endl;
 

@@ -24,9 +24,10 @@ class NEdge final: public Physical {
     float ang_for;
 
     std::array<MemDir2, N> points;
-    std::array<std::pair<MemDir2, MemDir2>, N> placed_points;
     std::array<std::array<MemDir2, 3>, N-2> triangles;
+    std::array<std::pair<MemDir2, MemDir2>, N> placed_points;
     std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
+
     Visualizer<D2FIG> texture;
 
     void reposition_polygon();
@@ -63,23 +64,19 @@ class NEdge final: public Physical {
     template<std::size_t M> friend bool test_collision (const Particle&, const NEdge<M>&);
     template<std::size_t M> friend bool test_collision (const Circle&, const NEdge<M>&);
     template<std::size_t M> friend bool test_collision (const Square&, const NEdge<M>&);
-    template<std::size_t M, std::size_t L> friend bool test_collision (const NEdge<M>&, const NEdge<L>&);
+    template<std::size_t M, std::size_t T> friend bool test_collision (const NEdge<M>&, const NEdge<T>&);
 
-    template<std::size_t M> friend void resolve_collision (NEdge<M>&, Line&);
+    template<std::size_t M> friend void resolve_collision (Line&, NEdge<M>&);
     template<std::size_t M> friend void resolve_collision (Particle&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collision (Circle&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collision (Square&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collision (NEdge<M>&, Circle&);
-    template<std::size_t M> friend void resolve_collision (NEdge<M>&, Square&);
-    template<std::size_t M, std::size_t T> friend void resolve_collision (NEdge<M>&, NEdge<T>&);
+    template<std::size_t M> friend void resolve_collision (Circle&, NEdge<M>&, bool);
+    template<std::size_t M> friend void resolve_collision (Square&, NEdge<M>&, bool);
+    template<std::size_t M, std::size_t T> friend void resolve_collision (NEdge<M>&, NEdge<T>&, bool);
 
-    template<std::size_t M> friend void correct_collision (NEdge<M>&, Line&);
+    template<std::size_t M> friend void correct_collision (Line&, NEdge<M>&);
     template<std::size_t M> friend void correct_collision (Particle&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collision (Circle&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collision (Square&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collision (NEdge<M>&, Circle&);
-    template<std::size_t M> friend void correct_collision (NEdge<M>&, Square&);
-    template<std::size_t M, std::size_t T> friend void correct_collision (NEdge<M>&, NEdge<N>&);
+    template<std::size_t M> friend void correct_collision (Circle&, NEdge<M>&, bool);
+    template<std::size_t M> friend void correct_collision (Square&, NEdge<M>&, bool);
+    template<std::size_t M, std::size_t T> friend void correct_collision (NEdge<M>&, NEdge<T>&, bool);
 
     template<std::size_t M> friend Dir2 collision_point (const Line&, const NEdge<M>&);
     template<std::size_t M> friend Dir2 collision_point (const Circle&, const NEdge<M>&);
@@ -175,29 +172,19 @@ NEdge<N>::NEdge (
 ) noexcept:
   Physical(glb, center, density, 0.f, 0.f, f_k, movible)
 {
-  // Global* glb, AngDir2 position, float density, float area, float f_k, bool movible, bool colidable
   if (size < N) {
     if (error != nullptr)
       *error = -1;
     return;
   }
 
-  this->glb = glb;
-
-  // writing points.
-  for (uint32_t i = 0; i < N; i++)
-    this->points[i].store(points[i]);
-
   // clock order.
   Dir2 mult = Dir2(-1.f, 1.f);
-  Dir2 mass_center = points[N-1];
   float order = 0.f;
   for (uint32_t i = 0; i < N; i++) {
-    mass_center += points[i];
     const Dir2 aux = points[i].dir_mul(mult) + points[(i+1)%N];
     order += aux.y() * aux.x();
   }
-  mass_center *= 1.f / static_cast<float>(N);
   bool clockwise = order > 0.f;
 
   // finding triangles on the polygon.
@@ -368,9 +355,8 @@ NEdge<N>::NEdge (
 
   // creating the triangles, and calculating final area and inertia.
   uint32_t* parts_indexes_pointer = parts_indexes.data();
-  float inertia_distance_acc = 0.f;
-  float inertia_deviation_acc = 0.f;
   this->area = 0.f;
+  this->inertia = 0.f;
   for (uint32_t i = 0; i < N-2; i++) {
     const Dir2 p1 = points[*(parts_indexes_pointer++)];
     const Dir2 p2 = points[*(parts_indexes_pointer++)];
@@ -379,18 +365,26 @@ NEdge<N>::NEdge (
     const Dir2 v2 = p3 - p1;
     const Dir2 v3 = p3 - p2;
 
-    const float triangle_mass = 0.5f * this->density * std::abs(v1.pL(v3));
-    this->area += triangle_mass;
-    inertia_deviation_acc += ((p1 + p2 + p3) / 3.f - mass_center).modulo2() * triangle_mass;
-    inertia_distance_acc += (v1.modulo2() + v2.modulo2() + v3.modulo2()) * triangle_mass;
+    const float triangle_area = 0.5f * std::abs(v1.pL(v3));
+    const float triangle_inertia = (v1.modulo2() + v2.modulo2() + v3.modulo2()) / 36.f;
+    const float triangle_inertia_dev = (p1 + p2 + p3).modulo2() / 9.f;
+    this->area += triangle_area;
+    this->inertia = std::fmaf(triangle_inertia + triangle_inertia_dev, triangle_area, this->inertia);
 
     this->triangles[i][0].store(p1);
     this->triangles[i][1].store(v1);
     this->triangles[i][2].store(v2);
   }
-  this->inertia = 
-    (inertia_distance_acc / 36.f + inertia_deviation_acc) + 
-    (mass_center.modulo2() * this->area * this->density);
+  this->inertia *= this->density;
+
+  // writing points.
+  for (uint32_t i = 0; i < N; i++)
+    this->points[i].store(points[i]);
+
+  this->ang_for = 0.f;
+  this->ang_vel = 0.f;
+  this->ang_pos = 0.f;
+  this->glb = glb;
    
   this->reposition_polygon();
   if (color != nullptr) {
@@ -545,7 +539,7 @@ float NEdge<N>::get_ang_position () const {
 
 template<std::size_t N>
 float NEdge<N>::get_ang_velocity() const {
-  return this->ang_pos;
+  return this->ang_vel;
 }
 
 template<std::size_t N>
@@ -556,7 +550,7 @@ float NEdge<N>::get_ang_force () const {
 template<std::size_t N>
 void NEdge<N>::set_force (const AngDir2 & force) {
   this->force.store(force);
-  this->ang_for += force.a();
+  this->ang_for = force.a();
 }
 
 template<std::size_t N>

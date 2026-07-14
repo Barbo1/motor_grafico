@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-void correct_collision (Square& sq, Line& line) {
+void correct_collision (Line& line, Square& sq) {
   Dir2 sq_pos = Dir2(sq.position);
   Dir2 v = Dir2(line.v);
   Dir2 r = Dir2 (-sq.dims.x, std::copysign(1.f, line.v.x * line.v.y) * sq.dims.y);

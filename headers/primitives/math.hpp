@@ -332,25 +332,25 @@ inline Dir2 calculate_direction_square_nedge (
  *
  * 'C' is the center of the square,
  * 'dims' are the dimentions of the square,
- * 'd' is the direction of the reposition,
+ * 'dn' is the direction of the reposition(must have norma2 = 1),
  * 'segments' are store segments,
  * 'many' is the number of segments avaiable in 'segments'.
  * */
 template<std::size_t N>
 inline Dir2 directional_distance_square_segment (
-    Dir2 C, Dir2 dims, Dir2 d, 
+    Dir2 C, Dir2 dims, Dir2 dn, 
     const std::array<std::pair<Dir2, Dir2>, N>& segments, uint32_t many
 ) {
   __m128 half = _mm_set1_ps(0.5f);
 
-  __m128 d_sgn = _mm_and_ps(d.v, _mm_set1_ps(-0.f));
+  __m128 d_sgn = _mm_and_ps(dn.v, _mm_set1_ps(-0.f));
   __m128 dims_sgn = _mm_xor_ps(dims.v, _mm_set_ps(-0.f, -0.f, 0.f, 0.f));
   __m128 sgns = _mm_xor_ps(dims_sgn, d_sgn);
 
   __m128 D_I = _mm_add_ps(C.v, sgns);
   __m128 P1_P2 = _mm_addsub_ps(C.v, sgns);
 
-  __m128 dL_ext = _mm_shuffle_ps(d.v, d.v, 0b00010001);
+  __m128 dL_ext = _mm_shuffle_ps(dn.v, dn.v, 0b00010001);
   __m128 curr_min = _mm_setzero_ps();
   for (uint32_t i = 0; i < many; i++) {
     Dir2 A = Dir2(segments[i].second);
@@ -362,7 +362,7 @@ inline Dir2 directional_distance_square_segment (
     {
       __m128 vL_ext = _mm_shuffle_ps(v.v, v.v, 0b00010001);
       __m128 M = _mm_add_ps(A.v, B_ext);
-      __m128 denom_prev = _mm_mul_ps(d.v, vL_ext);
+      __m128 denom_prev = _mm_mul_ps(dn.v, vL_ext);
       __m128 denom = _mm_rcp_ps(_mm_hsub_ps(denom_prev, denom_prev));
       
       // calculating value 1.
@@ -417,6 +417,6 @@ inline Dir2 directional_distance_square_segment (
 
   curr_min = _mm_min_ps(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00001110));
   curr_min = _mm_min_ss(curr_min, _mm_shuffle_ps (curr_min, curr_min, 0b00000001));
-  curr_min = _mm_sub_ps(_mm_shuffle_ps (curr_min, curr_min, 0), _mm_set1_ps(-0.1f));
+  curr_min = _mm_add_ps(_mm_shuffle_ps (curr_min, curr_min, 0), _mm_set1_ps(-0.1f));
   return Dir2::from_well(curr_min);
 }

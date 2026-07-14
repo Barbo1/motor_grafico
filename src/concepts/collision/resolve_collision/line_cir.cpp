@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-void resolve_collision (Circle& cir, Line& line) {
+void resolve_collision (Line& line, Circle& cir) {
   Dir2 cir_pos = cir.position;
   Dir2 cir_vel = cir.velocity;
   Dir2 v_L = Dir2(line.v).percan().normalize();
