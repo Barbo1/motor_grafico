@@ -34,7 +34,7 @@ class NEdge final: public Physical {
 
   public: 
     NEdge (
-      Global* glb, const Dir2 * points, std::size_t size, AngDir2 center, 
+      Global* glb, Arena& arena, const Dir2 * points, std::size_t size, AngDir2 center, 
       float density = 0, float f_k = 0, bool movible = true,
       SDL_Color* color = nullptr, int* error = nullptr
     ) noexcept;
@@ -166,7 +166,7 @@ static inline bool are_points_contiguous (int32_t i, int32_t j, int32_t M) {
  * * * * * * * * */
 template<std::size_t N>
 NEdge<N>::NEdge (
-  Global* glb, const Dir2 * points, std::size_t size, AngDir2 center, 
+  Global* glb, Arena& arena, const Dir2 * points, std::size_t size, AngDir2 center, 
   float density, float f_k, bool movible,
   SDL_Color* color, int* error
 ) noexcept:
@@ -388,7 +388,7 @@ NEdge<N>::NEdge (
    
   this->reposition_polygon();
   if (color != nullptr) {
-    this->texture = ImageModifier::polygon(points, size, *color).cast(glb);
+    this->texture = ImageModifier::polygon(arena, points, size, *color).cast(glb);
   }
 }
 

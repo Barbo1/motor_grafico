@@ -1,9 +1,10 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
 #include <SDL2/SDL_stdinc.h>
    
-ImageModifier ImageModifier::oval (int height, int base, SDL_Color color) {
-  Uint32* pixels = new Uint32[4 * base * height];
-  int* bounds = new int[4*height- 4];
+ImageModifier ImageModifier::oval (Arena& arena, int height, int base, SDL_Color color) {
+  ArenaConstexFlag context = arena.get_context();
+
+  int* bounds = arena.atalloc<int>(4*height- 4);
   int* biter = bounds;
 
   float a_b = static_cast<float>(base) / static_cast<float>(height), b_2 = height * height;
@@ -26,7 +27,7 @@ ImageModifier ImageModifier::oval (int height, int base, SDL_Color color) {
     *(biter++) += sum;
   }
 
-  ImageModifier ret = ImageModifier::bound_constructor(bounds, pixels, 2*height, 2*base, color);
-  delete [] bounds;
+  ImageModifier ret = ImageModifier::bound_constructor(bounds, 2*height, 2*base, color);
+  arena.go_back_context(context);
   return ret;
 }

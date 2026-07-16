@@ -1,6 +1,10 @@
+#pragma once
+
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+
+#include "./arena.hpp"
 
 class BoolMatrix {
   private:
@@ -12,8 +16,7 @@ class BoolMatrix {
     uint64_t _columns_;
 
   public:
-    BoolMatrix (unsigned rows, unsigned columns) noexcept ;
-    ~BoolMatrix ();
+    BoolMatrix (unsigned rows, unsigned columns, Arena& arena, int* error) noexcept ;
 
     uint64_t get_width();
     uint64_t get_height();

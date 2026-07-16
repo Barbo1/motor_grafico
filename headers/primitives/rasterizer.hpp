@@ -1,11 +1,13 @@
+#pragma once
+
 #include "./types_definition.hpp"
-#include "./bool_matrix.hpp"
+#include "./arena.hpp"
 #include "./vectors.hpp"
 
 #include <vector>
 #include <SDL2/SDL_render.h>
 
-SDL_Surface* raster_grade_1 (const Dir2*, std::size_t, SDL_Color, AntiAliasingType);
+SDL_Surface* raster_grade_1 (const Dir2*, std::size_t, SDL_Color, AntiAliasingType, Arena&);
 
 enum ComponentElementType { LINE, CURVE };
 
@@ -19,5 +21,6 @@ SDL_Surface* raster_grade_2 (
   const Dir2&, 
   const Dir2&, 
   SDL_Color, 
-  AntiAliasingType
+  AntiAliasingType,
+  Arena&
 );

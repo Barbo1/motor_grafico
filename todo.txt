@@ -150,7 +150,8 @@
               | | > testeo de colision entre linea y nedge.
               | | > testeo de colision entre prisma y nedge.
         |V| + eliminar el coportamiento indefinido de las uniones en los vectores.
-        | | + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
+        | | + verificar si <cuchar> sirve para hacer la transformacion de string a u16string.
+        |V| + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
               utilizarla mediente los siguientes metodos:
                + Arena (std::size_t SIZE): crea una nueva arena de tamaño 'SIZE'
                + void* alloc(std::size_t size, std::size_t alignment): 

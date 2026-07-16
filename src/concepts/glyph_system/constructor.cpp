@@ -12,7 +12,8 @@ static float f2d14tof (uint16_t a) {
   return std::bit_cast<int16_t> (a) / 16384.f;
 }
 
-GlyphsSystem::GlyphsSystem (Global* glb, std::string path, int* error) {
+GlyphsSystem::GlyphsSystem (Global* glb, Arena* arena, std::string path, int* error) {
+  this->arena = arena;
   SequentialFileReader file(path, error);
   if (*error != 0) {
     std::cout << "Font Error: file '" << path << "'not found" << std::endl;

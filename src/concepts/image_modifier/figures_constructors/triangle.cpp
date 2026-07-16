@@ -1,8 +1,9 @@
 #include "../../../../headers/concepts/image_modifier.hpp"
 #include <SDL2/SDL_stdinc.h>
-#include <cstdint>
 
-ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
+ImageModifier ImageModifier::triangle (Arena& arena, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color) {
+  ArenaConstexFlag context = arena.get_context();
+
   if (point2.y() < point1.y()) std::swap (point2, point1);
   if (point3.y() < point2.y()) std::swap (point3, point2);
   if (point2.y() < point1.y()) std::swap (point2, point1);
@@ -42,11 +43,8 @@ ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SD
 
   int width = static_cast<int>(max.x());
   int height = static_cast<int>(max.y());
-  Uint32* pixels = new Uint32[height * width];
-
-  std::vector<int> bounds;
-  bounds.resize (2 * height + 1);
-  std::vector<uint32_t>::iterator biter;
+  int* bounds = arena.atalloc<int>(2 * height + 1);
+  int* biter = bounds;
 
   float x = 0;
   int n = 0;
@@ -62,5 +60,7 @@ ImageModifier ImageModifier::triangle (Dir2 point1, Dir2 point2, Dir2 point3, SD
 
   *biter = height * width + 1;
 
-  return ImageModifier::bound_constructor (bounds.data(), pixels, height, width, color);
+  ImageModifier ret = ImageModifier::bound_constructor (bounds, height, width, color);
+  arena.go_back_context(context);
+  return ret;
 }

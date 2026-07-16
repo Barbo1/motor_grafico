@@ -430,6 +430,58 @@ inline Dir2 collision_point_nedge_square (
   return ret / denom;
 } 
 
+/* Given to the information of the line and nedge, calculate the movement
+ * vector to the new position of nedge(must be added to reach position). 
+ * A small deviation is added to the final vector to separate them enough 
+ * before collition testing hit in the next frame.
+ * */
+template<std::size_t N>
+static inline Dir2 calculate_reposition_line_nedge (
+  const Dir2& line_p, const Dir2& line_v, 
+  const Dir2& pol_pos,
+  const std::array<std::pair<MemDir2, MemDir2>, N>& placed_points,
+  Dir2& dn,
+  float& distance
+) {
+  Dir2 line_v_L = line_v.percan();
+  Dir2 d = line_v_L.normalize() * std::copysign(1.f, line_v_L * (line_p - pol_pos));
+  dn = -d;
+  distance = 0.f;
+  for (const auto& part: placed_points) {
+    float new_distance = line_v.pLd(line_p - Dir2(part.second), d);
+    if (new_distance < distance)
+      distance = new_distance;
+  }
+
+  return d * (distance - 0.1f);
+}
+
+/* Given to the information of the line and nedge, returns the point in
+ * the direction of the collision. The returned point is guarantied to be
+ * inside the line. If there is no point, the function returns (0.f, 0.f).
+ * */
+template<std::size_t N>
+static inline Dir2 collision_point_line_nedge (
+  const Dir2& line_p, const Dir2& line_v, 
+  const std::array<std::pair<MemDir2, MemDir2>, N>& placed_points
+) {
+  Dir2 col;
+  uint32_t many = 0;
+  for (const auto& part: placed_points) {
+    Dir2 v = part.first;
+    Dir2 p = part.second;
+    float distance = line_v.pLd(line_p - p, v);
+    if (0.f < distance && distance < 1.f) {
+      col += v.madd(distance, p);
+      many++;
+    }
+  }
+  if (many > 0)
+    return col / static_cast<float>(many);
+  else
+    return col;
+}
+
 
 
 /* * * * * * * * * * */
@@ -630,49 +682,6 @@ template<std::size_t N> void resolve_collision (Square& sq, NEdge<N>& pol, bool 
 /* * * * * * * * * * */
 /* *  Line - NEdge * */
 /* * * * * * * * * * */
-
-template<std::size_t N>
-static inline Dir2 calculate_reposition_line_nedge (
-  const Dir2& line_p, const Dir2& line_v, 
-  const Dir2& pol_pos,
-  const std::array<std::pair<MemDir2, MemDir2>, N>& placed_points,
-  Dir2& dn,
-  float& distance
-) {
-  Dir2 line_v_L = line_v.percan();
-  Dir2 d = line_v_L.normalize() * std::copysign(1.f, line_v_L * (line_p - pol_pos));
-  dn = -d;
-  distance = 0.f;
-  for (const auto& part: placed_points) {
-    float new_distance = line_v.pLd(line_p - Dir2(part.second), d);
-    if (new_distance < distance)
-      distance = new_distance;
-  }
-
-  return d * (distance - 0.1f);
-}
-
-template<std::size_t N>
-static inline Dir2 collision_point_line_nedge (
-  const Dir2& line_p, const Dir2& line_v, 
-  const std::array<std::pair<MemDir2, MemDir2>, N>& placed_points
-) {
-  Dir2 col;
-  uint32_t many = 0;
-  for (const auto& part: placed_points) {
-    Dir2 v = part.first;
-    Dir2 p = part.second;
-    float distance = line_v.pLd(line_p - p, v);
-    if (0.f < distance && distance < 1.f) {
-      col += v.madd(distance, p);
-      many++;
-    }
-  }
-  if (many > 0)
-    return col / static_cast<float>(many);
-  else
-    return col;
-}
 
 template<std::size_t N> Dir2 collision_point (const Line& line, const NEdge<N>& pol) {
   return collision_point_line_nedge (

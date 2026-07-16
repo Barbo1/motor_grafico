@@ -1,4 +1,5 @@
 #include "../../../headers/primitives/rasterizer.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
 #include <cmath>
 #include <algorithm>
 #include <cstdint>
@@ -32,12 +33,18 @@ static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_directio
       x -= x_diff;
     }
 
-  } else
-    if (prev_direction * next_direction > 0.f)
-      bound.change (std::lround (P1.y()), std::lround (P1.x()), 0ULL);
+  } else if (prev_direction * next_direction > 0.f) {
+    bound.change (
+      std::lround (P1.y()), 
+      std::lround (P1.x()), 
+      0ULL
+    );
+  }
 }
 
-SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, AntiAliasingType antialias) {
+SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, AntiAliasingType antialias, Arena& arena) {
+  ArenaConstexFlag arena_context = arena.get_context();
+
   float antialias_multiplier;
   switch (antialias) {
     case AAx2: antialias_multiplier = 2.f; break;
@@ -47,49 +54,49 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
     default: antialias_multiplier = 1.f;
   }
 
-  std::vector<Dir2> points;
-  points.resize(size);
-  std::size_t many_points = size;
-  for (uint32_t i = 0; i < size; i++) {
-    Dir2 point = ps[i];
-    points[i] = Dir2 (std::round (point.x()), std::round (point.y()));
-  }
+  Dir2* points = arena.atalloc<Dir2>(size+2);
+  for (uint32_t i = 0; i < size; i++)
+    points[i] = ps[i].round();
 
   // Searching maximum and minimum coordenates.
   Dir2 min = points[0], max = points[0];
-  for (const auto& point: points) {
-    min.v = _mm_min_ps (min.v, point.v);
-    max.v = _mm_max_ps (max.v, point.v);
+  for (uint32_t i = 0; i < size; i++) {
+    min.v = _mm_min_ps (min.v, points[i].v);
+    max.v = _mm_max_ps (max.v, points[i].v);
   }
 
   // calculating dimensions of the image and matrix.
   Dir2 min_sized = min * antialias_multiplier;
   Dir2 dims_l = max - min;
-  Dir2 dims = dims_l.madd (antialias_multiplier, Dir2{16.f, 16.f});
+  Dir2 dims = dims_l.madd (antialias_multiplier, Dir2(16.f, 16.f));
 
   // creating the matrix for the bounds.
   int32_t matrix_height = std::lround (dims.y()) + 2;
   int32_t matrix_width = std::lround (dims.x()) + 2;
-  BoolMatrix bound = BoolMatrix (matrix_height, matrix_width);
+  int error;
+  BoolMatrix bound = BoolMatrix (matrix_height, matrix_width, arena, &error);
+  if (error < 0)
+    return SDL_CreateRGBSurface (
+      0, 1, 1, 32, 
+      0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+    );
 
   // generating array of the point of the scaled image.
-  std::vector<Dir2> _points (many_points+2);
-  for (std::size_t i = 0; i < many_points; i++) {
-    _points[i] = points[i].msub(antialias_multiplier, min_sized) + Dir2 {1.f, 1.f};
-  }
-  _points[many_points] = _points[0];
-  _points[many_points+1] = _points[1];
+  for (uint32_t i = 0; i < size; i++)
+    points[i] = points[i].msub(antialias_multiplier, min_sized) + Dir2 (1.f, 1.f);
+  points[size] = points[0];
+  points[size+1] = points[1];
 
   // printing the bounds of the image in the matrix.
-  Dir2 P1 = _points[many_points-1];
-  Dir2 P2 = _points[0];
-  Dir2 P3 = _points[1];
-  float prev_direction = (P1 - _points[many_points-2]).y();
+  Dir2 P1 = points[size-1];
+  Dir2 P2 = points[0];
+  Dir2 P3 = points[1];
+  float prev_direction = (P1 - points[size-2]).y();
   float next_direction = (P3 - P2).y();
-  for (std::size_t pos = 2; pos < many_points+2; pos++) {
+  for (std::size_t pos = 2; pos < size+2; pos++) {
     draw_line (bound, P1, P2, prev_direction, next_direction);
     prev_direction = (P2 - P1).y();
-    P1 = std::exchange (P2, std::exchange (P3, _points[pos]));
+    P1 = std::exchange (P2, std::exchange (P3, points[pos]));
     next_direction = (P3 - P2).y();
   }
  
@@ -135,6 +142,8 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
       break;
     default: std::unreachable();
   }
+
+  arena.go_back_context(arena_context);
 
   return surface;
 }

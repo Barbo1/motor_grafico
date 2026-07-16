@@ -9,11 +9,11 @@
 #include <cstdint>
 #include <string>
 #include <cstring>
-#include <iostream>
 
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
 
   bool cont = true;
   SDL_Event event;
@@ -26,7 +26,7 @@ int main () {
     TrenchThin-aZ1J
   */
   std::string path = "../fuentes_letras/Nostard-Medium.ttf";
-  GlyphsSystem gs (glb, path, &error);
+  GlyphsSystem gs (glb, &arena, path, &error);
   if (error != 0) {
     std::exit (-1);
   }
@@ -43,10 +43,16 @@ int main () {
   gs.cache(u'a', 40, color_1);
   gs.cache(u'b', 40, color_1);
   gs.cache(u'o', 40, color_1);
+
+  float min = 20.f;
+  float max = 320.f;
+  uint64_t count = 0;
+  float size = max;
+  float inv;
   while (cont) {
     SDL_Delay(1);
     glb->begin_render();
-      gs.print (letras[pos], 320, color_1, Dir2 {0.f, 0.f});
+      gs.print (letras[pos], static_cast<uint64_t>(size), color_1, Dir2 {0.f, 0.f});
       //gs.print(u'ä', 320, Dir2 {0.f, 0.f});
       //Dir2 res;
       //res = Dir2(138.38, 76.5).round();
@@ -74,7 +80,15 @@ int main () {
               cont = false;
               break;
             case SDLK_SPACE:
+              count = 0;
+              inv = static_cast<float>(count & 1023) / 1024.f;
+              size = (1.f - inv) * max + inv * min;
               pos = (pos + 1) % 36;
+              break;
+            case SDLK_r:
+              count++;
+              inv = static_cast<float>(count & 1023) / 1024.f;
+              size = (1.f - inv) * max + inv * min;
               break;
           }
           break;

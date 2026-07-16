@@ -1,4 +1,6 @@
 #include "../../../headers/primitives/rasterizer.hpp"
+#include "../../../headers/primitives/bool_matrix.hpp"
+
 #include <SDL2/SDL_stdinc.h>
 #include <algorithm>
 #include <cstdint>
@@ -276,8 +278,9 @@ static void draw_quad_bezier (BoolMatrix& bound, Dir2 P1, Dir2 P2, Dir2 P3, floa
   }
 }
 
+SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& components, const Dir2& min, const Dir2& max, SDL_Color color, AntiAliasingType antialias, Arena& arena) {
+  ArenaConstexFlag arena_context = arena.get_context();
 
-SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& components, const Dir2& min, const Dir2& max, SDL_Color color, AntiAliasingType antialias) {
   float antialias_multiplier;
   switch (antialias) {
     case AAx2: antialias_multiplier = 2.f; break;
@@ -289,15 +292,33 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
     
   // calculating dimensions of the image and matrix.
   Dir2 dims_l = max - min;
-  Dir2 dims = dims_l.madd (antialias_multiplier, Dir2{16.f, 16.f});
+  Dir2 dims = dims_l.madd (antialias_multiplier, Dir2(16.f, 16.f));
 
   // creating the matrix for the bounds.
   int32_t matrix_height = std::lround (dims.y()) + 2;
   int32_t matrix_width = std::lround (dims.x()) + 2;
-  BoolMatrix bound = BoolMatrix (matrix_height, matrix_width);
+  int error;
+  BoolMatrix bound = BoolMatrix (matrix_height, matrix_width, arena, &error);
+  if (error < 0)
+    return SDL_CreateRGBSurface (
+      0, 1, 1, 32, 
+      0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+    );
+
+  // allocation for filtered_elements.
+  std::size_t max_elements = 0;
+  for (const auto& elements: components)
+    max_elements = std::max(max_elements, elements.size());
+  ComponentElement* filtered_elements = arena.atalloc<ComponentElement>(max_elements);
+  if (filtered_elements == nullptr)
+    return SDL_CreateRGBSurface (
+      0, 1, 1, 32, 
+      0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
+    );
 
   // drawing.
   for (const auto& elements: components) {
+    
     /* filtering problematic forms. The cases considering for evaluation are:
      *  1 - the first and last elements round to the same pixel 
      *        -> the curve will be eliminated.
@@ -308,10 +329,10 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
      *        -> both becomes one
      * */
 
-    std::vector<ComponentElement> filtered_elements;
-    filtered_elements.reserve (elements.size ());
     bool last_component_was_hl = false;
-    for (const auto& elem: elements) {
+    uint32_t many_filtered = 0;
+    for (uint32_t i = 0; i < elements.size(); i++) {
+      const auto& elem = elements[i];
       const Dir2 P1 = elem.start * antialias_multiplier;
       const Dir2 P2 = elem.middle * antialias_multiplier;
       const Dir2 P3 = elem.end * antialias_multiplier;
@@ -333,49 +354,50 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
 
       // rule 3.
       if (this_component_is_hl && last_component_was_hl) {
-        filtered_elements.back().end = P3;
+        filtered_elements[many_filtered-1].end = P3;
       } else if (this_component_is_hl) {
-        filtered_elements.push_back (ComponentElement {
+        filtered_elements[many_filtered] = ComponentElement {
           .start = P1,
           .middle = Dir2(),
           .end = P3,
           .t = ComponentElementType::LINE
-        });
+        };
+        many_filtered++;
       } else {
-        filtered_elements.push_back (ComponentElement {
+        filtered_elements[many_filtered] = ComponentElement {
           .start = P1,
           .middle = P2,
           .end = P3,
           .t = elem.t
-        });
+        };
+        many_filtered++;
       }
 
       last_component_was_hl = this_component_is_hl;
     }
 
     // last iteration for the last and first elements.
-    const auto last_elem = filtered_elements.back ();
+    const auto last_elem = filtered_elements[many_filtered-1];
     auto& first_elem = filtered_elements[0];
     if (is_horizontal_line (first_elem) && is_horizontal_line (last_elem)) {
       first_elem.start = last_elem.start;
-      filtered_elements.pop_back ();
+      many_filtered--;
     }
 
     // iterating over the array until found some element with y difference greater than 0.
     auto elem = filtered_elements[0];
-    const std::size_t many = filtered_elements.size ();
     std::size_t pos = 0;
-    while ((elem.start.round() - elem.end.round()).y() == 0.f && elem.t == ComponentElementType::LINE && pos < many)
+    while ((elem.start.round() - elem.end.round()).y() == 0.f && elem.t == ComponentElementType::LINE && pos < many_filtered)
       elem = filtered_elements[++pos];
 
     // assuming that no glyph can be compound only on straight lines.
-    if (pos == many)
+    if (pos == many_filtered)
       return nullptr;
 
     // drawing the component inside the BoolMatrix.
-    float prev_direction = get_prev_direction(filtered_elements [(many + pos - 1) % many]);
-    float next_direction = get_next_direction(filtered_elements [(pos + 1) % many]);
-    for (uint32_t k = 0; k < many; k++) {
+    float prev_direction = get_prev_direction(filtered_elements [(many_filtered + pos - 1) % many_filtered]);
+    float next_direction = get_next_direction(filtered_elements [(pos + 1) % many_filtered]);
+    for (uint32_t k = 0; k < many_filtered; k++) {
       const auto& elem = filtered_elements[pos];
       switch (elem.t) {
         case ComponentElementType::CURVE:
@@ -398,11 +420,12 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
           );
           break;
       }
-      pos = (pos + 1) % many;
-      prev_direction = get_prev_direction(filtered_elements [(many + pos - 1) % many]);
-      next_direction = get_next_direction(filtered_elements [(pos + 1) % many]);
+      pos = (pos + 1) % many_filtered;
+      prev_direction = get_prev_direction(filtered_elements [(many_filtered + pos - 1) % many_filtered]);
+      next_direction = get_next_direction(filtered_elements [(pos + 1) % many_filtered]);
     }
   }
+
 
   // creating the image filled with the data.
   const uint32_t height = std::lround (dims_l.y()) + 1;
@@ -445,6 +468,8 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       break;
     default: std::unreachable();
   }
+  
+  arena.go_back_context(arena_context);
 
   return surface;
 }

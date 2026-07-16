@@ -11,6 +11,7 @@
 #include <string>
 
 #include "../primitives/global.hpp"
+#include "../primitives/arena.hpp"
 #include "../primitives/vectors.hpp"
 
 enum VisualType {
@@ -33,6 +34,7 @@ class Visualizer {
 
   public:
     Visualizer () noexcept;
+    Visualizer (Global* glb, int height, int width, SDL_Color color) noexcept;
     Visualizer (const Visualizer & texture) noexcept;
     Visualizer (Visualizer && texture) noexcept;
     Visualizer & operator= (const Visualizer & texture) noexcept;
@@ -53,7 +55,7 @@ Uint32* charging_PNG_to_memory (const std::string& path, int & width, int & heig
 Visualizer<D2FIG> chargePNG (Global* glb, const std::string& path);
 
 /* Functions meant to print plain bidimentional figures. */
-void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color);
+void print_polygon_c (Global* glb, Arena& arena, std::vector<Dir2> points, SDL_Color color);
 void print_triangle_c (Global* glb, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
 
 /* Function meant to print a bidimentional triangles with a uv mapping. */

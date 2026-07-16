@@ -23,7 +23,7 @@ class Circle final: public Physical {
   public: 
     Circle () noexcept;
     Circle (
-      Global* glb, uint32_t radio, AngDir2 center, float density = 0, 
+      Global* glb, Arena& arena, uint32_t radio, AngDir2 center, float density = 0, 
       float f_k = 0, bool movible = true, SDL_Color* color = nullptr
     ) noexcept;
     Circle (const Circle &) noexcept;

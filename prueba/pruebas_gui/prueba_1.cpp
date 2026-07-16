@@ -12,9 +12,10 @@
 #include <cmath>
 
 Global* glb = Global::create("Ventana", 600, 800, SDL_Color {30, 30, 30, 0});
+Arena arena = Arena(1000*1000*4);
 
 int error;
-GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
 
 const std::vector<SDL_Scancode> keys = std::vector<SDL_Scancode> {
   SDL_SCANCODE_A, SDL_SCANCODE_B, SDL_SCANCODE_C, SDL_SCANCODE_D,

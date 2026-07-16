@@ -1,5 +1,4 @@
 #include "../../headers/primitives/global.hpp"
-#include "../../headers/primitives/rasterizer.hpp"
 #include "./visualizer.hpp"
 
 #include <string>
@@ -61,6 +60,7 @@ class GlyphsSystem {
     };
 
     Global* glb;
+    Arena* arena;
 
     // already cached glyphs.
     std::map<uint32_t, TTFCachedGlyphInfo> cached_glyphs;
@@ -86,7 +86,7 @@ class GlyphsSystem {
      *  + -4 for information not present in the file,
      *  + -5 inconsistencies between inner information,.
      * */
-    GlyphsSystem (Global* glb, std::string path, int* error);
+    GlyphsSystem (Global* glb, Arena* arena, std::string path, int* error);
     ~GlyphsSystem ();
 
     /* functions meant to print a letters or strings in different ways. */

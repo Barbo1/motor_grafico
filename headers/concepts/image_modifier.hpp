@@ -17,7 +17,7 @@ class ImageModifier {
     int aquired;
     
     ImageModifier (int height, int width, Uint32* pixels) noexcept;
-    static ImageModifier bound_constructor (int* bounds, Uint32* image_buffer, int height, int width, SDL_Color color);
+    static ImageModifier bound_constructor (int* bounds, int height, int width, SDL_Color color);
     static void circle_bound_maker (int radio, int* bounds, int offset);
 
   public:
@@ -55,12 +55,12 @@ class ImageModifier {
 
     /* Special constructors. */
     static ImageModifier square (int height, int base, SDL_Color color);
-    static ImageModifier rounded_square (int height, int base, int radio, SDL_Color color);
-    static ImageModifier triangle (Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
-    static ImageModifier circle (int radio, SDL_Color color);
-    static ImageModifier circunference (int radio, int width, SDL_Color color);
-    static ImageModifier oval (int height, int base, SDL_Color color);
-    static ImageModifier polygon (const Dir2* points, std::size_t size, SDL_Color color);
+    static ImageModifier rounded_square (Arena&, int height, int base, int radio, SDL_Color color);
+    static ImageModifier triangle (Arena&, Dir2 point1, Dir2 point2, Dir2 point3, SDL_Color color);
+    static ImageModifier circle (Arena&, int radio, SDL_Color color);
+    static ImageModifier circunference (Arena&, int radio, int width, SDL_Color color);
+    static ImageModifier oval (Arena&, int height, int base, SDL_Color color);
+    static ImageModifier polygon (Arena&, const Dir2* points, std::size_t size, SDL_Color color);
 
     static ImageModifier chargePNG (const std::string& path);
 

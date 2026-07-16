@@ -19,6 +19,7 @@
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   uint32_t width = glb->get_width();
   uint32_t height = glb->get_height();
 
@@ -30,10 +31,10 @@ int main () {
   SDL_Color color = SDL_Color {255,255,255,255};
 
   std::vector<Circle> circles = std::vector<Circle>{
-    Circle(glb, 19, AngDir2 (400.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
-    Circle(glb, 15, AngDir2 (470.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
-    Circle(glb, 25, AngDir2 (400.f, 470.f, 0.f), 2.1f, 0.f, true, &color),
-    Circle(glb, 10, AngDir2 (490.f, 480.f, 0.f), 2.1f, 0.f, true, &color)
+    Circle(glb, arena, 19, AngDir2 (400.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
+    Circle(glb, arena, 15, AngDir2 (470.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
+    Circle(glb, arena, 25, AngDir2 (400.f, 470.f, 0.f), 2.1f, 0.f, true, &color),
+    Circle(glb, arena, 10, AngDir2 (490.f, 480.f, 0.f), 2.1f, 0.f, true, &color)
   };
 
   for (auto& cir: circles)
@@ -139,7 +140,7 @@ int main () {
     glb->begin_render();
       SDL_Delay(2);
 
-      print_polygon_c(glb, polygon_points, SDL_Color {255, 255, 0, 255});
+      print_polygon_c(glb, arena, polygon_points, SDL_Color {255, 255, 0, 255});
       behind.draw(glb, impulse_pos);
       behind_1.draw(glb, particles_position_1);
       c1.draw ();

@@ -1,5 +1,6 @@
 #include "../../../headers/concepts/glyph_system.hpp"
 #include "../../../headers/primitives/types_definition.hpp"
+#include "../../../headers/primitives/rasterizer.hpp"
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <cstdint>
@@ -297,7 +298,8 @@ SDL_Surface* GlyphsSystem::raster (char16_t character, uint16_t s, SDL_Color col
       min, 
       max, 
       color, 
-      AntiAliasingType::AAx16
+      AntiAliasingType::AAx16,
+      *this->arena
     );
 
     if (surface == nullptr) {

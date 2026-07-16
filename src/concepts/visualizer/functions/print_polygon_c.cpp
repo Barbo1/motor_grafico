@@ -3,11 +3,11 @@
 #include <SDL2/SDL_surface.h>
 #include <cmath>
 
-void print_polygon_c (Global* glb, std::vector<Dir2> points, SDL_Color color) {
+void print_polygon_c (Global* glb, Arena& arena, std::vector<Dir2> points, SDL_Color color) {
   Dir2 min = points[0];
   for (const auto& point: points)
     min.v = _mm_min_ps (min.v, point.v);
-  SDL_Surface* surface = raster_grade_1(points.data(), points.size(), color, AAx8);
+  SDL_Surface* surface = raster_grade_1(points.data(), points.size(), color, AAx8, arena);
   SDL_Texture* tex = SDL_CreateTextureFromSurface(glb->get_render(), surface);
   SDL_Rect dst;
   dst.x = std::round(min.x());
