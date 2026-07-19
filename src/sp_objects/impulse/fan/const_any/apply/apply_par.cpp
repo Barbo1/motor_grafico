@@ -2,8 +2,8 @@
 
 template <UnitType UT, Function F>
 AngDir2 Impulse<IT_FAN, UT, F>::apply(Particle& par) {
-  Dir2 diff = ((par.get_position() - this->position).abs() - this->dimension).max0();
-  if (diff.modulo2() < par.get_radio() * par.get_radio()) {
+  Dir2 diff = ((Dir2(par.position) - Dir2(this->position)).abs() - this->dimension).max0();
+  if (diff.modulo2() < par.radio * par.radio) {
     return this->force;
   } else return AngDir2();
 }

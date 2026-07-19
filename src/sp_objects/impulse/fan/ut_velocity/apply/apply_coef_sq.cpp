@@ -2,10 +2,10 @@
 
 template <Function F>
 float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Square& sq) {
-  Dir2 diff = (this->position - sq.get_position()).abs();
-  Dir2 size = Dir2(sq.get_width(), sq.get_height()) + this->dimension;
+  Dir2 diff = (this->position - Dir2(sq.position)).abs();
+  Dir2 size = Dir2(sq.dims) + this->dimension;
   if (diff < size) {
-    float coef = sq.get_velocity().modulo() * this->generated_force_coef;
+    float coef = Dir2(sq.velocity).modulo() * this->generated_force_coef;
     
     /* return depending on the function. */
     if constexpr (F == FT_QUADRATIC)

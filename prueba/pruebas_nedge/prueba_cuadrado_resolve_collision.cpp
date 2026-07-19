@@ -2,6 +2,7 @@
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
 #include "../../headers/pr_objects/circle.hpp"
+#include "../../headers/concepts/image_modifier.hpp"
 #include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
@@ -31,31 +32,45 @@ std::array<Dir2, 10> set_points_2 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
+
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
     std::exit(-1);
   }
 
   std::array<Dir2, 10> points = set_points_2();
-  NEdge<10> poly(
-    glb, points.data(), points.size(), Dir2 (400.f, 200.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
+  NEdge<10> poly(points.data(), points.size(), Dir2 (400.f, 200.f), 2.f, 0.f, true, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono. (" << error << ")"  << std::endl;
     std::exit(-1);
   }
 
+  struct CircleElement {
+    Visualizer<D2FIG> texture;
+    Circle physical_body;
+  };
+  struct SquareElement {
+    Visualizer<D2FIG> texture;
+    Square physical_body;
+  };
+
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Square sq = Square(glb, 20, 50, Dir2 (310.f, 450.f), 2.f, 0, true, &color);
-  sq.set_velocity(AngDir2(0.f, -0.5f, 0.f));
+  SquareElement sq = SquareElement {
+    .texture = ImageModifier::square(40, 100, color).cast(glb),
+    .physical_body = Square(AngDir2 (310.f, 450.f, 0.f), 20, 50, 2.f)
+  };
+  sq.physical_body.velocity.store(AngDir2(0.f, -0.5f, 0.f));
   
-  Square sq1 = Square(glb, 50, 30, Dir2 (460.f, 600.f), 2.f, 0, true, &color);
-  sq1.set_velocity(AngDir2(0.f, -0.5f, 0.f));
+  SquareElement sq1 = SquareElement {
+    .texture = ImageModifier::square(100, 40, color).cast(glb),
+    .physical_body = Square(AngDir2 (460.f, 600.f, 0.f), 50, 30, 2.f)
+  };
+  sq1.physical_body.velocity.store(AngDir2(0.f, -0.5f, 0.f));
 
   bool cont = true;
   while (cont) {
@@ -64,25 +79,25 @@ int main () {
 
     glb->begin_render();
       poly.print(glb, &gs);
-      sq.draw();
-      sq1.draw();
+      sq.texture.draw(glb, Dir2(sq.physical_body.position));
+      sq1.texture.draw(glb, Dir2(sq1.physical_body.position));
 
-      sq.calculate_movement(AngDir2(0.f, 0.f, 0.f));
-      sq1.calculate_movement(AngDir2(0.f, 0.f, 0.f));
-      poly.calculate_movement(AngDir2(0.f, 0.f, 0.f));
+      sq.physical_body.calculate_movement(glb, AngDir2(0.f, 0.f, 0.f));
+      sq1.physical_body.calculate_movement(glb, AngDir2(0.f, 0.f, 0.f));
+      poly.calculate_movement(glb, AngDir2(0.f, 0.f, 0.f));
 
-      if (test_collision(sq, poly)) {
+      if (test_collision(sq.physical_body, poly)) {
         std::cout << 1 << std::endl;
-        Dir2 v = sq.get_velocity();
+        Dir2 v = Dir2(sq.physical_body.velocity);
         std::cout << "vel antes = (" << v.x() << ", " << v.y() << ")" << std::endl;
-        resolve_collision(sq, poly);
-        v = sq.get_velocity();
+        resolve_collision(sq.physical_body, poly, true);
+        v = Dir2(sq.physical_body.velocity);
         std::cout << "vel antes = (" << v.x() << ", " << v.y() << ")" << std::endl;
       }
 
-      if (test_collision(sq1, poly)) {
+      if (test_collision(sq1.physical_body, poly)) {
         std::cout << 2 << std::endl;
-        resolve_collision(sq1, poly);
+        resolve_collision(sq1.physical_body, poly, true);
       }
 
     glb->end_render();

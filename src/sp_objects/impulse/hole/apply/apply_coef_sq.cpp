@@ -2,8 +2,8 @@
 
 template <ImpulseType IT, UnitType UT, Function F>
 float Impulse<IT, UT, F>::apply_coef (Square& sq) {
-  Dir2 diff = sq.get_position() - this->position;
-  Dir2 size = Dir2(sq.get_width(), sq.get_height());
+  Dir2 diff = Dir2(sq.position) - this->position;
+  Dir2 size = Dir2(sq.dims);
   Dir2 diffa = (diff.abs() - size).max0();
   if (diffa.modulo2() < this->radio * this->radio) {
     Dir2 n = diff - diff.bound(size);

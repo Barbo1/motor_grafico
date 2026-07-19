@@ -53,10 +53,11 @@ std::array<Dir2, 10> set_points_4 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
     std::exit(-1);
@@ -67,11 +68,8 @@ int main () {
   Line line = Line(line_point_2, line_point_1);
 
   std::array<Dir2, 10> points1 = set_points_4();
-  NEdge<10> mov (
-    glb, points1.data(), points1.size(), Dir2 (400.f, 0.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
-  mov.set_velocity(AngDir2(-0.001f, 0.005f, 0.f));
+  NEdge<10> mov (points1.data(), points1.size(), Dir2 (400.f, 0.f), 2.f, 0.f, true, &error);
+  mov.velocity.store(AngDir2(-0.001f, 0.005f, 0.f));
 
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
@@ -85,7 +83,7 @@ int main () {
     SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
     SDL_RenderDrawLine(glb->get_render(), 0.f, 0.f, 600.f, 600.f);
 
-    mov.calculate_movement(AngDir2());
+    mov.calculate_movement(glb, AngDir2());
 
     if (test_collision(line, mov)) {
       std::cout << 1 << std::endl;

@@ -3,8 +3,8 @@
 
 template <Function F>
 inline AngDir2 Impulse<IT_FAN, UT_POSITION, F>::apply(Square& sq) {
-  Dir2 diff = sq.get_position() - this->position;
-  Dir2 size = Dir2 (sq.get_width(), sq.get_height()) + this->dimension;
+  Dir2 diff = Dir2(sq.position) - this->position;
+  Dir2 size = Dir2 (sq.dims) + this->dimension;
   if (diff.abs() < size) {
     float coef = ((diff * this->sign + size) * this->direction) * this->generated_force_coef;
 

@@ -1,59 +1,15 @@
 #pragma once
 
-#include "../primitives/global.hpp"
 #include "../primitives/vectors.hpp"
 
-#include <cstdint>
+struct Particle {
+  MemDir2 position;
+  MemDir2 velocity;
+  MemDir2 force;
 
-class Circle;
-class Line;
-class Square;
-template<std::size_t N> class NEdge;
+  float mass;
+  float radio;
 
-class Particle {
-  private:
-    MemDir2 position;
-    MemDir2 velocity;
-    MemDir2 force;
-    float mass;
-    float radio;
-    Global* glb;
-
-  public: 
-    Particle () noexcept;
-    Particle (Global* glb, uint32_t radio, const Dir2& center, float mass) noexcept;
-    Particle (const Particle &) noexcept;
-    Particle (Particle &&) noexcept;
-    Particle & operator= (const Particle &) noexcept;
-    Particle & operator= (Particle &&) noexcept;
-    
-    void add_position (const Dir2&);
-    void add_velocity (const Dir2 &);
-    void add_force (const Dir2 &);
-
-    void set_radio (float);
-    void set_position (const Dir2&);
-    void set_velocity (const Dir2 &);
-    void set_force (const Dir2 &);
-
-    float get_mass () const;
-    float get_radio () const;
-    Dir2 get_position () const;
-    Dir2 get_velocity () const;
-    Dir2 get_force () const;
-
-    friend bool test_collision (const Line&, const Particle&);
-    friend bool test_collision (const Particle&, const Circle&);
-    friend bool test_collision (const Particle&, const Square&);
-    template<std::size_t N> friend bool test_collision (const Particle&, const NEdge<N>&);
-
-    friend void resolve_collision (Line&, Particle&);
-    friend void resolve_collision (Particle&, Square&);
-    friend void resolve_collision (Particle&, Circle&);
-    template<std::size_t N> friend void resolve_collision (Particle&, NEdge<N>&);
-
-    friend void correct_collision (Line&, Particle&);
-    friend void correct_collision (Particle&, Square&);
-    friend void correct_collision (Particle&, Circle&);
-    template<std::size_t N> friend void correct_collision (Particle&, NEdge<N>&);
+  Particle () noexcept;
+  Particle (Dir2 center, uint32_t radio, float mass) noexcept;
 };

@@ -1,6 +1,6 @@
-#include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/physical.hpp"
 
 #include <cmath>
 

@@ -31,14 +31,21 @@ int main () {
   SDL_Color color = SDL_Color {255,255,255,255};
 
   std::vector<Circle> circles = std::vector<Circle>{
-    Circle(glb, arena, 19, AngDir2 (400.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
-    Circle(glb, arena, 15, AngDir2 (470.f, 400.f, 0.f), 2.1f, 0.f, true, &color),
-    Circle(glb, arena, 25, AngDir2 (400.f, 470.f, 0.f), 2.1f, 0.f, true, &color),
-    Circle(glb, arena, 10, AngDir2 (490.f, 480.f, 0.f), 2.1f, 0.f, true, &color)
+    Circle(AngDir2 (400.f, 400.f, 0.f), 19.f, 2.1f, 0.f, true),
+    Circle(AngDir2 (470.f, 400.f, 0.f), 15.f, 2.1f, 0.f, true),
+    Circle(AngDir2 (400.f, 470.f, 0.f), 25.f, 2.1f, 0.f, true),
+    Circle(AngDir2 (490.f, 480.f, 0.f), 10.f, 2.1f, 0.f, true)
+  };
+
+  std::vector<Visualizer<D2FIG>> circle_tex = std::vector<Visualizer<D2FIG>>{
+    ImageModifier::circle(arena, 19.f, color).cast(glb),
+    ImageModifier::circle(arena, 15.f, color).cast(glb),
+    ImageModifier::circle(arena, 25.f, color).cast(glb),
+    ImageModifier::circle(arena, 10.f, color).cast(glb)
   };
 
   for (auto& cir: circles)
-    cir.set_velocity(AngDir2 (
+    cir.velocity.store(AngDir2 (
       0.5f / (rand() % 4 + 1), 
       0.5f / (rand() % 4 + 1), 
       0.f
@@ -46,8 +53,8 @@ int main () {
 
   ImageModifier img_mod_2 = ImageModifier::chargePNG("../images/psic1.png");
   ImageModifier img_mod_1 = ImageModifier::square(40, 40, color);
-  Square c1 = Square(glb, 20, 20, AngDir2 (50.f, 60.f, 0.f), 2.1f, 0.3f, true);
-  c1.set_texture((img_mod_1 & img_mod_2).cast(glb));
+  Visualizer<D2FIG> c1_tex = (img_mod_1 & img_mod_2).cast(glb);
+  Square c1 = Square(AngDir2 (50.f, 60.f, 0.f), 20, 20, 2.1f, 0.3f, true);
 
 
   /* Creacion de estructura estatica. */
@@ -55,8 +62,8 @@ int main () {
   color = SDL_Color {255,255,255,255};
   img_mod_2 = ImageModifier::chargePNG("../images/psic2.png");
   img_mod_1 = (ImageModifier::square(60, 200, color) & img_mod_2);
-  Square c2 = Square(glb, 30, 200, AngDir2 {200, 200, 0}, 4.6f, 0.3f, false, &color);
-  c2.set_texture(img_mod_1.resize(400, 60).rotate180().cast(glb));
+  Visualizer<D2FIG> c2_tex = img_mod_1.resize(400, 60).rotate180().cast(glb);
+  Square c2 = Square(AngDir2 {200, 200, 0}, 30, 200, 4.6f, 0.3f, false);
 
 
   /* Creacion de lineas de colision. */
@@ -68,7 +75,7 @@ int main () {
   lines.push_back(Line (Dir2 ((float)width, (float)height), Dir2 (0.f, (float)height)));
 
   AngDir2 g = AngDir2 (0.f, 0.98f, 0.f);
-  AngDir2 g_p = AngDir2 (0.f, 0.02f, 0.f);
+  //AngDir2 g_p = AngDir2 (0.f, 0.02f, 0.f);
 
   float b = 40;
   Visualizer<D3FIG> cube = Visualizer<D3FIG>::prism(glb, b, b, b);
@@ -113,7 +120,7 @@ int main () {
     std::pair<float, float>{0.7853, M_PI - 0.7853},
     ImageModifier::square(5, 5, SDL_Color{255, 0, 0, 255}).cast(glb),
     5,
-    0.05f,
+    0.1f,
     40.2f,
     1200
   );
@@ -130,7 +137,7 @@ int main () {
     std::pair<float, float>{0.7853, M_PI - 0.7853},
     ImageModifier::square(5, 5, SDL_Color{0, 255, 0, 255}).cast(glb),
     5,
-    80.2f,
+    0.2f,
     1200
   );
   parts_1.burst();
@@ -143,21 +150,21 @@ int main () {
       print_polygon_c(glb, arena, polygon_points, SDL_Color {255, 255, 0, 255});
       behind.draw(glb, impulse_pos);
       behind_1.draw(glb, particles_position_1);
-      c1.draw ();
-      c2.draw ();
-      for (auto& cir: circles)
-        cir.draw ();
+      c1_tex.draw (glb, Dir2(c1.position));
+      c2_tex.draw (glb, Dir2(c2.position));
+      for (uint32_t i = 0; i < circles.size(); i++)
+        circle_tex[i].draw (glb, Dir2(circles[i].position));
       cube.draw (glb, cube_pos);
       parts.draw();
       parts_1.draw();
-    glb->end_render();
 
-    /* Calculation of the movement. */
-    for (auto& cir: circles)
-      cir.calculate_movement (g + impulse.apply(cir) + impulse_1.apply(cir));
-    c1.calculate_movement (g + impulse.apply(c1) + impulse_1.apply(c1));
-    impulse_1.apply(parts).calculate_movement (AngDir2 ());
-    parts_1.calculate_movement(g_p);
+      /* Calculation of the movement. */
+      for (auto& cir: circles)
+        cir.calculate_movement (glb, g + impulse.apply(cir) + impulse_1.apply(cir));
+      c1.calculate_movement (glb, g + impulse.apply(c1) + impulse_1.apply(c1));
+      parts.calculate_movement (AngDir2 ());
+      parts_1.calculate_movement(AngDir2 ());
+    glb->end_render();
 
     /* Testing of the collitions. */
     for (auto& cir: circles) {

@@ -1,4 +1,5 @@
 #include "../../../../headers/pr_objects/circle.hpp"
+#include "../../../../headers/concepts/physical.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
 
 void resolve_collision (Circle& cir1, Circle& cir2) {

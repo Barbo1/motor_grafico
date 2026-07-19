@@ -2,8 +2,8 @@
 
 template <ImpulseType IT, UnitType UT, Function F>
 float Impulse<IT, UT, F>::apply_coef (Circle& cir) {
-  Dir2 diff = cir.get_position() - this->position;
-  uint32_t radio = this->radio + cir.get_radio();
+  Dir2 diff = Dir2(cir.position) - this->position;
+  uint32_t radio = this->radio + cir.radio;
   float moddiff = diff.modulo();
   if (moddiff < radio) {
     float coef = this->generated_force_coef * moddiff;

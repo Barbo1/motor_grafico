@@ -3,6 +3,7 @@
 #include "../../headers/pr_objects/nedge.hpp"
 #include "../../headers/pr_objects/circle.hpp"
 #include "../../headers/concepts/collision.hpp"
+#include "../../headers/concepts/image_modifier.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -31,31 +32,40 @@ std::array<Dir2, 10> set_points_2 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
     std::exit(-1);
   }
 
   std::array<Dir2, 10> points = set_points_2();
-  NEdge<10> poly(
-    glb, points.data(), points.size(), Dir2 (400.f, 200.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
+  NEdge<10> poly(points.data(), points.size(), AngDir2 (400.f, 200.f, 0.f), 2.f, 0.f, true, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono. (" << error << ")"  << std::endl;
     std::exit(-1);
   }
 
+  struct CircleElement {
+    Visualizer<D2FIG> texture;
+    Circle physical_body;
+  };
+
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Circle cir = Circle (glb, 30, Dir2(360.f, 450.f), 2.f, 0.f, true, &color);
-  cir.set_velocity(AngDir2(0.f, -0.3f, 0.f));
-  
-  Circle cir1 = Circle (glb, 20, Dir2(480.f, 600.f), 2.f, 0.f, true, &color);
-  cir1.set_velocity(AngDir2(0.f, -0.5f, 0.f));
+  CircleElement cir = CircleElement {
+    .texture = ImageModifier::circle(arena, 30, color).cast(glb),
+    .physical_body = Circle (Dir2(360.f, 450.f), 30.f, 2.f, 0.f, true)
+  };
+  cir.physical_body.velocity.store(AngDir2(0.f, -0.3f, 0.f));
+
+  CircleElement cir1 = CircleElement {
+    .texture = ImageModifier::circle(arena, 20, color).cast(glb),
+    .physical_body = Circle (AngDir2(480.f, 600.f, 0.f), 20.f, 2.f, 0.f, true)
+  };
+  cir1.physical_body.velocity.store(AngDir2(0.f, -0.5f, 0.f));
 
   bool cont = true;
   while (cont) {
@@ -64,19 +74,19 @@ int main () {
 
     glb->begin_render();
       poly.print(glb, &gs);
-      cir.draw();
-      cir1.draw();
+      cir.texture.draw(glb, Dir2(cir.physical_body.position));
+      cir1.texture.draw(glb, Dir2(cir1.physical_body.position));
 
-      cir.calculate_movement(AngDir2(0.f, 0.f, 0.f));
-      cir1.calculate_movement(AngDir2(0.f, 0.f, 0.f));
-      poly.calculate_movement(AngDir2(0.f, 0.f, 0.f));
+      cir.physical_body.calculate_movement(glb, AngDir2(0.f, 0.f, 0.f));
+      cir1.physical_body.calculate_movement(glb, AngDir2(0.f, 0.f, 0.f));
+      poly.calculate_movement(glb, AngDir2(0.f, 0.f, 0.f));
 
-      if (test_collision(cir, poly)) {
-        resolve_collision(cir, poly, true);
+      if (test_collision(cir.physical_body, poly)) {
+        resolve_collision(cir.physical_body, poly, true);
       }
 
-      if (test_collision(cir1, poly)) {
-        resolve_collision(cir1, poly, true);
+      if (test_collision(cir1.physical_body, poly)) {
+        resolve_collision(cir1.physical_body, poly, true);
       }
 
     glb->end_render();

@@ -1,62 +1,33 @@
 #pragma once
 
-#include "../concepts/physical.hpp"
-#include "../concepts/visualizer.hpp"
 #include "../primitives/global.hpp"
 #include <cstdint>
 
-class Circle;
-class Line;
-class Particle;
-template<std::size_t N> class NEdge;
+struct Square {
+  MemDir2 position;
+  MemDir2 velocity;
+  MemDir2 force;
+  MemDir2 collision_normal;
+  MemDir2 dims;
 
-class Square final: public Physical {
-  private:
-    MemDir2 dims;
-    Visualizer<D2FIG> texture;
+  float area; /* px^2 */
+  float density; /* kg/px^2 */
+  float f_k; /* kinetic fritction. */
+  float acc_f_k;
 
-  public: 
-    Square () noexcept;
-    Square (
-      Global* glb, uint32_t height, uint32_t width, AngDir2 center, 
-      float density = 0, float f_k = 0, bool movible = true, 
-      SDL_Color* color = nullptr
-    ) noexcept;
-    Square (const Square &) noexcept;
-    Square (Square &&) noexcept;
-    Square & operator= (const Square &) noexcept;
-    Square & operator= (Square &&) noexcept;
+  //  0: movible -> The external forces adn velocities don't affect it.
+  //  1: normal_presence -> Denote if the collision was made, so the force 
+  //                          can be corrected and the friction applied
+  //  2...: indefined.
+  uint8_t config;
 
-    void set_texture (Visualizer<D2FIG>);
-    void set_height (float);
-    void set_width (float);
+  Square () noexcept;
+  Square (
+    AngDir2 center, uint32_t height, uint32_t width, float density, 
+    float f_k = 0, bool movible = true
+  ) noexcept;
 
-    float get_height () const;
-    float get_width () const;
-    Visualizer<D2FIG> get_texture () const;
+  float get_mass () const;
 
-    void draw ();
-
-    friend bool test_collision (const Line&, const Square&);
-    friend bool test_collision (const Particle&, const Square&);
-    friend bool test_collision (const Circle&, const Square&);
-    friend bool test_collision (const Square&, const Square&);
-    template<std::size_t N> friend bool test_collision (const Square&, const NEdge<N>&);
-
-    friend void resolve_collision (Line&, Square&);
-    friend void resolve_collision (Particle&, Square&);
-    friend void resolve_collision (Circle&, Square&, bool);
-    friend void resolve_collision (Square&, Square&);
-    template<std::size_t N> friend void resolve_collision (Square&, NEdge<N>&, bool);
-
-    friend void correct_collision (Line&, Square&);
-    friend void correct_collision (Particle&, Square&);
-    friend void correct_collision (Circle&, Square&, bool);
-    friend void correct_collision (Square&, Square&);
-    template<std::size_t N> friend void correct_collision (Square&, NEdge<N>&, bool);
-
-    friend Dir2 collision_point (const Line&, const Square&);
-    friend Dir2 collision_point (const Circle&, const Square&);
-    friend Dir2 collision_point (const Square&, const Square&);
-    template<std::size_t N> friend Dir2 collision_point (const Square&, const NEdge<N>&);
+  void calculate_movement(Global* glb, const AngDir2 & extrenal_forces);
 };

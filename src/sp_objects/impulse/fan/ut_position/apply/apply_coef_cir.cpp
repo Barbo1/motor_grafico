@@ -2,11 +2,11 @@
 
 template <Function F>
 inline float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle& cir) {
-  Dir2 diff = cir.get_position() - this->position;
+  Dir2 diff = Dir2(cir.position) - this->position;
   Dir2 diffa = (diff.abs() - this->dimension).max0();
-  if (diffa.modulo2() < cir.get_radio() * cir.get_radio()) {
+  if (diffa.modulo2() < cir.radio * cir.radio) {
     float coef = (
-      (diff * this->sign + this->dimension) * this->direction + cir.get_radio()
+      (diff * this->sign + this->dimension) * this->direction + cir.radio
     ) * this->generated_force_coef;
 
     if constexpr (F == FT_QUADRATIC)
@@ -14,7 +14,7 @@ inline float Impulse<IT_FAN, UT_POSITION, F>::apply_coef(Circle& cir) {
     else if constexpr (F == FT_CUBIC)
       return coef * coef * coef;
     else if constexpr (F == FT_SINUSOIDAL)
-      return std::sin(M_PI * coef / (this->dimension * this->direction + cir.get_radio()));
+      return std::sin(M_PI * coef / (this->dimension * this->direction + cir.radio));
     else if constexpr (F == FT_EXPONENTIAL)
       return std::exp(coef);
     else

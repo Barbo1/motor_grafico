@@ -2,8 +2,8 @@
 
 template <ImpulseType IT, UnitType UT, Function F>
 AngDir2 Impulse<IT, UT, F>::apply(Circle& cir) {
-  AngDir2 diff = cir.get_position() - this->position;
-  uint32_t radio = this->radio + cir.get_radio();
+  AngDir2 diff = Dir2(cir.position) - this->position;
+  uint32_t radio = this->radio + cir.radio;
   float moddiff = diff.modulo();
   if (moddiff < radio) {
     if constexpr (F == FT_LINEAR) {

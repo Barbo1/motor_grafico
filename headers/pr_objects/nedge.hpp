@@ -5,7 +5,6 @@
 #include "../primitives/global.hpp"
 #include "../primitives/types_definition.hpp"
 #include "../concepts/glyph_system.hpp"
-#include "../concepts/image_modifier.hpp"
 
 #include <SDL2/SDL.h>
 #include <codecvt>
@@ -17,71 +16,52 @@ class Particle;
 class Square;
 
 template<std::size_t N>
-class NEdge final: public Physical {
+struct NEdge {
+  std::array<MemDir2, N> points;
+  std::array<std::array<MemDir2, 3>, N-2> triangles;
+  std::array<std::pair<MemDir2, MemDir2>, N> placed_points;
+  std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
+
+  MemDir2 position;
+  MemDir2 velocity;
+  MemDir2 force;
+  MemDir2 collision_normal;
+
+  float ang_pos;
+  float ang_vel;
+  float ang_for;
+
+  float area; /* px^2 */
+  float density; /* kg/px^2 */
+  float f_k; /* kinetic fritction. */
+  float acc_f_k;
+  float inertia;
+
+  //  0: movible -> The external forces adn velocities don't affect it.
+  //  1: normal_presence -> Denote if the collision was made, so the force 
+  //                          can be corrected and the friction applied
+  //  2...: indefined.
+  uint8_t config;
+
+  NEdge (
+    const Dir2 * points, std::size_t size, AngDir2 center, float density, 
+    float f_k = 0, bool movible = true, int* error = nullptr
+  ) noexcept;
+
+  void print (Global * glb, GlyphsSystem * gs);
+
+  void calculate_movement(Global* glb, const AngDir2 & extrenal_forces);
+
+  void set_position (const AngDir2& center);
+  void set_velocity (const AngDir2 & velocity);
+  void set_force (const AngDir2 & force);
+
+  void add_force (const AngDir2 & force);
+  void add_velocity (const AngDir2 & velocity);
+
+  float get_mass () const;
   private:
-    float ang_pos;
-    float ang_vel;
-    float ang_for;
-
-    std::array<MemDir2, N> points;
-    std::array<std::array<MemDir2, 3>, N-2> triangles;
-    std::array<std::pair<MemDir2, MemDir2>, N> placed_points;
-    std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
-
-    Visualizer<D2FIG> texture;
-
     void reposition_polygon();
-
-  public: 
-    NEdge (
-      Global* glb, Arena& arena, const Dir2 * points, std::size_t size, AngDir2 center, 
-      float density = 0, float f_k = 0, bool movible = true,
-      SDL_Color* color = nullptr, int* error = nullptr
-    ) noexcept;
-    NEdge (const NEdge &) noexcept;
-    NEdge & operator= (const NEdge &) noexcept;
-
-    void set_texture (Visualizer<D2FIG>);
-    Visualizer<D2FIG> get_texture () const;
-
-    void print (Global * glb, GlyphsSystem * gs);
-
-    void draw ();
-
-    float get_ang_position () const;
-    float get_ang_velocity() const;
-    float get_ang_force () const;
-
-    virtual void set_force (const AngDir2 & force);
-    virtual void add_force (const AngDir2 & force);
-    virtual void add_velocity (const AngDir2 & velocity);
-
-    virtual void calculate_movement(const AngDir2 & extrenal_forces);
-    virtual void set_position (const AngDir2& center);
-    virtual void set_velocity (const AngDir2 & velocity);
-
-    template<std::size_t M> friend bool test_collision (const Line&, const NEdge<M>&);
-    template<std::size_t M> friend bool test_collision (const Particle&, const NEdge<M>&);
-    template<std::size_t M> friend bool test_collision (const Circle&, const NEdge<M>&);
-    template<std::size_t M> friend bool test_collision (const Square&, const NEdge<M>&);
-    template<std::size_t M, std::size_t T> friend bool test_collision (const NEdge<M>&, const NEdge<T>&);
-
-    template<std::size_t M> friend void resolve_collision (Line&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collision (Particle&, NEdge<M>&);
-    template<std::size_t M> friend void resolve_collision (Circle&, NEdge<M>&, bool);
-    template<std::size_t M> friend void resolve_collision (Square&, NEdge<M>&, bool);
-    template<std::size_t M, std::size_t T> friend void resolve_collision (NEdge<M>&, NEdge<T>&, bool);
-
-    template<std::size_t M> friend void correct_collision (Line&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collision (Particle&, NEdge<M>&);
-    template<std::size_t M> friend void correct_collision (Circle&, NEdge<M>&, bool);
-    template<std::size_t M> friend void correct_collision (Square&, NEdge<M>&, bool);
-    template<std::size_t M, std::size_t T> friend void correct_collision (NEdge<M>&, NEdge<T>&, bool);
-
-    template<std::size_t M> friend Dir2 collision_point (const Line&, const NEdge<M>&);
-    template<std::size_t M> friend Dir2 collision_point (const Circle&, const NEdge<M>&);
-    template<std::size_t M> friend Dir2 collision_point (const Square&, const NEdge<M>&);
-    template<std::size_t M, std::size_t T> friend Dir2 collision_point (const NEdge<M>&, const NEdge<T>&);
 };
 
 
@@ -166,12 +146,9 @@ static inline bool are_points_contiguous (int32_t i, int32_t j, int32_t M) {
  * * * * * * * * */
 template<std::size_t N>
 NEdge<N>::NEdge (
-  Global* glb, Arena& arena, const Dir2 * points, std::size_t size, AngDir2 center, 
-  float density, float f_k, bool movible,
-  SDL_Color* color, int* error
-) noexcept:
-  Physical(glb, center, density, 0.f, 0.f, f_k, movible)
-{
+  const Dir2 * points, std::size_t size, AngDir2 center, 
+  float density, float f_k, bool movible, int* error
+) noexcept {
   if (size < N) {
     if (error != nullptr)
       *error = -1;
@@ -375,7 +352,8 @@ NEdge<N>::NEdge (
     this->triangles[i][1].store(v1);
     this->triangles[i][2].store(v2);
   }
-  this->inertia *= this->density;
+  this->density = density;
+  this->inertia *= density;
 
   // writing points.
   for (uint32_t i = 0; i < N; i++)
@@ -384,64 +362,31 @@ NEdge<N>::NEdge (
   this->ang_for = 0.f;
   this->ang_vel = 0.f;
   this->ang_pos = 0.f;
-  this->glb = glb;
+
+  /*
+  const Dir2 * points, std::size_t size, AngDir2 center, 
+  float density, float f_k, bool movible, int* error
+   * */
+  this->position.store(center);
+  this->velocity.store(Dir2());
+  this->force.store(Dir2());
+  this->collision_normal.store(Dir2());
+  this->ang_pos = center.a();
+  this->ang_vel = 0.f;
+  this->ang_for = 0.f;
+
+  this->f_k = f_k;
+  this->acc_f_k = 0.f;
+
+  this->config = movible;
    
   this->reposition_polygon();
-  if (color != nullptr) {
-    this->texture = ImageModifier::polygon(arena, points, size, *color).cast(glb);
-  }
-}
-
-/* * * * * * * * * * * *
- *  Copy constructor  *
- * * * * * * * * * * * */
-
-template<std::size_t N>
-NEdge<N>::NEdge (const NEdge & poly) noexcept: Physical(poly) {
-  this->texture = poly.texture;
-  this->points = poly.points;
-  this->placed_points = poly.placed_points;
-  this->triangles = poly.triangles;
-  this->placed_triangles = poly.placed_triangles;
-  this->glb = poly.glb;
-}
-
-
-/* * * * * * * * * * *
- *  Copy assignment  *
- * * * * * * * * * * */
-
-template<std::size_t N>
-NEdge<N> & NEdge<N>::operator= (const NEdge & poly) noexcept {
-  this->texture = poly.texture;
-  this->points = poly.points;
-  this->placed_points = poly.placed_points;
-  this->triangles = poly.triangles;
-  this->placed_triangles = poly.placed_triangles;
-  this->glb = poly.glb;
-  this->Physical::operator=(poly);
-  return *this;
 }
 
 
 /* * * * * * * * *
  *  Operations  *
  * * * * * * * * */
-
-template<std::size_t N>
-void NEdge<N>::draw () {
-  this->texture.draw(glb, this->position);
-}
-
-template<std::size_t N>
-void NEdge<N>::set_texture (Visualizer<D2FIG> tex) {
-  this->texture = tex;
-}
-
-template<std::size_t N>
-Visualizer<D2FIG> NEdge<N>::get_texture () const {
-  return this->texture;
-}
 
 template<std::size_t N>
 void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
@@ -484,7 +429,7 @@ void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
 }
 
 template<std::size_t N>
-void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
+void NEdge<N>::calculate_movement(Global* glb, const AngDir2 & extrenal_forces) {
   if (this->config & PCO_MOVIBLE) {
     AngDir2 final_force = AngDir2(this->force, this->ang_for) + extrenal_forces;
     AngDir2 velocity_2 = AngDir2(this->velocity, this->ang_vel);
@@ -504,7 +449,7 @@ void NEdge<N>::calculate_movement(const AngDir2 & extrenal_forces) {
       }
     }
 
-    float coef_mult = (this->glb->get_time() + 1.f) * DRAW_RATE;
+    float coef_mult = (glb->get_time() + 1.f) * DRAW_RATE;
 
     final_force *= 2.f / (this->density * this->area);
     velocity_2 = final_force.madd(coef_mult, velocity_2);
@@ -533,21 +478,6 @@ void NEdge<N>::set_velocity (const AngDir2 & velocity) {
 }
 
 template<std::size_t N>
-float NEdge<N>::get_ang_position () const {
-  return this->ang_pos;
-}
-
-template<std::size_t N>
-float NEdge<N>::get_ang_velocity() const {
-  return this->ang_vel;
-}
-
-template<std::size_t N>
-float NEdge<N>::get_ang_force () const {
-  return this->ang_for;
-}
-
-template<std::size_t N>
 void NEdge<N>::set_force (const AngDir2 & force) {
   this->force.store(force);
   this->ang_for = force.a();
@@ -563,4 +493,8 @@ template<std::size_t N>
 void NEdge<N>::add_velocity (const AngDir2 & velocity) {
   this->velocity.store(Dir2(velocity) + Dir2(this->velocity));
   this->ang_vel += velocity.a();
+}
+template<std::size_t N>
+float NEdge<N>::get_mass () const {
+  return this->density * this->area;
 }

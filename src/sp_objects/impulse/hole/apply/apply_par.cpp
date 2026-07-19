@@ -2,8 +2,8 @@
 
 template <ImpulseType IT, UnitType UT, Function F>
 AngDir2 Impulse<IT, UT, F>::apply(Particle& par) {
-  AngDir2 diff = par.get_position() - this->position;
-  uint32_t radio = this->radio + par.get_radio();
+  AngDir2 diff = Dir2(par.position) - this->position;
+  uint32_t radio = this->radio + par.radio;
   float moddiff = diff.modulo();
   if (moddiff < radio) {
     if constexpr (F == FT_LINEAR) {

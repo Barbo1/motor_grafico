@@ -420,3 +420,115 @@ inline Dir2 directional_distance_square_segment (
   curr_min = _mm_add_ps(_mm_shuffle_ps (curr_min, curr_min, 0), _mm_set1_ps(-0.1f));
   return Dir2::from_well(curr_min);
 }
+
+/* This function recieves the information of a projectile, the information 
+ * of a physical circle(could be a circle, particle or projectile), and
+ * returns the multiplicative distance at where they collide. If they don't
+ * reach, or the distance isn't between 0 and 1, it returns INFINITY.
+ *
+ * 'C1' is the center of the projectile,
+ * 'C2' is the center of the circle,
+ * 'v1' is the distance traversed of the projectile,
+ * 'v2' is the distance traversed of the circle(could be 0 for circles and particles),
+ * 'R1' is the radio of the projectile,
+ * 'R2' is the radio of the circle.
+ * */
+inline float coef_collision_projectile_circle (Dir2 C1, Dir2 v1, float R1, Dir2 C2, Dir2 v2, float R2) {
+  __m128 R1_ext = _mm_set1_ps(R1);
+  __m128 R2_ext = _mm_set1_ps(R2);
+  __m128 Rs = _mm_add_ps(R1_ext, R2_ext);
+  __m128 sqrt_part_1 = _mm_mul_ps(Rs, Rs);
+
+  __m128 vd = _mm_sub_ps(v1.v, v2.v);
+  __m128 vd_inv_norm = _mm_mul_ps(vd, vd);
+  vd_inv_norm = _mm_rsqrt_ps(_mm_hadd_ps(vd_inv_norm, vd_inv_norm));
+  __m128 vdn = _mm_mul_ps(vd, vd_inv_norm);
+
+  __m128 Cd = _mm_sub_ps(C1.v, C2.v);
+  __m128 CdL = _mm_shuffle_ps(Cd, Cd, 0b00010001);
+
+  __m128 sqrt_part_2 = _mm_mul_ps(vdn, CdL);
+  sqrt_part_2 = _mm_hsub_ps(sqrt_part_2, sqrt_part_2);
+  sqrt_part_2 = _mm_mul_ps(sqrt_part_2, sqrt_part_2);
+
+  __m128 sqrt_part = _mm_sqrt_ps(_mm_sub_ps(sqrt_part_1, sqrt_part_2));
+  __m128 ind_term = _mm_mul_ps(vdn, Cd);
+  ind_term = _mm_hadd_ps(ind_term, ind_term);
+  ind_term = _mm_xor_ps(ind_term, _mm_set_ps(0.f, -0.f, 0.f, -0.f));
+  __m128 ts = _mm_mul_ps(_mm_sub_ps(ind_term, sqrt_part), vd_inv_norm);
+
+  __m128 cond1 = _mm_cmplt_ps(sqrt_part_2, sqrt_part_1);
+  __m128 cond2 = _mm_cmplt_ps(ts, _mm_set_ps(0.f, 1.f, 0.f, 1.f));
+
+  __m128 cond_complete = _mm_and_ps(
+    cond1, 
+    _mm_and_ps(
+      cond2,
+      _mm_shuffle_ps(cond2, cond2, 0b00010001)
+    )
+  );
+  return _mm_cvtss_f32(_mm_max_ps(
+    _mm_setzero_ps(),
+    _mm_or_ps(_mm_and_ps(cond_complete, ts), _mm_andnot_ps(cond_complete, _mm_set1_ps(INFINITY)))
+  ));
+}
+
+
+/* This function recieves the information of a projectile and the information 
+ * of a segment, and returns the multiplicative distance at where they collide. 
+ * If they don't reach at the direction of 'v', or the distance isn't between 
+ * 0 and 1, it returns INFINITY.
+ *
+ * 'C' is the center of the projectile,
+ * 'v' is the distance traversed of the projectile,
+ * 'R' is the radio of the projectile,
+ * 'A' the point were the segment starts in,
+ * 'u' the vector to the last point of the segment.
+ * */
+inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir2 u) {
+  __m128 b = _mm_sub_ps(C.v, A.v);
+  __m128 R_ext = _mm_set1_ps(R);
+  __m128 R2 = _mm_mul_ps(R_ext, R_ext);
+
+  __m128 inv_norms = _mm_movelh_ps(v.v, u.v);
+  inv_norms = _mm_mul_ps(inv_norms, inv_norms);
+  inv_norms = _mm_hadd_ps(inv_norms, _mm_undefined_ps());
+  inv_norms = _mm_rsqrt_ps(inv_norms);
+  __m128 u_inv_norm = _mm_permute_ps(inv_norms, 0b01010101);
+  __m128 v_inv_norm = _mm_permute_ps(inv_norms, 0b00000000);
+  __m128 un = _mm_mul_ps(u.v, u_inv_norm);
+  __m128 vn = _mm_mul_ps(v.v, v_inv_norm);
+
+  __m128 bLs = _mm_xor_ps(_mm_permute_ps(b, 0b00010001), _mm_set_ps(0.f, -0.f, 0.f, -0.f));
+  __m128 vLn = _mm_permute_ps(vn, 0b00010001);
+  __m128 p = _mm_mul_ps(bLs, un);
+  p = _mm_hadd_ps(p, p);
+
+  __m128 coef_1 = _mm_div_ps(_mm_mul_ps(R_ext, p), _mm_max_ps(R_ext, _mm_andnot_ps(_mm_set1_ps(-0.f), p)));
+  __m128 vec_1 = _mm_fnmadd_ps(un, coef_1, bLs);
+  __m128 coef_2 = _mm_mul_ps(vLn, u.v);
+  coef_2 = _mm_hsub_ps(coef_2, coef_2);
+  __m128 vec_2 = _mm_div_ps(vn, coef_2);
+  __m128 coef_f = _mm_mul_ps(vec_1, vec_2);
+  coef_f = _mm_max_ps(_mm_min_ps(_mm_hadd_ps(coef_f, coef_f), _mm_set1_ps(1.f)), _mm_setzero_ps());
+  __m128 f = _mm_fmsub_ps(u.v, coef_f, b);
+
+  __m128 sqrt_part_1 = _mm_mul_ps(vLn, f);
+  __m128 ind_term = _mm_mul_ps(vn, f);
+  sqrt_part_1 = _mm_hsub_ps(sqrt_part_1, sqrt_part_1);
+  ind_term = _mm_hadd_ps(ind_term, ind_term);
+  sqrt_part_1 = _mm_mul_ps(sqrt_part_1, sqrt_part_1);
+
+  __m128 sqrt_part = _mm_sqrt_ps(_mm_sub_ps(R2, sqrt_part_1));
+  __m128 d = _mm_mul_ps(_mm_sub_ps(ind_term, sqrt_part), v_inv_norm);
+  
+  __m128 cond_2 = _mm_and_ps(_mm_cmplt_ps(d, _mm_set1_ps(1.f)), _mm_cmpgt_ps(d, _mm_set1_ps(0.f)));
+  __m128 cond_3 = _mm_cmplt_ps(sqrt_part_1, R2);
+
+  __m128 cond_long = _mm_and_ps(cond_2, cond_3);
+
+  if (_mm_movemask_ps(cond_long))
+    return _mm_cvtss_f32(d);
+  else
+    return INFINITY;
+}

@@ -2,8 +2,8 @@
 
 template <ImpulseType IT, UnitType UT, Function F>
 float Impulse<IT, UT, F>::apply_coef (Particle& par) {
-  Dir2 diff = par.get_position() - this->position;
-  uint32_t radio = this->radio + par.get_radio();
+  Dir2 diff = Dir2(par.position) - this->position;
+  uint32_t radio = this->radio + par.radio;
   float moddiff = diff.modulo();
   if (moddiff < radio) {
     float coef = this->generated_force_coef * moddiff;

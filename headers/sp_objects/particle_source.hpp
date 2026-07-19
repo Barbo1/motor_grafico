@@ -65,17 +65,14 @@ class ParticleSource {
     void up ();
     void down ();
 
-    bool test_collition (Physical&);
     bool test_collition (Circle&);
     bool test_collition (Square&);
     template<std::size_t M> bool test_collition (NEdge<M>&);
 
-    void correct_collition (Physical&);
     void correct_collition (Square&);
     void correct_collition (Circle&);
     template<std::size_t M> void correct_collition (NEdge<M>&);
 
-    void resolve_collition (Physical&);
     void resolve_collition (Square&);
     void resolve_collition (Circle&);
     template<std::size_t M> void resolve_collition (NEdge<M>&);
@@ -99,7 +96,6 @@ class ParticleSource<PS_EXPLOSION, N, F, T> {
 
     /* General information. */
     uint32_t ticks_to_live;
-    uint32_t ticks_passed;
 
     /* Array of particles. */
     struct particle_data {
@@ -127,17 +123,14 @@ class ParticleSource<PS_EXPLOSION, N, F, T> {
     void calculate_movement (const AngDir2 &);
     void burst ();
 
-    bool test_collition (Physical&);
     bool test_collition (Circle&);
     bool test_collition (Square&);
     template<std::size_t M> bool test_collition (NEdge<M>&);
 
-    void correct_collition (Physical&);
     void correct_collition (Square&);
     void correct_collition (Circle&);
     template<std::size_t M> void correct_collition (NEdge<M>&);
 
-    void resolve_collition (Physical&);
     void resolve_collition (Square&);
     void resolve_collition (Circle&);
     template<std::size_t M> void resolve_collition (NEdge<M>&);
@@ -159,24 +152,24 @@ template<ParSrcType P, std::size_t N, Function F, Function T>
 void ParticleSource<P, N, F, T>::particle_setter(Particle& particle) {
   float coef = this->glb->get_random_f01 ();
   coef = this->change_angle.first * (1 - coef) + this->change_angle.second * coef;
-  AngDir2 new_dir = AngDir2 (std::sin(coef), std::cos(coef), 0);
+  AngDir2 new_dir = AngDir2 (std::cos(coef), std::sin(coef), 0);
 
-  particle.set_position (this->init_position);
-  particle.set_velocity (new_dir * this->velocity_coef);
-  particle.set_force (new_dir.percan() * this->force_coef);
+  particle.position.store(this->init_position);
+  particle.velocity.store(new_dir * this->velocity_coef);
+  particle.force.store(new_dir.percan() * this->force_coef);
 }
 
 template<ParSrcType P, std::size_t N, Function F, Function T>
 ParticleSource<P, N, F, T>::ParticleSource(
-    Global* glb, 
-    const AngDir2& position, 
-    const std::pair<float, float>& change_angle, 
-    const Visualizer<D2FIG>& texture, 
-    float radio, 
-    float force_coef, 
-    float velocity_coef, 
-    uint32_t ticks_to_live,
-    float init_scale
+  Global* glb, 
+  const AngDir2& position, 
+  const std::pair<float, float>& change_angle, 
+  const Visualizer<D2FIG>& texture, 
+  float radio, 
+  float force_coef, 
+  float velocity_coef, 
+  uint32_t ticks_to_live,
+  float init_scale
 ) noexcept : 
   glb(glb),
   init_position(position),
@@ -189,7 +182,7 @@ ParticleSource<P, N, F, T>::ParticleSource(
 { 
   for (uint32_t i = 0; i < N; i++) {
     this->particles[i] = std::pair<Particle, particle_data> (
-      Particle (glb, radio, init_position, PARTICLE_MASS), particle_data {AngDir2(), this->ticks_to_live + 1}
+      Particle (init_position, radio, PARTICLE_MASS), particle_data {AngDir2(), this->ticks_to_live + 1}
     );
   }
 }
@@ -204,20 +197,22 @@ void ParticleSource<P, N, F, T>::set_external_force (const AngDir2 & force) {
 
 template<ParSrcType P, std::size_t N, Function F, Function T>
 void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_force) {
-  uint32_t ticks = this->glb->get_ticks();
-  float draw_coef = this->glb->get_time() * DRAW_RATE;
+  uint32_t ticks = this->glb->get_ticks() + 1;
+  float draw_coef = (this->glb->get_time() + 1.f) * DRAW_RATE;
 
-  if (this->turned) [[likely]] {
+  if (this->turned) {
     if (this->many_particles < N) {
       for (uint32_t i = 0; i < this->many_particles; i++) {
         auto& [particle, data] = this->particles[i];
         data.ticks += ticks;
-    
-        particle.add_velocity (
-          (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-          draw_coef * (2.f / particle.get_mass())
-        );
-        particle.add_position (particle.get_velocity () * draw_coef);
+
+        Dir2 vel = particle.velocity;
+        Dir2 pos = particle.position;
+        Dir2 new_vel = 
+          (AngDir2(particle.force) + external_force + std::exchange(data.force, AngDir2 ()))
+          .madd(draw_coef * 2.f / particle.mass, vel);
+        particle.velocity.store(new_vel);
+        particle.position.store(new_vel.madd(draw_coef, pos));
       }
 
       this->ticks_init_need += ticks;
@@ -226,15 +221,18 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
         this->particles[this->many_particles].second.ticks = 0;
         this->particle_setter (this->particles[this->many_particles++].first);
       }
-    } else [[likely]] {
+    } else {
       for (auto& [particle, data]: this->particles) {
-        if (data.ticks <= this->ticks_to_live) [[likely]] {
+        if (data.ticks <= this->ticks_to_live) {
           data.ticks += ticks;
-          particle.add_velocity (
-            (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-            draw_coef * (2.f / particle.get_mass())
-          );
-          particle.add_position (particle.get_velocity () * draw_coef);
+
+          Dir2 vel = particle.velocity;
+          Dir2 pos = particle.position;
+          Dir2 new_vel = 
+            (AngDir2(particle.force) + external_force + std::exchange(data.force, AngDir2 ()))
+            .madd(draw_coef * 2.f / particle.mass, vel);
+          particle.velocity.store(new_vel);
+          particle.position.store(new_vel.madd(draw_coef, pos));
         } else {
           data.ticks = 0;
           this->particle_setter (particle);
@@ -246,11 +244,13 @@ void ParticleSource<P, N, F, T>::calculate_movement (const AngDir2 & external_fo
       if (data.ticks <= this->ticks_to_live) {
         data.ticks += ticks;
 
-        particle.add_velocity (
-          (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-          draw_coef * (2.f / particle.get_mass())
-        );
-        particle.add_position (particle.get_velocity () * draw_coef);
+        Dir2 vel = particle.velocity;
+        Dir2 pos = particle.position;
+        Dir2 new_vel = 
+          (AngDir2(particle.force) + external_force + std::exchange(data.force, AngDir2 ()))
+          .madd(draw_coef * 2.f / particle.mass, vel);
+        particle.velocity.store(new_vel);
+        particle.position.store(new_vel.madd(draw_coef, pos));
       }
     }
   }
@@ -325,7 +325,7 @@ void ParticleSource<P, N, F, T>::draw () {
         scale = 1.0f - scale * scale * scale * scale;
       }
      
-      this->texture.draw (this->glb, this->particles[i].first.get_position(), scale + this->init_scale);
+      this->texture.draw (this->glb, this->particles[i].first.position, scale + this->init_scale);
     }
   }
 }
@@ -341,10 +341,11 @@ template<std::size_t N, Function F, Function T>
 void ParticleSource<PS_EXPLOSION, N, F, T>::particle_setter(Particle& particle) {
   float coef = this->glb->get_random_f01 ();
   coef = this->change_angle.first * (1 - coef) + this->change_angle.second * coef;
-  AngDir2 new_dir = AngDir2 (std::sin(coef), std::cos(coef), 0);
+  AngDir2 new_dir = AngDir2 (std::cos(coef), std::sin(coef), 0);
+  AngDir2 new_vel = new_dir * (this->glb->get_random_f01() * this->velocity_coef);
 
-  particle.set_position (this->init_position);
-  particle.set_velocity (new_dir * (this->glb->get_random_f01() * this->velocity_coef));
+  particle.position.store (this->init_position);
+  particle.velocity.store (new_vel);
 }
 
 template<std::size_t N, Function F, Function T>
@@ -366,7 +367,7 @@ ParticleSource<PS_EXPLOSION, N, F, T>::ParticleSource(
 { 
   for (uint32_t i = 0; i < N; i++) {
     this->particles[i] = std::pair<Particle, particle_data> (
-      Particle (glb, radio, init_position, PARTICLE_MASS), particle_data {this->ticks_to_live + 1}
+      Particle (init_position, radio, PARTICLE_MASS), particle_data {.ticks = 0, .force = AngDir2()}
     );
   }
 }
@@ -380,17 +381,19 @@ void ParticleSource<PS_EXPLOSION, N, F, T>::set_external_force (const AngDir2 & 
 
 template<std::size_t N, Function F, Function T>
 void ParticleSource<PS_EXPLOSION, N, F, T>::calculate_movement (const AngDir2 & external_force) {
-  uint32_t ticks = this->glb->get_ticks();
-  float draw_coef = this->glb->get_time() * DRAW_RATE;
+  uint32_t ticks = this->glb->get_ticks() + 1;
+  float draw_coef = (this->glb->get_time() + 1.f) * DRAW_RATE;
 
   for (auto& [particle, data]: this->particles) {
-    if (data.ticks <= this->ticks_to_live) [[likely]] {
+    if (data.ticks <= this->ticks_to_live) {
       data.ticks += ticks;
-      particle.add_velocity (
-        (AngDir2(particle.get_force ()) + external_force + std::exchange(data.force, AngDir2 ())) * 
-        draw_coef * (2.f / particle.get_mass())
-      );
-      particle.add_position (particle.get_velocity () * draw_coef);
+        
+      Dir2 vel = Dir2(particle.velocity);
+      Dir2 pos = Dir2(particle.position);
+      Dir2 part = AngDir2(particle.force) + external_force + std::exchange(data.force, AngDir2 ());
+      Dir2 new_vel = part.madd(draw_coef * 2.f / particle.mass, vel);
+      particle.velocity.store(new_vel);
+      particle.position.store(new_vel.madd(draw_coef, pos));
     }
   }
 }
@@ -458,7 +461,7 @@ void ParticleSource<PS_EXPLOSION, N, F, T>::draw () {
         scale = 1.0f - scale * scale * scale * scale;
       }
      
-      this->texture.draw (this->glb, particle.get_position(), scale);
+      this->texture.draw (this->glb, particle.position, scale);
     }
   }
 }

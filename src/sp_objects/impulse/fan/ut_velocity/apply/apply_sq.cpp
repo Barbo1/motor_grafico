@@ -2,10 +2,10 @@
 
 template <Function F>
 AngDir2 Impulse<IT_FAN, UT_VELOCITY, F>::apply(Square& sq) {
-  Dir2 diff = (this->position - sq.get_position()).abs();
-  Dir2 size = Dir2(sq.get_width(), sq.get_height()) + this->dimension;
+  Dir2 diff = (this->position - Dir2(sq.position)).abs();
+  Dir2 size = Dir2(sq.dims) + this->dimension;
   if (diff < size) {
-    AngDir2 n = sq.get_velocity();
+    AngDir2 n = sq.velocity;
     float coef = n.modulo() * this->generated_force_coef;
     
     /* return depending on the function. */

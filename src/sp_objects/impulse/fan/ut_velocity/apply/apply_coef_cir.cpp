@@ -2,9 +2,9 @@
 
 template <Function F>
 float Impulse<IT_FAN, UT_VELOCITY, F>::apply_coef (Circle& cir) {
-  Dir2 diffa = ((cir.get_position() - this->position).abs() - this->dimension).max0();
-  if (diffa.modulo2() < cir.get_radio() * cir.get_radio()) {
-    float coef = cir.get_velocity().modulo() * this->generated_force_coef;
+  Dir2 diffa = ((Dir2(cir.position) - this->position).abs() - this->dimension).max0();
+  if (diffa.modulo2() < cir.radio * cir.radio) {
+    float coef = Dir2(cir.velocity).modulo() * this->generated_force_coef;
     
     /* return depending on the function. */
     if constexpr (F == FT_QUADRATIC)
