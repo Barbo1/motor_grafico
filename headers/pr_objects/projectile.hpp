@@ -8,7 +8,9 @@ struct Projectile {
   MemDir2 velocity;
   MemDir2 force;
   MemDir2 collision_normal;
+  MemDir2 direction_to_new_position;
 
+  float multiplicative_distance;
   float mass;
   float radio;
 
@@ -21,5 +23,6 @@ struct Projectile {
   Projectile () noexcept;
   Projectile (AngDir2 center, float radio, float mass, bool movible = true) noexcept;
 
-  void calculate_movement (Global* glb, const AngDir2 & extrenal_forces);
+  void calculate_future_movement (Global* glb, const AngDir2 & extrenal_forces);
+  void make_movement ();
 };

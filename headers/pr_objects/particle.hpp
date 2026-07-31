@@ -2,6 +2,8 @@
 
 #include "../primitives/vectors.hpp"
 
+#include <cstdint>
+
 struct Particle {
   MemDir2 position;
   MemDir2 velocity;

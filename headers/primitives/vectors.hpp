@@ -1,15 +1,9 @@
 #pragma once 
 
-#include <emmintrin.h>
 #include <immintrin.h>
-#include <smmintrin.h>
-#include <xmmintrin.h>
-#include <SDL2/SDL_cpuinfo.h>
 #include <type_traits>
-#include <bit>
-#include <utility>
 #include <array>
-#include <cmath>
+#include <bit>
 
 /* This classes are used to represent vectors in the two and three dimentional space. 
  * */
@@ -29,9 +23,9 @@ class MemDir2 {
     inline MemDir2(float x, float y) noexcept: x(x), y(y) {}
     inline MemDir2(const MemDir2& dir) noexcept: x(dir.x), y(dir.y) {}
     inline MemDir2& operator=(const MemDir2& dir) { 
-      this->x = dir.x; 
-      this->y = dir.y; 
-      return *this; 
+      this->x = dir.x;
+      this->y = dir.y;
+      return *this;
     }
 
     template<DirFin T>

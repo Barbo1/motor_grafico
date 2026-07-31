@@ -1,3 +1,5 @@
+#pragma once
+
 #include "./vectors.hpp"
 #include <cstdint>
 #include <immintrin.h>
@@ -8,6 +10,69 @@
 
 void rotate_segments (std::pair<Dir2, Dir2>*, uint32_t, float);
 void rotate_triangles (std::array<Dir2, 3>*, uint32_t, float);
+
+/* This function takes a float number and returns its corresponding
+ * angle representation, meaning it makes a kind of modulo, leaving
+ * the number between -pi and pi. 
+ * */
+inline float correct_angle(float x) {
+  __m128 pi2 = _mm_set1_ps(6.2831853f);
+  __m128 inv_pi = _mm_set1_ps(0.3183098f);
+  __m128 inv_2 = _mm_set1_ps(0.5f);
+
+  __m128 num = _mm_set1_ps(x);
+  __m128 ones_signed = _mm_or_ps(_mm_set1_ps(1.f), _mm_and_ps(num, _mm_set_ss(-0.f)));
+  __m128 round_part = _mm_round_ps(
+    _mm_mul_ps(_mm_fmadd_ps(inv_pi, num, ones_signed), inv_2), 
+    _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC
+  );
+
+  return _mm_cvtss_f32(_mm_fnmadd_ps(round_part, pi2, num));
+}
+
+/* Given a number respresenting a angle between -pi and pi, calculates the
+ * cosine and sine of both using a four degree taylor polynomial. The first
+ * position of the returned Dir2 is the cosine, and the second is the 
+ * sine.
+ * */
+inline Dir2 cos_sin(float x) {
+  __m128 num = _mm_set1_ps(x);
+  __m128 sign = _mm_and_ps(_mm_set1_ps(-0.f), num);
+  __m128 ones = _mm_set1_ps(1.f);
+
+  __m128 mod = _mm_sub_ps(
+    _mm_set1_ps(1.5707963f),
+    _mm_andnot_ps(_mm_set1_ps(-0.f), num)
+  );
+  __m128 xs_1 = _mm_blend_ps(ones, mod, 0b1010);
+  __m128 xs_2 = _mm_movelh_ps(ones, _mm_mul_ps(mod, mod));
+  __m128 xs = _mm_mul_ps(xs_1, xs_2);
+  xs = _mm_mul_ps(xs, xs);
+
+  __m128 res_sin = _mm_dp_ps(
+    _mm_set_ps(-0.0013888f, 0.0416666f, -0.5f, 1.f),
+    xs,
+    0b11111111
+  );
+  __m128 res_cos = _mm_mul_ps(
+    mod, 
+    _mm_dp_ps(
+      _mm_set_ps(-0.0001984f, 0.0083333f, -0.1666666f, 1.f),
+      xs,
+      0b11111111
+    )
+  );
+  return Dir2::from_well(_mm_blend_ps(_mm_xor_ps(res_sin, sign), res_cos, 0b0101));
+}
+
+/* Given a number respresenting a angle, calculates the cosine and sine 
+ * of both using a four degree taylor polynomial(it doesn't need the 
+ * angle to be in the interval [-pi, pi]). The first position of the 
+ * returned Dir2 is the cosine, and the second is the sine.
+ * */
+inline Dir2 cos_sin_c(float x) {
+  return cos_sin(correct_angle(x));
+}
 
 /* Test if there is a collision between a triangle and a point.
  *
@@ -488,7 +553,6 @@ inline float coef_collision_projectile_circle (Dir2 C1, Dir2 v1, float R1, Dir2 
 inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir2 u) {
   __m128 b = _mm_sub_ps(C.v, A.v);
   __m128 R_ext = _mm_set1_ps(R);
-  __m128 R2 = _mm_mul_ps(R_ext, R_ext);
 
   __m128 inv_norms = _mm_movelh_ps(v.v, u.v);
   inv_norms = _mm_mul_ps(inv_norms, inv_norms);
@@ -498,36 +562,38 @@ inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir
   __m128 v_inv_norm = _mm_permute_ps(inv_norms, 0b00000000);
   __m128 un = _mm_mul_ps(u.v, u_inv_norm);
   __m128 vn = _mm_mul_ps(v.v, v_inv_norm);
-
-  __m128 bLs = _mm_xor_ps(_mm_permute_ps(b, 0b00010001), _mm_set_ps(0.f, -0.f, 0.f, -0.f));
   __m128 vLn = _mm_permute_ps(vn, 0b00010001);
+  __m128 bLs = _mm_xor_ps(_mm_permute_ps(b, 0b00010001), _mm_set_ps(0.f, -0.f, 0.f, -0.f));
   __m128 p = _mm_mul_ps(bLs, un);
   p = _mm_hadd_ps(p, p);
 
-  __m128 coef_1 = _mm_div_ps(_mm_mul_ps(R_ext, p), _mm_max_ps(R_ext, _mm_andnot_ps(_mm_set1_ps(-0.f), p)));
-  __m128 vec_1 = _mm_fnmadd_ps(un, coef_1, bLs);
-  __m128 coef_2 = _mm_mul_ps(vLn, u.v);
-  coef_2 = _mm_hsub_ps(coef_2, coef_2);
-  __m128 vec_2 = _mm_div_ps(vn, coef_2);
-  __m128 coef_f = _mm_mul_ps(vec_1, vec_2);
-  coef_f = _mm_max_ps(_mm_min_ps(_mm_hadd_ps(coef_f, coef_f), _mm_set1_ps(1.f)), _mm_setzero_ps());
+  __m128 coef_2 = _mm_hsub_ps(_mm_mul_ps(vLn, u.v), _mm_undefined_ps());
+  __m128 coef_1 = _mm_max_ps(R_ext, _mm_andnot_ps(_mm_set1_ps(-0.f), p));
+  __m128 invs = _mm_rcp_ps(_mm_movelh_ps(coef_1, coef_2));
+
+  __m128 vec_1_coef = _mm_mul_ps(_mm_mul_ps(R_ext, p), _mm_permute_ps(invs, 0));
+  __m128 vec_1 = _mm_fnmadd_ps(un, vec_1_coef, bLs);
+  __m128 vec_2 = _mm_mul_ps(vn, _mm_permute_ps(invs, 0b10101010));
+
+  __m128 coef_f = _mm_hadd_ps(_mm_mul_ps(vec_1, vec_2), _mm_undefined_ps());
+  coef_f = _mm_max_ps(_mm_min_ps(coef_f, _mm_set1_ps(1.f)), _mm_setzero_ps());
   __m128 f = _mm_fmsub_ps(u.v, coef_f, b);
 
   __m128 sqrt_part_1 = _mm_mul_ps(vLn, f);
   __m128 ind_term = _mm_mul_ps(vn, f);
-  sqrt_part_1 = _mm_hsub_ps(sqrt_part_1, sqrt_part_1);
-  ind_term = _mm_hadd_ps(ind_term, ind_term);
-  sqrt_part_1 = _mm_mul_ps(sqrt_part_1, sqrt_part_1);
-
-  __m128 sqrt_part = _mm_sqrt_ps(_mm_sub_ps(R2, sqrt_part_1));
+  sqrt_part_1 = _mm_hsub_ps(sqrt_part_1, _mm_undefined_ps());
+  ind_term = _mm_hadd_ps(ind_term, _mm_undefined_ps());
+  __m128 sqrt_part_1_sq = _mm_mul_ps(sqrt_part_1, sqrt_part_1);
+  __m128 sqrt_part = _mm_sqrt_ps(_mm_fmsub_ps(R_ext, R_ext, sqrt_part_1_sq));
   __m128 d = _mm_mul_ps(_mm_sub_ps(ind_term, sqrt_part), v_inv_norm);
-  
-  __m128 cond_2 = _mm_and_ps(_mm_cmplt_ps(d, _mm_set1_ps(1.f)), _mm_cmpgt_ps(d, _mm_set1_ps(0.f)));
-  __m128 cond_3 = _mm_cmplt_ps(sqrt_part_1, R2);
 
-  __m128 cond_long = _mm_and_ps(cond_2, cond_3);
+  __m128 cond_long = _mm_movelh_ps(
+    _mm_xor_ps(_mm_set_ps(0.f, -0.f, 0.f, -0.f), d), 
+    _mm_andnot_ps(_mm_set1_ps(-0.f), sqrt_part_1)
+  );
+  __m128 bound = _mm_set_ps(0.f, R, -1.f, 0.f);
 
-  if (_mm_movemask_ps(cond_long))
+  if (_mm_movemask_ps(_mm_cmplt_ps(cond_long, bound)) & 1)
     return _mm_cvtss_f32(d);
   else
     return INFINITY;

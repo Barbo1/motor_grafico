@@ -1,6 +1,7 @@
+#pragma once
+
 #include "../concepts/glyph_system.hpp"
 #include "../concepts/visualizer.hpp"
-#include "../primitives/math.hpp"
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>

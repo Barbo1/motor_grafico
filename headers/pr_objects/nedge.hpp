@@ -1,27 +1,19 @@
 #pragma once
 
-#include "../concepts/physical.hpp"
-#include "../concepts/visualizer.hpp"
-#include "../primitives/global.hpp"
 #include "../primitives/types_definition.hpp"
 #include "../concepts/glyph_system.hpp"
+#include "../concepts/visualizer.hpp"
+#include "../concepts/physical.hpp"
+#include "../primitives/global.hpp"
+#include "../primitives/math.hpp"
 
 #include <SDL2/SDL.h>
 #include <codecvt>
 #include <cstdint>
-
-class Circle;
-class Line;
-class Particle;
-class Square;
+#include <sys/types.h>
 
 template<std::size_t N>
 struct NEdge {
-  std::array<MemDir2, N> points;
-  std::array<std::array<MemDir2, 3>, N-2> triangles;
-  std::array<std::pair<MemDir2, MemDir2>, N> placed_points;
-  std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
-
   MemDir2 position;
   MemDir2 velocity;
   MemDir2 force;
@@ -36,6 +28,10 @@ struct NEdge {
   float f_k; /* kinetic fritction. */
   float acc_f_k;
   float inertia;
+  
+  std::array<std::array<MemDir2, 3>, N> triangles;
+  std::array<std::pair<MemDir2, MemDir2>, N> placed_segments;
+  std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
 
   //  0: movible -> The external forces adn velocities don't affect it.
   //  1: normal_presence -> Denote if the collision was made, so the force 
@@ -75,31 +71,55 @@ struct NEdge {
  * to operate correctly. The structures mantained in for each one provides 
  * the ability to save computation, only calculating when it moves.
  *
- * It assume this->position has been overriden.
+ * It assume this->position has been overriden with the new location of the
+ * center of the polygon.
  * */
 
 template<std::size_t N>
 void NEdge<N>::reposition_polygon() {
   Dir2 pos = this->position;
-  std::array<std::pair<Dir2, Dir2>, N> placed_points_aux;
-  for (uint32_t i = 0; i < N; i++) {
-    Dir2 p1 = Dir2(this->points[i]);
-    Dir2 p2 = Dir2(this->points[(i+1)%N]);
-    placed_points_aux[i] = std::pair{p2 - p1, p1};
-  }
-  rotate_segments(placed_points_aux.data(), N, this->ang_pos);
-  for (uint32_t i = 0; i < N; i++) {
-    this->placed_points[i].first.store(placed_points_aux[i].first);
-    this->placed_points[i].second.store(placed_points_aux[i].second + pos);
+  __m128 mat_rotation = _mm_xor_ps(
+    _mm_set_ps(0.f, 0.f, -0.f, 0.f),
+    _mm_permute_ps(cos_sin_c(this->ang_pos).v, 0b00010100)
+  );
+
+  // calculate the placed points by rotating and adding the position.
+  for (uint32_t i = 0; i < N-2; i++) {
+    Dir2 sp = Dir2(this->triangles[i][0]);
+    Dir2 sv = Dir2(this->triangles[i+1][0]) - sp;
+    Dir2 v1 = Dir2(this->triangles[i][1]);
+    Dir2 v2 = Dir2(this->triangles[i][2]);
+
+    __m128 spr = _mm_mul_ps(mat_rotation, sp.v);
+    __m128 svr = _mm_mul_ps(mat_rotation, sv.v);
+    __m128 v1r = _mm_mul_ps(mat_rotation, v1.v);
+    __m128 v2r = _mm_mul_ps(mat_rotation, v2.v);
+
+    Dir2 p = Dir2::from_well(_mm_hadd_ps(spr, spr)) + pos;
+
+    this->placed_segments[i].second.store(p);
+    this->placed_segments[i].first.store(Dir2::from_well(_mm_hadd_ps(svr, svr)));
+
+    this->placed_triangles[i][0].store(p);
+    this->placed_triangles[i][1].store(Dir2::from_well(_mm_hadd_ps(v1r, v1r)));
+    this->placed_triangles[i][2].store(Dir2::from_well(_mm_hadd_ps(v2r, v2r)));
   }
 
-  std::array<std::array<Dir2, 3>, N-2> placed_triangles_aux = bring_memdir(this->triangles);
-  rotate_triangles(placed_triangles_aux.data(), N-2, this->ang_pos);
-  for (uint32_t i = 0; i < N-2; i++) {
-    this->placed_triangles[i][0].store(placed_triangles_aux[i][0] + pos);
-    this->placed_triangles[i][1].store(placed_triangles_aux[i][1]);
-    this->placed_triangles[i][2].store(placed_triangles_aux[i][2]);
-  }
+  Dir2 pn2 = Dir2(this->triangles[N-2][0]);
+  Dir2 pn1 = Dir2(this->triangles[N-1][0]);
+  Dir2 p0 = Dir2(this->triangles[0][0]);
+  Dir2 vn2 = pn1 - pn2;
+  Dir2 vn1 = p0 - pn1;
+
+  __m128 p1 = _mm_mul_ps(mat_rotation, pn2.v);
+  __m128 v1 = _mm_mul_ps(mat_rotation, vn2.v);
+  __m128 p2 = _mm_mul_ps(mat_rotation, pn1.v);
+  __m128 v2 = _mm_mul_ps(mat_rotation, vn1.v);
+
+  this->placed_segments[N-2].second.store(Dir2::from_well(_mm_hadd_ps(p1, p1)) + pos);
+  this->placed_segments[N-2].first.store(Dir2::from_well(_mm_hadd_ps(v1, v1)));
+  this->placed_segments[N-1].second.store(Dir2::from_well(_mm_hadd_ps(p2, p2)) + pos);
+  this->placed_segments[N-1].first.store(Dir2::from_well(_mm_hadd_ps(v2, v2)));
 }
 
 
@@ -144,6 +164,7 @@ static inline bool are_points_contiguous (int32_t i, int32_t j, int32_t M) {
 /* * * * * * * * *
  *  Constructor  *
  * * * * * * * * */
+#include<iostream>
 template<std::size_t N>
 NEdge<N>::NEdge (
   const Dir2 * points, std::size_t size, AngDir2 center, 
@@ -329,15 +350,69 @@ NEdge<N>::NEdge (
       *error = -4;
     return;
   } else *error = 0;
+  
+  for (uint32_t j = 0; j < 3*(N-2); j+=3) {
+    std::cout << parts_indexes[j] << ", " << parts_indexes[j + 1] << ", " << parts_indexes[j + 2] << std::endl;
+  }
 
+  // reorder of the triangles to begin in order.
+  uint32_t founded_index = 0;
+  std::array<uint32_t, N> founded_many = {};
+  std::array<uint32_t, N> founded_where = {};
+  while (founded_index < N-2) {
+    std::cout << "----------- nuevo ---------------" << std::endl;
+    for (uint32_t i = 3*founded_index; i < 3*(N-2); i++) {
+      uint32_t pos = parts_indexes[i];
+      founded_where[pos] = i;
+      founded_many[pos]++;
+    }
+      
+    for (uint32_t j = 0; j < N-2; j++) 
+      std::cout << founded_many[j] << ", ";
+    std::cout << std::endl;
+
+    bool founded = false;
+    for (uint32_t i = 0; i < N-2; i++) {
+      std::cout << "coso" << std::endl;
+      if (founded_many[i] == 1) {
+
+        founded = true;
+        uint32_t where = founded_where[i];
+        uint32_t where_mod = where - ((where) % 3);
+
+        std::swap(parts_indexes[where], parts_indexes[where_mod]);
+        for (uint32_t k = 0; k < 3; k++)
+          std::swap(parts_indexes[where_mod + k], parts_indexes[3*founded_index + k]);
+        founded_index++;
+
+        std::cout << "luego." << std::endl;
+        for (uint32_t j = 0; j < 3*(N-2); j+=3) {
+          std::cout << parts_indexes[j] << ", " << parts_indexes[j + 1] << ", " << parts_indexes[j + 2] << std::endl;
+        }
+      }
+    }
+    if (!founded) {
+      *error = -5;
+      return;
+    }
+
+    for (uint32_t i = 0; i < N-2; i++)
+      founded_many[i] = 0;
+    for (uint32_t i = 0; i < founded_index; i++)
+      founded_many[parts_indexes[3*i]] = 2;
+  }
+  
   // creating the triangles, and calculating final area and inertia.
-  uint32_t* parts_indexes_pointer = parts_indexes.data();
   this->area = 0.f;
   this->inertia = 0.f;
+  uint32_t* parts_indexes_pointer = parts_indexes.data();
   for (uint32_t i = 0; i < N-2; i++) {
-    const Dir2 p1 = points[*(parts_indexes_pointer++)];
-    const Dir2 p2 = points[*(parts_indexes_pointer++)];
-    const Dir2 p3 = points[*(parts_indexes_pointer++)];
+    uint32_t index_1 = *(parts_indexes_pointer++);
+    uint32_t index_2 = *(parts_indexes_pointer++);
+    uint32_t index_3 = *(parts_indexes_pointer++);
+    const Dir2 p1 = points[index_1];
+    const Dir2 p2 = points[index_2];
+    const Dir2 p3 = points[index_3];
     const Dir2 v1 = p2 - p1;
     const Dir2 v2 = p3 - p1;
     const Dir2 v3 = p3 - p2;
@@ -348,25 +423,20 @@ NEdge<N>::NEdge (
     this->area += triangle_area;
     this->inertia = std::fmaf(triangle_inertia + triangle_inertia_dev, triangle_area, this->inertia);
 
-    this->triangles[i][0].store(p1);
-    this->triangles[i][1].store(v1);
-    this->triangles[i][2].store(v2);
+    this->triangles[index_1][0].store(p1);
+    this->triangles[index_1][1].store(v1);
+    this->triangles[index_1][2].store(v2);
   }
-  this->density = density;
-  this->inertia *= density;
+  this->triangles[N-2][0].store(points[N-2]);
+  this->triangles[N-1][0].store(points[N-1]);
 
-  // writing points.
-  for (uint32_t i = 0; i < N; i++)
-    this->points[i].store(points[i]);
+  this->density = density;
+  this->inertia *= density;    
 
   this->ang_for = 0.f;
   this->ang_vel = 0.f;
   this->ang_pos = 0.f;
 
-  /*
-  const Dir2 * points, std::size_t size, AngDir2 center, 
-  float density, float f_k, bool movible, int* error
-   * */
   this->position.store(center);
   this->velocity.store(Dir2());
   this->force.store(Dir2());

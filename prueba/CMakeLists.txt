@@ -1,4 +1,4 @@
-add_executable (fin ./pruebas_nedge/prueba_linea_resolve_collision.cpp)
+add_executable (fin ./pruebas_nedge/prueba_cuadrado_resolve_collision.cpp)
 target_include_directories (fin PRIVATE ${CMAKE_SOURCE_DIR}/headers)
 target_link_libraries (fin PRIVATE 
   objsrc_primitives

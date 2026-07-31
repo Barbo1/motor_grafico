@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../headers/primitives/global.hpp"
 #include "./visualizer.hpp"
 

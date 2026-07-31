@@ -1,5 +1,7 @@
 #include "../../../../headers/concepts/gui.hpp"
+#include "../../../../headers/primitives/math.hpp"
 #include <cstdint>
+#include <utility>
 
 void GuiComponent::test () {
   // obtain click position and test if click is pressed.

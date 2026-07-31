@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 
 static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction) {
   Dir2 diff21 = P2 - P1;
