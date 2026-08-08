@@ -1,5 +1,5 @@
-#include "../../../../headers/concepts/collision.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 void resolve_collision (Square& sq, NEdge& pol, bool move_first) {
   Dir2 sq_dims = Dir2(sq.dims);

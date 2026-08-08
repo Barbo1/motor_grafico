@@ -1,5 +1,5 @@
-#include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 #include "../../../../headers/concepts/physical.hpp"
 
 void resolve_collision (Square& sq1, Square& sq2) {

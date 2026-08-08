@@ -14,6 +14,7 @@
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*8);
 
   bool cont = true;
   SDL_Event event;
@@ -26,7 +27,7 @@ int main () {
     TrenchThin-aZ1J
   */
   std::string path = "../fuentes_letras/Nostard-Medium.ttf";
-  GlyphsSystem gs (glb, path, &error);
+  GlyphsSystem gs (glb, &arena, path, &error);
   if (error != 0) {
     std::exit (-1);
   }

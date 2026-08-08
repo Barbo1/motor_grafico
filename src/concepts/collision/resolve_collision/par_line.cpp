@@ -1,6 +1,4 @@
-#include "../../../../headers/pr_objects/line.hpp"
-#include "../../../../headers/pr_objects/particle.hpp"
-
+#include "../../../../headers/concepts/collision.hpp"
 #include <cmath>
 
 void resolve_collision (Line& line, Particle& par) {

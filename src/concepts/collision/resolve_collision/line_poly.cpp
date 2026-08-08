@@ -1,5 +1,5 @@
-#include "../../../../headers/concepts/collision.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 void resolve_collision (Line& line, NEdge& pol) {
   Dir2 collision_point = collision_point_line_nedge (

@@ -1,7 +1,6 @@
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/concepts/physical.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
+#include "../../../../headers/concepts/physical.hpp"
 
 void resolve_collision (Circle& cir, Square& sq, bool move_first) {
   Dir2 cir_pos = cir.position;

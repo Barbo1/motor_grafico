@@ -1,7 +1,6 @@
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
-Dir2 collision_point (const Square& sq1, const Square& sq2) {
+Dir2 collision_point (Square& sq1, Square& sq2) {
   Dir2 pos1 = sq1.position, pos2 = sq2.position;
   Dir2 sq1_dims = sq1.dims;
   Dir2 sq2_dims = sq2.dims;

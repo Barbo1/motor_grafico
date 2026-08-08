@@ -1,5 +1,5 @@
-#include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 void correct_collision (Circle& cir1, Circle& cir2) {
   Dir2 cir1_pos = cir1.position;

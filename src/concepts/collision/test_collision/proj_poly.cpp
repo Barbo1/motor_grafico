@@ -1,8 +1,6 @@
-#include "../../../../headers/pr_objects/projectile.hpp"
-#include "../../../../headers/pr_objects/nedge.hpp"
-#include "../../../../headers/primitives/math.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
-#include <cstdint>
+#include "../../../../headers/concepts/collision.hpp"
+#include "../../../../headers/primitives/math.hpp"
 
 bool test_collision (Projectile& proj, NEdge& pol) {
   float mult_dist = INFINITY;

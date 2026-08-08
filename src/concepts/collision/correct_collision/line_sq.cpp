@@ -1,7 +1,5 @@
 #include "../../../../headers/primitives/types_definition.hpp"
-#include "../../../../headers/pr_objects/line.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-
+#include "../../../../headers/concepts/collision.hpp"
 #include <cmath>
 
 void correct_collision (Line& line, Square& sq) {

@@ -1,7 +1,6 @@
-#include "../../../../headers/pr_objects/projectile.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-#include "../../../../headers/primitives/math.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
+#include "../../../../headers/primitives/math.hpp"
 
 bool test_collision (Projectile& proj, Square& sq) {
   Dir2 sq_dims = Dir2(sq.dims);

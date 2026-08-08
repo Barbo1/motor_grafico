@@ -1,5 +1,4 @@
-#include "../../../../headers/pr_objects/particle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 #include "../../../../headers/concepts/physical.hpp"
 
 void resolve_collision (Particle& par, Square& sq) {

@@ -1,6 +1,5 @@
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 void correct_collision (Square& sq1, Square& sq2) {
   Dir2 sq1_pos = sq1.position;

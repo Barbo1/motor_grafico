@@ -1,9 +1,7 @@
-#include "../../../../headers/pr_objects/particle.hpp"
-#include "../../../../headers/pr_objects/line.hpp"
-
+#include "../../../../headers/concepts/collision.hpp"
 #include <cmath>
 
-void correct_collision (Particle& par, Line& line) {
+void correct_collision (Line& line, Particle& par) {
   Dir2 u = Dir2 (line.get_slope(), -1.f);
   float num = par.position.y - std::fmaf(line.get_slope(), par.position.x, line.get_deviation());
   float denom = std::fmaf(line.get_slope(), line.get_slope(), 1.f);

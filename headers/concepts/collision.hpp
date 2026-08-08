@@ -38,7 +38,6 @@ bool test_collision (Projectile&, Circle&);
 bool test_collision (Projectile&, NEdge&);
 
 
-
 /* Take two objects and generate the collision. The order 
  * of the parameters are from least to most complex. 
  * */
@@ -59,7 +58,6 @@ void resolve_collision (Square&, NEdge&, bool);
 void resolve_collision (NEdge&, NEdge&, bool);
 
 bool resolve_collision (Projectile&);
-
 
 
 /* Given that a collision had ocurred, this function corrects 
@@ -87,7 +85,6 @@ void correct_collision (NEdge&, NEdge&, bool);
 bool correct_collision (Projectile&);
 
 
-
 /* Returns the point of the collision between two objects. */
 Dir2 collision_point (Line&, Square&);
 Dir2 collision_point (Line&, Circle&);
@@ -101,6 +98,21 @@ Dir2 collision_point (Square&, NEdge&);
 Dir2 collision_point (NEdge&, NEdge&);
 
 Dir2 collision_point (Projectile&);
+
+
+/* Returns the direction of the collision between two objects. */
+Dir2 collision_direction (Line&, Square&);
+Dir2 collision_direction (Line&, Circle&);
+Dir2 collision_direction (Line&, NEdge&);
+
+Dir2 collision_direction (Circle&, Circle&);
+Dir2 collision_direction (Circle&, Square&);
+Dir2 collision_direction (Square&, Square&);
+Dir2 collision_direction (Circle&, NEdge&);
+Dir2 collision_direction (Square&, NEdge&);
+Dir2 collision_direction (NEdge&, NEdge&);
+
+Dir2 collision_direction (Projectile&);
 
 
 

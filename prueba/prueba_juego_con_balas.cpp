@@ -8,18 +8,46 @@
 #include "../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
 #include <cstdint>
 #include <iostream>
 #include <cmath>
 
+void configure_glyph_system (GlyphsSystem* gs) {
+  SDL_Color color = SDL_Color {255,255,255,255};
+  constexpr std::array<char16_t, 26 + 26 + 10 + 8> characters = {
+    u'A', u'B', u'C', u'D', u'E', u'F', u'G', u'H', u'I', u'J',
+    u'K', u'L', u'M', u'N', u'O', u'P', u'Q', u'R', u'S', u'T',
+    u'U', u'V', u'W', u'X', u'Y', u'Z',
+
+    u'a', u'b', u'c', u'd', u'e', u'f', u'g', u'h', u'i', u'j',
+    u'k', u'l', u'm', u'n', u'o', u'p', u'q', u'r', u's', u't',
+    u'u', u'v', u'w', u'x', u'y', u'z',
+
+    u'0', u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9',
+
+    u'_', u'?', u'!', u':', u',', u'.', u'/'
+  };
+  for (const auto& character: characters) {
+    gs->cache(character, 20, color);
+  }
+  gs->clear_meta();
+}
+
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
-  Arena arena = Arena(1000*1000*4);
-  uint32_t width = glb->get_width();
-  uint32_t height = glb->get_height();
+  Arena arena = Arena(1000*1000*8);
+  
+  int32_t error;
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  if (error < 0) {
+    std::cout << "problema al cargar fuentes de letra." << std::endl;
+    std::exit(-1);
+  }
+  configure_glyph_system (&gs);
 
   const Uint8* key_array = SDL_GetKeyboardState(nullptr);
   bool cont = true;
@@ -31,6 +59,8 @@ int main () {
   SDL_Color cian = SDL_Color {0,255,255,255};
 
   /* limites del escenario */
+  uint32_t width = glb->get_width();
+  uint32_t height = glb->get_height();
   std::array<Line, 4> lines = std::array<Line, 4> {
     Line (Dir2 (0.f, 0.f), Dir2 ((float)width, 0.f)),
     Line (Dir2 (0.f, 0.f), Dir2 (0.f, (float)height)),
@@ -52,15 +82,17 @@ int main () {
   };
   float player_pos_margin = 0.f;
 
+
   // informacion del cajas
+
   std::array<SquareElement, 2> boxes = std::array<SquareElement, 2> {
     SquareElement {
       .texture = ImageModifier::square(200, 100, color).cast(glb),
-      .physical_body = Square(AngDir2 (600.f, 400.f, 0.f), 100, 50, 2.f)
+      .physical_body = Square(AngDir2 (600.f, 400.f, 0.f), 100, 50, 200.f, false)
     },
     SquareElement {
       .texture = ImageModifier::square(80, 80, color).cast(glb),
-      .physical_body = Square(AngDir2 (300.f, 200.f, 0.f), 40, 40, 2.f)
+      .physical_body = Square(AngDir2 (300.f, 200.f, 0.f), 40, 40, 200.f, false)
     }
   };
 
@@ -74,11 +106,12 @@ int main () {
     uint32_t many_collisions;
     bool present;
   };
-  std::array<Bullet, 10> bullets;
+  std::array<Bullet, 200> bullets;
 
   const float bullet_radio = 4.f;
   const float bullet_mass = 50.f;
-  Visualizer<D2FIG> bullet_img = ImageModifier::circle(arena, bullet_radio, red).cast(glb);
+  Visualizer<D2FIG> bullet_img = ImageModifier::circle(arena, bullet_radio, cian).cast(glb);
+  Visualizer<D2FIG> bullet_particles_img = ImageModifier::square(2, 2, cian).cast(glb);
 
   for (uint32_t i = 0; i < bullets.size(); i++) {
     bullets[i] = Bullet {
@@ -86,9 +119,9 @@ int main () {
         glb,
         AngDir2 (0.f, 0.f, 0.f),
         std::pair<float, float>{M_PI * 0.5f, M_PI * 1.5f},
-        ImageModifier::square(2, 2, SDL_Color{0, 255, 0, 255}).cast(glb),
+        bullet_particles_img,
         5,
-        0.02f,
+        0.01f,
         3000
       ),
       .texture = bullet_img,
@@ -99,34 +132,64 @@ int main () {
   }
 
   const int32_t ratio_bullet_generation_ms = 300;
-  int32_t time_to_next_bullet = ratio_bullet_generation_ms;
 
 
   // Enemies.
 
-  struct Enemies {
+  struct FlyingOrbs {
     Visualizer<D2FIG> texture;
     Circle physical_body;
+    int32_t life;
+    int32_t ticks_until_shot;
     bool present;
   };
-  std::array<Enemies, 5> enemies;
-  uint32_t gen_rand = glb->get_random();
-  float radio = static_cast<float>((gen_rand & 31) + 10);
-  enemies[0] = Enemies {
-    .texture = ImageModifier::circle(arena, radio, cian).cast(glb),
-    .physical_body = Circle (Dir2(600.f, 100.f), radio, 2.f),
-    .present = true 
-  };
-  enemies[0].physical_body.velocity.store(Dir2(0.01f, 0.01f));
+  const uint32_t ticks_until_shot_flying_orbs = 5000;
+  std::array<FlyingOrbs, 10> enemies;
+  
+  {
+    uint32_t gen_rand = glb->get_random();
+    float radio = static_cast<float>((gen_rand & 7) + 30);
+    std::cout << (gen_rand & 7) << std::endl;
+    enemies[0] = FlyingOrbs {
+      .texture = ImageModifier::circle(arena, radio, red).cast(glb),
+      .physical_body = Circle (Dir2(600.f, 100.f), radio, 2.f),
+      .life = 1 + (gen_rand > 4),
+      .ticks_until_shot = ticks_until_shot_flying_orbs,
+      .present = true 
+    };
+    enemies[0].physical_body.velocity.store(Dir2(0.01f, 0.01f));
 
+    gen_rand = glb->get_random();
+    radio = static_cast<float>((gen_rand & 7) + 30);
+    std::cout << (gen_rand & 7) << std::endl;
+    enemies[1] = FlyingOrbs {
+      .texture = ImageModifier::circle(arena, radio, red).cast(glb),
+      .physical_body = Circle (Dir2(400.f, 400.f), radio, 2.f),
+      .life = 1 + (gen_rand > 4),
+      .ticks_until_shot = ticks_until_shot_flying_orbs,
+      .present = true 
+    };
+    enemies[1].physical_body.velocity.store(Dir2(0.01f, -0.01f));
+  }
+
+
+  // general information in the program.
+
+  float min_cos_angle_direction = 0.7071f;
+  float bullet_velocity_norm = 0.02f;
+  uint32_t max_bullet_quantity = 8;
 
   // program.
-
+  int x_mouse, y_mouse;
+  uint32_t many_bullets = max_bullet_quantity;
+  int32_t time_to_next_bullet = ratio_bullet_generation_ms;
   while (cont) {
+    std::string aux_str = std::to_string(many_bullets) + " : " + std::to_string(max_bullet_quantity);
     time_to_next_bullet = std::max(0, time_to_next_bullet - static_cast<int32_t>(glb->get_ticks()));
 
     /* Render of the objects. */
     glb->begin_render();
+      gs.print (aux_str, 20, color, Dir2(20.f, 20.f));
       player.physical_body.position.store(Dir2(30.f, player_pos_margin * 400.f + 100.f));
       player.texture.draw(glb, player.physical_body.position);
       
@@ -148,9 +211,13 @@ int main () {
 
     // moving the movible obejcts.
 
-    for (auto& enemy: enemies)
-      if (enemy.present)
+    for (auto& enemy: enemies) {
+      if (enemy.present) {
         enemy.physical_body.calculate_movement(glb, AngDir2());
+        int32_t ticks = enemy.ticks_until_shot - glb->get_ticks();
+        enemy.ticks_until_shot = std::max(0, ticks);
+      }
+    }
 
     /* Testing of the collitions. */
 
@@ -196,7 +263,8 @@ int main () {
             void* ptr1 = bullet.physical_body.col_obj;
             void* ptr2 = static_cast<void*>(&(enemies[i].physical_body));
             if (enemies[i].present && ptr1 == ptr2) {
-              enemies[i].present = false;
+              enemies[i].life--;
+              enemies[i].present = enemies[i].life != 0;
               collide_with_enemies = false;
             }
             i++;
@@ -222,28 +290,31 @@ int main () {
       }
     }
 
-    if (key_array[SDL_SCANCODE_UP])
+    if (key_array[SDL_SCANCODE_W])
       player_pos_margin = std::max(player_pos_margin - glb->get_time(), 0.f);
-    if (key_array[SDL_SCANCODE_DOWN])
+    if (key_array[SDL_SCANCODE_S])
       player_pos_margin = std::min(player_pos_margin + glb->get_time(), 1.f);
 
-    if (key_array[SDL_SCANCODE_SPACE] && time_to_next_bullet == 0) {
+    uint32_t mask = SDL_GetMouseState(&x_mouse, &y_mouse);
+    bool clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
+    if (clicking && time_to_next_bullet == 0 && many_bullets > 0) {
       bool finded = false;
       for (uint32_t i = 0; i < bullets.size() && !finded; i++) {
         if (!bullets[i].present && !bullets[i].particles.bursting()) {
           finded = true;
-          bullets[i].physical_body = Projectile (
-            AngDir2(player.physical_body.position) + AngDir2(0.f, bullet_radio + 1.f, 0.f), 
-            bullet_radio, 
-            bullet_mass
-          );
+          many_bullets--;
+
+          Dir2 dev = Dir2(bullet_radio + player.physical_body.dims.x + 2.f, 0.f);
+          Dir2 bullet_begin = Dir2(player.physical_body.position) + dev;
+          Dir2 direction = (Dir2(x_mouse, y_mouse) - bullet_begin).normalize();
+          float cos = std::max(direction.x(), min_cos_angle_direction);
+          direction = Dir2(cos, std::copysign(std::sqrt(1 - cos*cos), direction.y()));
+
+          bullets[i].physical_body = Projectile (bullet_begin, bullet_radio, bullet_mass);
           bullets[i].many_collisions = 1;
           bullets[i].present = true;
+          bullets[i].physical_body.velocity.store(direction * bullet_velocity_norm);
         }
-        bullets[i].physical_body.velocity.store(Dir2(0.5f, 0.f));
-      }
-      if (!finded) {
-        std::cout << "no se encontro lugar para la bala" << std::endl;
       }
       time_to_next_bullet = ratio_bullet_generation_ms;
     }

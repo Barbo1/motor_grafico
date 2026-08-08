@@ -1,5 +1,4 @@
-#include "../../../../headers/pr_objects/particle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 void correct_collision (Particle& par, Square& sq) {
   Dir2 diff = Dir2(sq.position) - Dir2(par.position);

@@ -1,9 +1,7 @@
-#include "../../../../headers/pr_objects/line.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-
+#include "../../../../headers/concepts/collision.hpp"
 #include <cmath>
 
-Dir2 collision_point (const Line& line, const Square& sq) {
+Dir2 collision_point (Line& line, Square& sq) {
   Dir2 sq_pos = sq.position;
   float h = sq.dims.y * std::copysignf(1.f, line.get_slope()), 
         a = (std::fmaf(line.get_slope(), sq_pos.x(), line.get_deviation()) - sq_pos.y()) / 

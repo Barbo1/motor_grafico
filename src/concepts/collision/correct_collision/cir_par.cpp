@@ -1,5 +1,4 @@
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/particle.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 void correct_collision (Particle& par, Circle& cir) {
   Dir2 cir_pos = Dir2(cir.position);
