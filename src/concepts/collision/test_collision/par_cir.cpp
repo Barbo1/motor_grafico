@@ -1,5 +1,4 @@
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/particle.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 bool test_collision (const Particle& par, const Circle & cir) {
   uint32_t radio = cir.radio + par.radio;

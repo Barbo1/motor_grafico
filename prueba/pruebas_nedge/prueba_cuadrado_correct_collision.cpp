@@ -1,8 +1,8 @@
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/vectors.hpp"
-#include "../../headers/pr_objects/nedge.hpp"
-#include "../../headers/pr_objects/circle.hpp"
+#include "../../headers/primitives/arena.hpp"
 #include "../../headers/concepts/collision.hpp"
+#include "../../headers/concepts/image_modifier.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
@@ -53,47 +53,53 @@ std::array<Dir2, 10> set_points_4 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
     std::exit(-1);
   }
 
   std::array<Dir2, 17> points = set_points_3();
-  NEdge<17> poly(
-    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
+  NEdgeComp<17> poly(points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, &error);
   if (error < 0) {
-    std::cout << "problema al cargar poligono." << std::endl;
+    std::cout << "problema al cargar poligono. Codigo " << error << std::endl;
     std::exit(-1);
   }
-  poly.set_position(Dir2 (100.f, 100.f));
+  poly.physical.position.store(Dir2 (100.f, 100.f));
+
+  struct SquareElement {
+    Visualizer<D2FIG> texture;
+    Square physical_body;
+  };
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Square sq = Square(glb, 20, 50, Dir2 {0, 0}, 0, 0, true, &color);
+  SquareElement sq = SquareElement {
+    .texture = ImageModifier::square(40, 100, color).cast(glb),
+    .physical_body = Square(Dir2 (0.f, 0.f), 20, 50, 0, 0, true)
+  };
 
   bool cont = true;
   while (cont) {
     glb->begin_render();
 
-    poly.print(glb, &gs);
+    poly.physical.print(glb, &gs);
     
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
-    sq.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
+    sq.physical_body.position.store(Dir2 (static_cast<float>(mouse_x), static_cast<float>(mouse_y)));
 
     std::string dial = "false";
-    if (test_collision(sq, poly)) {
+    if (test_collision(sq.physical_body, poly.physical)) {
       dial = "true";
-      correct_collision(sq, poly, true);
+      correct_collision(sq.physical_body, poly.physical, true);
     }
     std::cout << dial << std::endl;
 
-    sq.draw();
+    sq.texture.draw(glb, sq.physical_body.position);
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

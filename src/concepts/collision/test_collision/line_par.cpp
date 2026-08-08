@@ -1,7 +1,4 @@
-#include "../../../../headers/pr_objects/line.hpp"
-#include "../../../../headers/pr_objects/particle.hpp"
-
-#include <cmath>
+#include "../../../../headers/concepts/collision.hpp"
 
 bool test_collision (const Line& line, const Particle& par) {
   float p1 = par.position.y - std::fmaf(line.get_slope(), par.position.x, line.get_deviation());

@@ -1,7 +1,6 @@
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
-#include "../../headers/pr_objects/circle.hpp"
 #include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
@@ -53,12 +52,20 @@ std::array<Dir2, 10> set_points_4 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
+    std::exit(-1);
+  }
+
+  std::array<Dir2, 10> points = set_points_4();
+  NEdgeComp<10> mov(points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, &error);
+  if (error < 0) {
+    std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
 
@@ -66,31 +73,20 @@ int main () {
   Dir2 line_point_2 = Dir2(200.f, 200.f);
   Line line = Line(line_point_2, line_point_1);
 
-  std::array<Dir2, 10> points1 = set_points_4();
-  NEdge<10> mov (
-    glb, points1.data(), points1.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
-
-  if (error < 0) {
-    std::cout << "problema al cargar poligono." << std::endl;
-    std::exit(-1);
-  }
-
   bool cont = true;
   while (cont) {
     glb->begin_render();
     
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
-    mov.set_position(AngDir2(static_cast<float>(mouse_x), static_cast<float>(mouse_y), 0.f));
+    mov.physical.set_position(AngDir2(static_cast<float>(mouse_x), static_cast<float>(mouse_y), 0.f));
 
-    mov.print(glb, &gs);
+    mov.physical.print(glb, &gs);
     SDL_SetRenderDrawColor(glb->get_render(), 255, 0, 0, 255);
     SDL_RenderDrawLine(glb->get_render(), 0.f, 0.f, 600.f, 600.f);
 
     std::string dial = "false";
-    if (test_collision(line, mov)) {
+    if (test_collision(line, mov.physical)) {
       dial = "true";
     }
     std::cout << dial << std::endl;

@@ -1,4 +1,4 @@
-#include "../../../../headers/pr_objects/square.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 bool test_collision (const Square& sq1, const Square& sq2) {
   Dir2 diff = (Dir2(sq1.position) - Dir2(sq2.position)).abs();

@@ -50,3 +50,13 @@ enum PhysicalConfigOptions {
   PCO_MOVIBLE = 0b1,
   PCO_IS_NORMAL = 0b10
 };
+
+enum PRObjType {
+  PR_NONE = 0b0,
+  PR_CIRCLE = 0b1,
+  PR_SQUARE = 0b10,
+  PR_LINE = 0b11,
+  PR_NEDGE = 0b100,
+  PR_PARTICLE = 0b101,
+  PR_PROJECTILE = 0b110
+};

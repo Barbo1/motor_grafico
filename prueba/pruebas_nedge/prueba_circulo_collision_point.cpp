@@ -1,7 +1,7 @@
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/vectors.hpp"
+#include "../../headers/concepts/image_modifier.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
-#include "../../headers/pr_objects/circle.hpp"
 #include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
@@ -53,48 +53,53 @@ std::array<Dir2, 10> set_points_4 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
     std::exit(-1);
   }
 
-  std::array<Dir2, 17> points = set_points_3();
-  NEdge<17> poly(
-    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
+  std::array<Dir2, 11> points = set_points_2();
+  NEdgeComp<11> mov(points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
-  poly.set_position(Dir2 (100.f, 100.f));
+  mov.physical.set_position(Dir2 (100.f, 100.f));
+
+  struct CircleElement {
+    Visualizer<D2FIG> texture;
+    Circle physical_body;
+  };
 
   SDL_Color color = SDL_Color{.r=0, .g=255, .b=0, .a=255};
-  Circle cir = Circle (glb, 50, Dir2 {0, 0}, 0, 0, true, &color);
+  CircleElement cir = CircleElement {
+    .texture = ImageModifier::circle(arena, 50, color).cast(glb),
+    .physical_body = Circle(Dir2 (310.f, 450.f), 50, 2.f)
+  };
 
   bool cont = true;
   while (cont) {
     glb->begin_render();
 
-    poly.print(glb, &gs);
+    mov.physical.print(glb, &gs);
     std::string dial = "false";
     
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
-    cir.set_position(Dir2 {static_cast<float>(mouse_x), static_cast<float>(mouse_y)});
+    cir.physical_body.position.store(Dir2 (static_cast<float>(mouse_x), static_cast<float>(mouse_y)));
+    cir.texture.draw(glb, cir.physical_body.position);
 
-    cir.draw();
-
-    if (test_collision(cir, poly)) {
+    if (test_collision(cir.physical_body, mov.physical)) {
       dial = "true";
-      Dir2 point = collision_point(cir, poly);
+      Dir2 point = collision_point(cir.physical_body, mov.physical);
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
-      SDL_RenderDrawPoint(glb->get_render(), point.x, point.y);
-      std::cout << "Col = (" << point.x << ", " << point.y << ")" << std::endl;
+      SDL_RenderDrawPoint(glb->get_render(), point.x(), point.y());
+      std::cout << "Col = (" << point.x() << ", " << point.y() << ")" << std::endl;
     }
     std::cout << dial << std::endl;
 

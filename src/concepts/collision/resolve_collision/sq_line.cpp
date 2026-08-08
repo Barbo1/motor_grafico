@@ -2,8 +2,6 @@
 #include "../../../../headers/pr_objects/square.hpp"
 #include "../../../../headers/primitives/types_definition.hpp"
 
-#include <cmath>
-
 void resolve_collision (Line& line, Square& sq) {
   Dir2 sq_pos = sq.position;
   Dir2 sq_vel = sq.velocity;

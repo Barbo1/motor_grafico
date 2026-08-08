@@ -312,10 +312,9 @@ inline bool test_collision_triangle_triangle(Dir2 A, Dir2 vB, Dir2 vC, Dir2 D, D
  * 'dims' are the dimenions of the square,
  * 'triangles' is the array with all the triangles composing the nedge
  * */
-template<std::size_t N>
 inline Dir2 calculate_direction_square_nedge (
-  Dir2 D, Dir2 dims, 
-  const std::array<std::array<MemDir2, 3>, N>& triangles
+  Dir2 D, Dir2 dims, uint32_t size,
+  const std::array<MemDir2, 3>* triangles
 ) {
   __m128 xor_mask = _mm_castsi128_ps(_mm_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0));
 
@@ -328,7 +327,8 @@ inline Dir2 calculate_direction_square_nedge (
   );
 
   __m128 final_cond = _mm_setzero_ps();
-  for (const auto& triangle: triangles) {
+  for (uint32_t i = 0; i < size; i++) {
+    const auto& triangle = triangles[i];
     Dir2 A = Dir2(triangle[0]);
     Dir2 vB = Dir2(triangle[1]);
     Dir2 vC = Dir2(triangle[2]);
@@ -401,10 +401,9 @@ inline Dir2 calculate_direction_square_nedge (
  * 'segments' are store segments,
  * 'many' is the number of segments avaiable in 'segments'.
  * */
-template<std::size_t N>
 inline Dir2 directional_distance_square_segment (
     Dir2 C, Dir2 dims, Dir2 dn, 
-    const std::array<std::pair<Dir2, Dir2>, N>& segments, uint32_t many
+    std::array<MemDir2, 2>* segments, uint32_t many
 ) {
   __m128 half = _mm_set1_ps(0.5f);
 
@@ -418,8 +417,8 @@ inline Dir2 directional_distance_square_segment (
   __m128 dL_ext = _mm_shuffle_ps(dn.v, dn.v, 0b00010001);
   __m128 curr_min = _mm_setzero_ps();
   for (uint32_t i = 0; i < many; i++) {
-    Dir2 A = Dir2(segments[i].second);
-    Dir2 v = Dir2(segments[i].first);
+    Dir2 A = Dir2(segments[i][1]);
+    Dir2 v = Dir2(segments[i][0]);
 
     __m128 B_ext = _mm_add_ps(A.v, v.v);
 
@@ -550,7 +549,7 @@ inline float coef_collision_projectile_circle (Dir2 C1, Dir2 v1, float R1, Dir2 
  * 'A' the point were the segment starts in,
  * 'u' the vector to the last point of the segment.
  * */
-inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir2 u) {
+inline float coef_collision_projectil_segment (Dir2 C, Dir2 v, float R, Dir2 A, Dir2 u) {
   __m128 b = _mm_sub_ps(C.v, A.v);
   __m128 R_ext = _mm_set1_ps(R);
 
@@ -595,6 +594,39 @@ inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir
 
   if (_mm_movemask_ps(_mm_cmplt_ps(cond_long, bound)) & 1)
     return _mm_cvtss_f32(d);
+  else
+    return INFINITY;
+}
+
+/* This function recieves the information of a projectile and the information 
+ * of a line, and returns the multiplicative distance at where they collide. 
+ * If the distance isn't between  0 and 1, it returns INFINITY.
+ *
+ * 'C' is the center of the projectile,
+ * 'v' is the distance traversed of the projectile,
+ * 'R' is the radio of the projectile,
+ * 'A' the point were the line starts in,
+ * 'u' the vector to the last point of the line.
+ * */
+inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir2 d) {
+  __m128 d2 = _mm_mul_ps(d.v, d.v);
+  __m128 d_norm = _mm_rsqrt_ps(_mm_hadd_ps(d2, d2));
+  __m128 d_L = _mm_permute_ps(d.v, 0b00010001);
+  __m128 sngs = _mm_set_ps(0.f, -0.f, 0.f, -0.f);
+  __m128 d_Ln = _mm_xor_ps(_mm_mul_ps(d_L, d_norm), sngs);
+  
+  __m128 parts = _mm_movelh_ps(_mm_sub_ps(C.v, A.v), v.v);
+  parts = _mm_mul_ps(parts, d_Ln);
+  parts = _mm_hadd_ps(parts, _mm_undefined_ps());
+  __m128 denom = _mm_permute_ps(parts, 0b01);
+  __m128 numer = _mm_sub_ss(
+    _mm_xor_ps(_mm_set_ss(R), _mm_and_ps(parts, sngs)), 
+    parts
+  );
+
+  float ret = _mm_cvtss_f32(_mm_div_ss(numer, denom));
+  if (std::abs(ret - 0.5f) < 0.5f)
+    return ret;
   else
     return INFINITY;
 }

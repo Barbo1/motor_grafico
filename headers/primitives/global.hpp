@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <cstdlib>
 
 #include "../concepts/lights.hpp"
 
@@ -29,13 +30,6 @@ class Global {
     
     SDL_Color darkness_color;
     
-    /* random generator information. */
-    static constexpr uint32_t relatives[32] {
-      19, 8191, 337, 431, 89, 257, 2833, 353, 4649, 673, 193, 449, 9901, 97, 
-      1777, 2113, 65537, 113, 953, 683, 1321, 26317, 37171, 1013, 1657, 1103, 
-      13367, 5419, 1429, 20857, 241, 101
-    };
-    uint32_t c, a, xN;
   public:
 
     static Global* create (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept;

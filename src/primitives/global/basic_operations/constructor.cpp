@@ -57,15 +57,5 @@ Global::Global (std::string_view window_name, uint32_t height, uint32_t width, S
       std::chrono::system_clock::now().time_since_epoch()
     ).count()
   );
-  this->c = 1;
-  for (int i = 0; i < 16; i++)
-    if (seed & (1 << i))
-      this->c *= relatives[i];
-  this->a = 2;
-  seed = (~seed >> 5) + 0x0000FFFF;
-  for (int i = 16; i < 32; i++)
-    if (seed & (1 << i))
-      this->a *= relatives[i];
-  this->a += 1;
-  this->xN = 0;
+  srand(seed);
 }

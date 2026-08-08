@@ -1,7 +1,6 @@
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/vectors.hpp"
 #include "../../headers/pr_objects/nedge.hpp"
-#include "../../headers/pr_objects/circle.hpp"
 #include "../../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
@@ -53,32 +52,25 @@ std::array<Dir2, 10> set_points_4 () {
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   
   int32_t error;
-  GlyphsSystem gs (glb, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
     std::exit(-1);
   }
 
-  std::array<Dir2, 17> points = set_points_3();
-  NEdge<17> poly(
-    glb, points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
+  std::array<Dir2, 11> points = set_points_2();
+  NEdgeComp<11> poly(points.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
   }
-  poly.set_position(AngDir2 (100.f, 100.f, 0.f));
 
-  std::array<Dir2, 10> points1 = set_points_4();
-  NEdge<10> mov (
-    glb, points1.data(), points.size(), Dir2 (100.f, 100.f), 2.f, 0.f, true,
-    nullptr, &error
-  );
-
+  std::array<Dir2, 10> points_1 = set_points_4();
+  NEdgeComp<10> poly_1(points_1.data(), points_1.size(), Dir2 (0.f, 0.f), 2.f, 0.f, true, &error);
   if (error < 0) {
     std::cout << "problema al cargar poligono." << std::endl;
     std::exit(-1);
@@ -87,19 +79,19 @@ int main () {
   bool cont = true;
   while (cont) {
     glb->begin_render();
-
-    std::string dial = "false";
-    if (test_collision(mov, poly)) {
-      dial = "true";
-    }
-    std::cout << dial << std::endl;
     
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
-    mov.set_position(AngDir2(static_cast<float>(mouse_x), static_cast<float>(mouse_y), 0.f));
+    poly_1.physical.set_position(Dir2 (static_cast<float>(mouse_x), static_cast<float>(mouse_y)));
 
-    poly.print(glb, &gs);
-    mov.print(glb, &gs);
+    std::string dial = "false";
+    if (test_collision(poly_1.physical, poly.physical)) {
+      dial = "true";
+    }
+    std::cout << dial << std::endl;
+
+    poly_1.physical.print(glb, &gs);
+    poly.physical.print(glb, &gs);
 
     /* Evaluacion de perifericos. */
     if (SDL_PollEvent(&event)) {

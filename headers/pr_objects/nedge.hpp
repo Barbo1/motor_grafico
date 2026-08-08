@@ -1,23 +1,23 @@
 #pragma once
 
-#include "../primitives/types_definition.hpp"
 #include "../concepts/glyph_system.hpp"
 #include "../concepts/visualizer.hpp"
-#include "../concepts/physical.hpp"
 #include "../primitives/global.hpp"
-#include "../primitives/math.hpp"
 
 #include <SDL2/SDL.h>
-#include <codecvt>
 #include <cstdint>
 #include <sys/types.h>
 
-template<std::size_t N>
 struct NEdge {
   MemDir2 position;
   MemDir2 velocity;
   MemDir2 force;
   MemDir2 collision_normal;
+
+  std::array<MemDir2, 3>* triangles;
+  std::array<MemDir2, 3>* placed_triangles;
+  std::array<MemDir2, 2>* placed_segments;
+  uint32_t size;
 
   float ang_pos;
   float ang_vel;
@@ -28,21 +28,12 @@ struct NEdge {
   float f_k; /* kinetic fritction. */
   float acc_f_k;
   float inertia;
-  
-  std::array<std::array<MemDir2, 3>, N> triangles;
-  std::array<std::pair<MemDir2, MemDir2>, N> placed_segments;
-  std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
 
   //  0: movible -> The external forces adn velocities don't affect it.
-  //  1: normal_presence -> Denote if the collision was made, so the force 
-  //                          can be corrected and the friction applied
-  //  2...: indefined.
+  //  1: normal_presence -> Denote if the collision was made, so the 
+  //        force can be corrected and the friction applied.
+  //  2...: undefined.
   uint8_t config;
-
-  NEdge (
-    const Dir2 * points, std::size_t size, AngDir2 center, float density, 
-    float f_k = 0, bool movible = true, int* error = nullptr
-  ) noexcept;
 
   void print (Global * glb, GlyphsSystem * gs);
 
@@ -56,8 +47,30 @@ struct NEdge {
   void add_velocity (const AngDir2 & velocity);
 
   float get_mass () const;
-  private:
-    void reposition_polygon();
+
+  /* This function is meant to reposition the polygon in the space to be able 
+   * to operate correctly. The structures mantained in for each one provides 
+   * the ability to save computation, only calculating when it moves.
+   *
+   * It assume this->position has been overriden with the new location of the
+   * center of the polygon.
+   * */
+  void reposition_polygon();
+  
+  void reposition_segments();
+};
+
+template<std::size_t N>
+struct NEdgeComp {
+  std::array<std::array<MemDir2, 3>, N> triangles;
+  std::array<std::array<MemDir2, 3>, N-2> placed_triangles;
+  std::array<std::array<MemDir2, 2>, N> placed_segments;
+  NEdge physical;
+
+  NEdgeComp (
+    const Dir2 * points, std::size_t size, AngDir2 center, float density, 
+    float f_k = 0, bool movible = true, int* error = nullptr
+  ) noexcept;
 };
 
 
@@ -66,61 +79,6 @@ struct NEdge {
  |                 Code                 |
  ----------------------------------------
 */
-
-/* This function is meant to reposition the polygon in the space to be able 
- * to operate correctly. The structures mantained in for each one provides 
- * the ability to save computation, only calculating when it moves.
- *
- * It assume this->position has been overriden with the new location of the
- * center of the polygon.
- * */
-
-template<std::size_t N>
-void NEdge<N>::reposition_polygon() {
-  Dir2 pos = this->position;
-  __m128 mat_rotation = _mm_xor_ps(
-    _mm_set_ps(0.f, 0.f, -0.f, 0.f),
-    _mm_permute_ps(cos_sin_c(this->ang_pos).v, 0b00010100)
-  );
-
-  // calculate the placed points by rotating and adding the position.
-  for (uint32_t i = 0; i < N-2; i++) {
-    Dir2 sp = Dir2(this->triangles[i][0]);
-    Dir2 sv = Dir2(this->triangles[i+1][0]) - sp;
-    Dir2 v1 = Dir2(this->triangles[i][1]);
-    Dir2 v2 = Dir2(this->triangles[i][2]);
-
-    __m128 spr = _mm_mul_ps(mat_rotation, sp.v);
-    __m128 svr = _mm_mul_ps(mat_rotation, sv.v);
-    __m128 v1r = _mm_mul_ps(mat_rotation, v1.v);
-    __m128 v2r = _mm_mul_ps(mat_rotation, v2.v);
-
-    Dir2 p = Dir2::from_well(_mm_hadd_ps(spr, spr)) + pos;
-
-    this->placed_segments[i].second.store(p);
-    this->placed_segments[i].first.store(Dir2::from_well(_mm_hadd_ps(svr, svr)));
-
-    this->placed_triangles[i][0].store(p);
-    this->placed_triangles[i][1].store(Dir2::from_well(_mm_hadd_ps(v1r, v1r)));
-    this->placed_triangles[i][2].store(Dir2::from_well(_mm_hadd_ps(v2r, v2r)));
-  }
-
-  Dir2 pn2 = Dir2(this->triangles[N-2][0]);
-  Dir2 pn1 = Dir2(this->triangles[N-1][0]);
-  Dir2 p0 = Dir2(this->triangles[0][0]);
-  Dir2 vn2 = pn1 - pn2;
-  Dir2 vn1 = p0 - pn1;
-
-  __m128 p1 = _mm_mul_ps(mat_rotation, pn2.v);
-  __m128 v1 = _mm_mul_ps(mat_rotation, vn2.v);
-  __m128 p2 = _mm_mul_ps(mat_rotation, pn1.v);
-  __m128 v2 = _mm_mul_ps(mat_rotation, vn1.v);
-
-  this->placed_segments[N-2].second.store(Dir2::from_well(_mm_hadd_ps(p1, p1)) + pos);
-  this->placed_segments[N-2].first.store(Dir2::from_well(_mm_hadd_ps(v1, v1)));
-  this->placed_segments[N-1].second.store(Dir2::from_well(_mm_hadd_ps(p2, p2)) + pos);
-  this->placed_segments[N-1].first.store(Dir2::from_well(_mm_hadd_ps(v2, v2)));
-}
 
 
 /* This function goes through all of the points in a division part of the polygon, 
@@ -164,13 +122,12 @@ static inline bool are_points_contiguous (int32_t i, int32_t j, int32_t M) {
 /* * * * * * * * *
  *  Constructor  *
  * * * * * * * * */
-#include<iostream>
 template<std::size_t N>
-NEdge<N>::NEdge (
+NEdgeComp<N>::NEdgeComp (
   const Dir2 * points, std::size_t size, AngDir2 center, 
   float density, float f_k, bool movible, int* error
 ) noexcept {
-  if (size < N) {
+  if (size < N || size < 2) {
     if (error != nullptr)
       *error = -1;
     return;
@@ -351,29 +308,19 @@ NEdge<N>::NEdge (
     return;
   } else *error = 0;
   
-  for (uint32_t j = 0; j < 3*(N-2); j+=3) {
-    std::cout << parts_indexes[j] << ", " << parts_indexes[j + 1] << ", " << parts_indexes[j + 2] << std::endl;
-  }
-
   // reorder of the triangles to begin in order.
   uint32_t founded_index = 0;
   std::array<uint32_t, N> founded_many = {};
   std::array<uint32_t, N> founded_where = {};
   while (founded_index < N-2) {
-    std::cout << "----------- nuevo ---------------" << std::endl;
     for (uint32_t i = 3*founded_index; i < 3*(N-2); i++) {
       uint32_t pos = parts_indexes[i];
       founded_where[pos] = i;
       founded_many[pos]++;
     }
-      
-    for (uint32_t j = 0; j < N-2; j++) 
-      std::cout << founded_many[j] << ", ";
-    std::cout << std::endl;
 
     bool founded = false;
-    for (uint32_t i = 0; i < N-2; i++) {
-      std::cout << "coso" << std::endl;
+    for (uint32_t i = 0; i < N-2 && !founded; i++) {
       if (founded_many[i] == 1) {
 
         founded = true;
@@ -384,11 +331,6 @@ NEdge<N>::NEdge (
         for (uint32_t k = 0; k < 3; k++)
           std::swap(parts_indexes[where_mod + k], parts_indexes[3*founded_index + k]);
         founded_index++;
-
-        std::cout << "luego." << std::endl;
-        for (uint32_t j = 0; j < 3*(N-2); j+=3) {
-          std::cout << parts_indexes[j] << ", " << parts_indexes[j + 1] << ", " << parts_indexes[j + 2] << std::endl;
-        }
       }
     }
     if (!founded) {
@@ -403,8 +345,28 @@ NEdge<N>::NEdge (
   }
   
   // creating the triangles, and calculating final area and inertia.
-  this->area = 0.f;
-  this->inertia = 0.f;
+  this->physical = NEdge {
+    .position = MemDir2(),
+    .velocity = MemDir2(),
+    .force = MemDir2(),
+    .collision_normal = MemDir2(),
+    .triangles = &(this->triangles[0]),
+    .placed_triangles = &(this->placed_triangles[0]),
+    .placed_segments = &(this->placed_segments[0]),
+    .size = N,
+    .ang_pos = center.a(),
+    .ang_vel = 0.f,
+    .ang_for = 0.f,
+    .area = 0.f,
+    .density = density,
+    .f_k = f_k,
+    .acc_f_k = 0.f,
+    .inertia = 0.f,
+    .config = movible
+  };
+
+  this->physical.position.store(center);
+
   uint32_t* parts_indexes_pointer = parts_indexes.data();
   for (uint32_t i = 0; i < N-2; i++) {
     uint32_t index_1 = *(parts_indexes_pointer++);
@@ -420,8 +382,8 @@ NEdge<N>::NEdge (
     const float triangle_area = 0.5f * std::abs(v1.pL(v3));
     const float triangle_inertia = (v1.modulo2() + v2.modulo2() + v3.modulo2()) / 36.f;
     const float triangle_inertia_dev = (p1 + p2 + p3).modulo2() / 9.f;
-    this->area += triangle_area;
-    this->inertia = std::fmaf(triangle_inertia + triangle_inertia_dev, triangle_area, this->inertia);
+    this->physical.area += triangle_area;
+    this->physical.inertia = std::fmaf(triangle_inertia + triangle_inertia_dev, triangle_area, this->physical.inertia);
 
     this->triangles[index_1][0].store(p1);
     this->triangles[index_1][1].store(v1);
@@ -429,142 +391,12 @@ NEdge<N>::NEdge (
   }
   this->triangles[N-2][0].store(points[N-2]);
   this->triangles[N-1][0].store(points[N-1]);
+  this->physical.inertia *= density;
 
-  this->density = density;
-  this->inertia *= density;    
-
-  this->ang_for = 0.f;
-  this->ang_vel = 0.f;
-  this->ang_pos = 0.f;
-
-  this->position.store(center);
-  this->velocity.store(Dir2());
-  this->force.store(Dir2());
-  this->collision_normal.store(Dir2());
-  this->ang_pos = center.a();
-  this->ang_vel = 0.f;
-  this->ang_for = 0.f;
-
-  this->f_k = f_k;
-  this->acc_f_k = 0.f;
-
-  this->config = movible;
-   
-  this->reposition_polygon();
+  this->physical.reposition_polygon();
 }
 
 
 /* * * * * * * * *
  *  Operations  *
  * * * * * * * * */
-
-template<std::size_t N>
-void NEdge<N>::print (Global * glb, GlyphsSystem * gs) {
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  uint32_t i = 0;
-  for (const auto& triangle: bring_memdir(this->placed_triangles)) {
-    const Dir2 point1 = triangle[0];
-    const Dir2 point2 = triangle[1] + point1;
-    const Dir2 point3 = triangle[2] + point1;
-    SDL_SetRenderDrawColor (glb->get_render(), 255, 0, 0, 255);
-    SDL_RenderDrawLine (
-      glb->get_render(), 
-      static_cast<uint32_t>(point1.x()),
-      static_cast<uint32_t>(point1.y()),
-      static_cast<uint32_t>(point2.x()),
-      static_cast<uint32_t>(point2.y())
-    );
-    SDL_RenderDrawLine (
-      glb->get_render(), 
-      static_cast<uint32_t>(point1.x()),
-      static_cast<uint32_t>(point1.y()),
-      static_cast<uint32_t>(point3.x()),
-      static_cast<uint32_t>(point3.y())
-    );
-    SDL_RenderDrawLine (
-      glb->get_render(), 
-      static_cast<uint32_t>(point2.x()),
-      static_cast<uint32_t>(point2.y()),
-      static_cast<uint32_t>(point3.x()),
-      static_cast<uint32_t>(point3.y())
-    );
-    gs->print(
-      conv.from_bytes(std::to_string(i)), 
-      20, 
-      SDL_Color {.r = 255, .g = 255, .b = 255, .a = 255}, 
-      point2 + Dir2(5.f, 5.f)
-    );
-    i++;
-  }
-}
-
-template<std::size_t N>
-void NEdge<N>::calculate_movement(Global* glb, const AngDir2 & extrenal_forces) {
-  if (this->config & PCO_MOVIBLE) {
-    AngDir2 final_force = AngDir2(this->force, this->ang_for) + extrenal_forces;
-    AngDir2 velocity_2 = AngDir2(this->velocity, this->ang_vel);
-    AngDir2 position_2 = AngDir2(this->position, this->ang_pos);
-
-    if (this->config & PCO_IS_NORMAL) {
-      this->config &= ~PCO_IS_NORMAL;
-      AngDir2 collision_2 = AngDir2(this->collision_normal);
-      float direction = final_force * collision_2;
-      if (direction < 0.f) {
-        float v_n = velocity_2 * collision_2;
-        AngDir2 friction = collision_2.nmadd(v_n, velocity_2);
-
-        final_force = AngDir2 ();
-        if (friction.modulo2() > 0.001f)
-          final_force = friction.normalize() * this->acc_f_k * direction;
-      }
-    }
-
-    float coef_mult = (glb->get_time() + 1.f) * DRAW_RATE;
-
-    final_force *= 2.f / (this->density * this->area);
-    velocity_2 = final_force.madd(coef_mult, velocity_2);
-    position_2 = velocity_2.madd (coef_mult, position_2);
-
-    this->velocity.store(velocity_2);
-    this->ang_vel = velocity_2.a();
-    this->position.store(position_2);
-    this->ang_pos = position_2.a();
-
-    this->reposition_polygon();
-  }
-}
-
-template<std::size_t N>
-void NEdge<N>::set_position (const AngDir2& center) {
-  this->position.store(center);
-  this->ang_pos = center.a();
-  this->reposition_polygon();
-}
-
-template<std::size_t N>
-void NEdge<N>::set_velocity (const AngDir2 & velocity) {
-  this->velocity.store(velocity);
-  this->ang_vel = velocity.a();
-}
-
-template<std::size_t N>
-void NEdge<N>::set_force (const AngDir2 & force) {
-  this->force.store(force);
-  this->ang_for = force.a();
-}
-
-template<std::size_t N>
-void NEdge<N>::add_force (const AngDir2 & force) {
-  this->force.store(Dir2(force) + Dir2(this->force));
-  this->ang_for += force.a();
-}
-
-template<std::size_t N>
-void NEdge<N>::add_velocity (const AngDir2 & velocity) {
-  this->velocity.store(Dir2(velocity) + Dir2(this->velocity));
-  this->ang_vel += velocity.a();
-}
-template<std::size_t N>
-float NEdge<N>::get_mass () const {
-  return this->density * this->area;
-}

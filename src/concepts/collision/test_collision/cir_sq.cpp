@@ -1,5 +1,4 @@
-#include "../../../../headers/pr_objects/circle.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
+#include "../../../../headers/concepts/collision.hpp"
 
 bool test_collision (const Circle& cir, const Square& sq) {
   Dir2 diff = ((Dir2(cir.position) - Dir2(sq.position)).abs() - Dir2 (sq.dims)).max0();

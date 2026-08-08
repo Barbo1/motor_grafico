@@ -8,6 +8,7 @@
 #include "../pr_objects/square.hpp"
 #include "../pr_objects/nedge.hpp"
 #include "../primitives/types_definition.hpp"
+#include "../concepts/physical.hpp"
 
 #include <SDL2/SDL.h>
 #include <array>
@@ -46,6 +47,7 @@ class ParticleSource {
     void particle_setter(Particle& particle);
 
   public:
+    ParticleSource() = default;
     ParticleSource (
       Global* glb,
       const AngDir2& position, 
@@ -67,15 +69,15 @@ class ParticleSource {
 
     bool test_collition (Circle&);
     bool test_collition (Square&);
-    template<std::size_t M> bool test_collition (NEdge<M>&);
+    bool test_collition (NEdge&);
 
     void correct_collition (Square&);
     void correct_collition (Circle&);
-    template<std::size_t M> void correct_collition (NEdge<M>&);
+    void correct_collition (NEdge&);
 
     void resolve_collition (Square&);
     void resolve_collition (Circle&);
-    template<std::size_t M> void resolve_collition (NEdge<M>&);
+    void resolve_collition (NEdge&);
 
     void draw ();
 
@@ -88,15 +90,6 @@ class ParticleSource<PS_EXPLOSION, N, F, T> {
   private:
     Global* glb;
 
-    /* Particle infromation. */
-    AngDir2 init_position;
-    float velocity_coef;
-    std::pair<float, float> change_angle;
-    Visualizer<D2FIG> texture;
-
-    /* General information. */
-    uint32_t ticks_to_live;
-
     /* Array of particles. */
     struct particle_data {
       uint32_t ticks;
@@ -104,10 +97,21 @@ class ParticleSource<PS_EXPLOSION, N, F, T> {
     };
     std::array<std::pair<Particle, particle_data>, N> particles;
 
+    /* Particle infromation. */
+    Visualizer<D2FIG> texture;
+    std::pair<float, float> change_angle;
+    AngDir2 init_position;
+    float velocity_coef;
+
+    /* General information. */
+    uint32_t ticks_to_live;
+    bool living;
+
     /* helpers. */
     void particle_setter(Particle& particle);
 
   public:
+    ParticleSource() = default;
     ParticleSource (
       Global* glb,
       const AngDir2& position, 
@@ -118,22 +122,24 @@ class ParticleSource<PS_EXPLOSION, N, F, T> {
       uint32_t ticks_to_live = 1200
     ) noexcept;
    
+    void set_position (const AngDir2 &);
     void set_external_force (const AngDir2 &);
     void add_external_force (const AngDir2 &);
     void calculate_movement (const AngDir2 &);
     void burst ();
+    bool bursting () const;
 
     bool test_collition (Circle&);
     bool test_collition (Square&);
-    template<std::size_t M> bool test_collition (NEdge<M>&);
+    bool test_collition (NEdge&);
 
     void correct_collition (Square&);
     void correct_collition (Circle&);
-    template<std::size_t M> void correct_collition (NEdge<M>&);
+    void correct_collition (NEdge&);
 
     void resolve_collition (Square&);
     void resolve_collition (Circle&);
-    template<std::size_t M> void resolve_collition (NEdge<M>&);
+    void resolve_collition (NEdge&);
 
     void draw ();
 
@@ -359,17 +365,31 @@ ParticleSource<PS_EXPLOSION, N, F, T>::ParticleSource(
   uint32_t ticks_to_live
 ) noexcept :
   glb(glb),
+  texture(texture),
+  change_angle(change_angle),
   init_position(position),
   velocity_coef(velocity_coef),
-  change_angle(change_angle),
-  texture(texture),
-  ticks_to_live(ticks_to_live)
+  ticks_to_live(ticks_to_live),
+  living(false)
 { 
   for (uint32_t i = 0; i < N; i++) {
     this->particles[i] = std::pair<Particle, particle_data> (
-      Particle (init_position, radio, PARTICLE_MASS), particle_data {.ticks = 0, .force = AngDir2()}
+      Particle (
+        init_position, 
+        radio, 
+        PARTICLE_MASS
+      ), 
+      particle_data {
+        .ticks = static_cast<uint32_t>(ticks_to_live * 0.01f * glb->get_random_f01()), 
+        .force = AngDir2()
+      }
     );
   }
+}
+
+template<std::size_t N, Function F, Function T>
+void ParticleSource<PS_EXPLOSION, N, F, T>::set_position (const AngDir2 & pos) {
+  this->init_position = pos;
 }
 
 template<std::size_t N, Function F, Function T>
@@ -384,8 +404,10 @@ void ParticleSource<PS_EXPLOSION, N, F, T>::calculate_movement (const AngDir2 & 
   uint32_t ticks = this->glb->get_ticks() + 1;
   float draw_coef = (this->glb->get_time() + 1.f) * DRAW_RATE;
 
+  bool living_particle = false;
   for (auto& [particle, data]: this->particles) {
     if (data.ticks <= this->ticks_to_live) {
+      living_particle = true;
       data.ticks += ticks;
         
       Dir2 vel = Dir2(particle.velocity);
@@ -396,14 +418,21 @@ void ParticleSource<PS_EXPLOSION, N, F, T>::calculate_movement (const AngDir2 & 
       particle.position.store(new_vel.madd(draw_coef, pos));
     }
   }
+  this->living = living_particle;
 }
 
 template<std::size_t N, Function F, Function T>
 void ParticleSource<PS_EXPLOSION, N, F, T>::burst () {
+  this->living = true;
   for (auto& [particle, data]: this->particles) {
     this->particle_setter(particle);
     data.ticks = 0;
   }
+}
+
+template<std::size_t N, Function F, Function T>
+bool ParticleSource<PS_EXPLOSION, N, F, T>::bursting () const {
+  return this->living;
 }
 
 template<std::size_t N, Function F, Function T>

@@ -1,4 +1,3 @@
-#include "../../../../headers/pr_objects/circle.hpp"
 #include "../../../../headers/concepts/collision.hpp"
 
 bool test_collision (const Circle& cir1, const Circle& cir2) {

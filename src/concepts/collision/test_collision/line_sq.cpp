@@ -1,7 +1,4 @@
-#include "../../../../headers/pr_objects/line.hpp"
-#include "../../../../headers/pr_objects/square.hpp"
-
-#include <cmath>
+#include "../../../../headers/concepts/collision.hpp"
 
 bool test_collision (const Line& line, const Square& sq) {
   Dir2 u = Dir2 (-1.f, std::copysign(1.f, line.v.x * line.v.y)).dir_mul(Dir2(sq.dims));

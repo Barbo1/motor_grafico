@@ -2,8 +2,6 @@
 #include "../../../../headers/primitives/types_definition.hpp"
 #include "../../../../headers/concepts/physical.hpp"
 
-#include <cmath>
-
 void resolve_collision (Square& sq1, Square& sq2) {
   Dir2 sq1_pos = sq1.position;
   Dir2 sq1_dims = sq1.dims;
