@@ -2,12 +2,13 @@
 #include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_video.h>
 #include <cstdint>
 #include <iostream>
 #include <cstring>
 #include <chrono>
 
-Global::Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept {
+Global::Global (std::string_view window_name, SDL_Color bg_color) noexcept {
   /* Initialization of SDL. */
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "Could not initialize SDL" << SDL_GetError() << std::endl;
@@ -16,9 +17,16 @@ Global::Global (std::string_view window_name, uint32_t height, uint32_t width, S
   
   /* Creation of window. */
   this->window = SDL_CreateWindow (
-    window_name.data(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-    width, height, SDL_WINDOW_SHOWN
+    window_name.data(), 
+    SDL_WINDOWPOS_UNDEFINED, 
+    SDL_WINDOWPOS_UNDEFINED, 
+    0, 
+    0, 
+    SDL_WINDOW_FULLSCREEN_DESKTOP
   );
+  int width, height;
+  SDL_GetWindowSize(this->window, &width, &height);
+
   if (this->window == nullptr) {
     std::cerr << "Could not initialize window" << SDL_GetError() << std::endl;
     SDL_Quit ();

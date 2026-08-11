@@ -1,7 +1,5 @@
 #include "../../../headers/concepts/glyph_system.hpp"
-#include <codecvt>
 #include <cstdint>
-#include <locale>
 
 float GlyphsSystem::get_ascent (float size) {
   return this->ascent * size;
@@ -36,6 +34,17 @@ float GlyphsSystem::get_length (std::u16string_view str, uint32_t many, float si
 }
 
 float GlyphsSystem::get_length (std::string_view str, uint32_t many, float size) {
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t, 0x10ffff, std::little_endian>, char16_t> conv;
-  return this->get_length(conv.from_bytes(std::string(str)), many, size);
+  float total_length = 0.f;
+  float sizef = static_cast<float>(size);
+  for (uint32_t i = 0; i < many; i++) {
+    const char16_t& character = static_cast<char16_t>(str[i]);
+    uint32_t pos = this->mapping[character];
+    total_length += (
+      pos < this->advance_widths.size () ? 
+        this->advance_widths[pos] : 
+        this->advance_widths.back()
+    ) * sizef;
+  }
+
+  return total_length;
 }

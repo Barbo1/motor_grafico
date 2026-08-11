@@ -11,7 +11,7 @@
 #include <iostream>
 #include <cmath>
 
-Global* glb = Global::create("Ventana", 600, 800, SDL_Color {30, 30, 30, 0});
+Global* glb = Global::create("Ventana", SDL_Color {30, 30, 30, 0});
 Arena arena = Arena(1000*1000*4);
 
 int error;
@@ -140,13 +140,19 @@ int main () {
   TextBox textbox = TextBox (
     glb,
     &gs,
+    arena,
     nullptr,
     Dir2(500.f, 300.f),
     Dir2(150.f, 50.f),
     20,
     SDL_Color {.r=255, .g=255, .b=255, .a=255},
-    40
+    40,
+    &error
   );
+  if (error < 0) {
+    std::cout << "problema inicializando textbox." << std::endl;
+    return -1;
+  }
   const Visualizer<D2FIG> textbox_background =
     ImageModifier::square(
       textbox.get_dimentions().y(), 
@@ -161,13 +167,19 @@ int main () {
   Label label_1 = Label (
     glb,
     &gs,
+    arena,
     [&] (Dir2 pos) {textbox_background.draw(glb, pos);},
     Dir2(600.f, 400.f),
     Dir2(150.f, 50.f),
     20,
     SDL_Color {.r=255, .g=255, .b=255, .a=255},
-    30
+    30,
+    &error
   );
+  if (error < 0) {
+    std::cout << "problema inicializando label." << std::endl;
+    return -1;
+  }
 
   GuiComponent inicio = GuiComponent(glb, 6, keys, &error);
   if (error != 0) {

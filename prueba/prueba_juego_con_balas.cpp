@@ -8,9 +8,7 @@
 #include "../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_video.h>
 #include <cstdint>
 #include <iostream>
 #include <cmath>
@@ -30,22 +28,23 @@ void configure_glyph_system (GlyphsSystem* gs) {
 
     u'_', u'?', u'!', u':', u',', u'.', u'/'
   };
-  for (const auto& character: characters) {
+  for (const auto& character: characters)
     gs->cache(character, 20, color);
-  }
   gs->clear_meta();
 }
 
 int main () {
   std::string name = "Ventana";
-  Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create(name, SDL_Color {30, 30, 30, 0});
   Arena arena = Arena(1000*1000*8);
+  uint32_t width = glb->get_width();
+  uint32_t height = glb->get_height();
   
   int32_t error;
   GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
   if (error < 0) {
     std::cout << "problema al cargar fuentes de letra." << std::endl;
-    std::exit(-1);
+    return -1;
   }
   configure_glyph_system (&gs);
 
@@ -59,8 +58,6 @@ int main () {
   SDL_Color cian = SDL_Color {0,255,255,255};
 
   /* limites del escenario */
-  uint32_t width = glb->get_width();
-  uint32_t height = glb->get_height();
   std::array<Line, 4> lines = std::array<Line, 4> {
     Line (Dir2 (0.f, 0.f), Dir2 ((float)width, 0.f)),
     Line (Dir2 (0.f, 0.f), Dir2 (0.f, (float)height)),
@@ -80,7 +77,6 @@ int main () {
     .texture = ImageModifier::square(40, 40, color).cast(glb),
     .physical_body = Square(AngDir2 (20.f, 20.f, 0.f), 20, 20, 2.f)
   };
-  float player_pos_margin = 0.f;
 
 
   // informacion del cajas
@@ -131,8 +127,6 @@ int main () {
     };
   }
 
-  const int32_t ratio_bullet_generation_ms = 300;
-
 
   // Enemies.
 
@@ -147,9 +141,8 @@ int main () {
   std::array<FlyingOrbs, 10> enemies;
   
   {
-    uint32_t gen_rand = glb->get_random();
-    float radio = static_cast<float>((gen_rand & 7) + 30);
-    std::cout << (gen_rand & 7) << std::endl;
+    uint32_t gen_rand = glb->get_random() & 7;
+    float radio = static_cast<float>(gen_rand + 30);
     enemies[0] = FlyingOrbs {
       .texture = ImageModifier::circle(arena, radio, red).cast(glb),
       .physical_body = Circle (Dir2(600.f, 100.f), radio, 2.f),
@@ -159,9 +152,8 @@ int main () {
     };
     enemies[0].physical_body.velocity.store(Dir2(0.01f, 0.01f));
 
-    gen_rand = glb->get_random();
-    radio = static_cast<float>((gen_rand & 7) + 30);
-    std::cout << (gen_rand & 7) << std::endl;
+    gen_rand = glb->get_random() & 7;
+    radio = static_cast<float>(gen_rand + 30);
     enemies[1] = FlyingOrbs {
       .texture = ImageModifier::circle(arena, radio, red).cast(glb),
       .physical_body = Circle (Dir2(400.f, 400.f), radio, 2.f),
@@ -175,14 +167,21 @@ int main () {
 
   // general information in the program.
 
-  float min_cos_angle_direction = 0.7071f;
+  float player_vel = 0.2f;
+  float amplitud_pos_margin = 0.365f; // max = 0.365f
+  float shot_aperture_angle = M_PI / 18.f;
   float bullet_velocity_norm = 0.02f;
-  uint32_t max_bullet_quantity = 8;
+  uint32_t max_bullet_quantity = 100;
+  int32_t ratio_bullet_generation_ms = 300;
 
   // program.
   int x_mouse, y_mouse;
+  float real_player_vel = player_vel / (2.f * amplitud_pos_margin);
+  float middle_pos_margin = 0.535f;
+  float player_pos_margin = 0.5f;
   uint32_t many_bullets = max_bullet_quantity;
   int32_t time_to_next_bullet = ratio_bullet_generation_ms;
+  float min_cos_angle_direction = std::cos(shot_aperture_angle);
   while (cont) {
     std::string aux_str = std::to_string(many_bullets) + " : " + std::to_string(max_bullet_quantity);
     time_to_next_bullet = std::max(0, time_to_next_bullet - static_cast<int32_t>(glb->get_ticks()));
@@ -190,7 +189,11 @@ int main () {
     /* Render of the objects. */
     glb->begin_render();
       gs.print (aux_str, 20, color, Dir2(20.f, 20.f));
-      player.physical_body.position.store(Dir2(30.f, player_pos_margin * 400.f + 100.f));
+      player.physical_body.position.store(Dir2(
+        width * 0.04, 
+        height * (std::fmaf(std::fmaf(player_pos_margin, 2.f, -1.f), amplitud_pos_margin, middle_pos_margin))
+      ));
+
       player.texture.draw(glb, player.physical_body.position);
       
       for (auto& box: boxes)
@@ -291,9 +294,9 @@ int main () {
     }
 
     if (key_array[SDL_SCANCODE_W])
-      player_pos_margin = std::max(player_pos_margin - glb->get_time(), 0.f);
+      player_pos_margin = std::max(player_pos_margin - real_player_vel*glb->get_time(), 0.f);
     if (key_array[SDL_SCANCODE_S])
-      player_pos_margin = std::min(player_pos_margin + glb->get_time(), 1.f);
+      player_pos_margin = std::min(player_pos_margin + real_player_vel*glb->get_time(), 1.f);
 
     uint32_t mask = SDL_GetMouseState(&x_mouse, &y_mouse);
     bool clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);

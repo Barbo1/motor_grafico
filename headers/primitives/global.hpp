@@ -26,13 +26,13 @@ class Global {
 
     /* singleton. */
     static Global* single;
-    Global (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept;
+    Global (std::string_view window_name, SDL_Color bg_color) noexcept;
     
     SDL_Color darkness_color;
     
   public:
 
-    static Global* create (std::string_view window_name, uint32_t height, uint32_t width, SDL_Color bg_color) noexcept;
+    static Global* create (std::string_view window_name, SDL_Color bg_color) noexcept;
     ~Global ();
 
     /* Render functions. */

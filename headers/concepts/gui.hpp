@@ -2,6 +2,7 @@
 
 #include "../concepts/glyph_system.hpp"
 #include "../concepts/visualizer.hpp"
+#include "../primitives/arena.hpp"
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -101,7 +102,7 @@ class TextBox {
     Visualizer<D2FIG> cursor_image;
     GlyphsSystem* gs;
     SDL_Texture* text_area;
-    char16_t* text;
+    char* text;
     Dir2 position, dims;
     SDL_Color letter_color;
     uint32_t 
@@ -120,13 +121,13 @@ class TextBox {
       TBCWinAgRight = 0b10
     };
 
-    void copial_patra() {
+    inline void copial_patra() {
       for (uint32_t i = this->curr_pos-1; i < this->text_len; i++) {
         this->text[i] = this->text[i+1];
       }
     }
 
-    void copial_palante() {
+    inline void copial_palante() {
       for (uint32_t i = this->text_len; this->curr_pos < i; i--) {
         this->text[i] = this->text[i-1];
       }
@@ -136,15 +137,15 @@ class TextBox {
     TextBox (
       Global* glb,
       GlyphsSystem* gs,
+      Arena& arena,
       std::function<void(Dir2)> background,
       Dir2 position, 
       Dir2 dims,
       uint32_t max_len,
       SDL_Color letter_color,
-      uint32_t letter_size
+      uint32_t letter_size,
+      int *error
     ) noexcept;
-
-    ~TextBox();
 
     void set_background_fn (std::function<void(Dir2)> fn);
 
@@ -154,8 +155,7 @@ class TextBox {
     void set_dimentions (const Dir2&);
     Dir2 get_dimentions () const;
     
-    std::u16string get_text_16() const;
-    std::string get_text() const;
+    std::string_view get_text() const;
 
     bool set_cursor(uint32_t pos);
     uint32_t get_cursor() const;
@@ -170,7 +170,7 @@ class Label {
     std::function<void(Dir2)> background;
     GlyphsSystem* gs;
     SDL_Texture* text_area;
-    char16_t* text;
+    char* text;
     Dir2 position, dims;
     SDL_Color letter_color;
     uint32_t 
@@ -186,15 +186,15 @@ class Label {
     Label (
       Global* glb,
       GlyphsSystem* gs,
+      Arena& arena,
       std::function<void(Dir2)> background,
       Dir2 position, 
       Dir2 dims,
       uint32_t max_len,
       SDL_Color letter_color,
-      uint32_t letter_size
+      uint32_t letter_size,
+      int *error
     ) noexcept;
-
-    ~Label();
 
     void set_background_fn (std::function<void(Dir2)> fn);
 
@@ -204,10 +204,8 @@ class Label {
     void set_dimentions (const Dir2&);
     Dir2 get_dimentions () const;
     
-    std::u16string get_text_16() const;
-    std::string get_text() const;
+    std::string_view get_text() const;
     void set_text(std::string_view);
-    void set_text(std::u16string_view);
 
     friend class GuiComponent;
 };

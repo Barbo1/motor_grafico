@@ -4,16 +4,17 @@
 Label::Label (
   Global* glb,
   GlyphsSystem* gs,
+  Arena& arena,
   std::function<void(Dir2)> background,
   Dir2 position, 
   Dir2 dims,
   uint32_t max_len,
   SDL_Color letter_color,
-  uint32_t letter_size
+  uint32_t letter_size,
+  int *error
 ) noexcept:
    background(background),
    gs(gs),
-   text(new char16_t[max_len]),
    position(position),
    dims(dims),
    letter_color(letter_color),
@@ -22,6 +23,12 @@ Label::Label (
    text_len(0),
    config(0)
 {
+  this->text = arena.talloc<char>(max_len);
+  if (this->text == nullptr) {
+    if (error != nullptr)
+      *error = -1;
+    return;
+  }
   this->text_area = SDL_CreateTexture(
     glb->get_render(), 
     SDL_PIXELFORMAT_RGBA8888, 

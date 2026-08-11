@@ -185,7 +185,7 @@ void GuiComponent::test () {
                     TextBox::TextBoxConfig::TBCWinAgRight;
                   textbox->window_end = prev_text_len;
                   textbox->window_start = textbox->gs->get_left_window(
-                    textbox->get_text_16(), 
+                    textbox->get_text(), 
                     textbox->text_len,
                     textbox->letter_size,
                     textbox->dims.x(),
@@ -196,7 +196,7 @@ void GuiComponent::test () {
                   if (textbox->window_end <= textbox->curr_pos) {
                     textbox->window_end = textbox->curr_pos + 1;
                     textbox->window_start = textbox->gs->get_left_window(
-                      textbox->get_text_16(), 
+                      textbox->get_text(), 
                       textbox->curr_pos,
                       textbox->letter_size,
                       textbox->dims.x(),
@@ -207,7 +207,7 @@ void GuiComponent::test () {
                     textbox->config &= ~TextBox::TextBoxConfig::TBCWinAgRight;
                     textbox->window_start = textbox->curr_pos;
                     textbox->window_end = textbox->gs->get_right_window(
-                      textbox->get_text_16(), 
+                      textbox->get_text(), 
                       textbox->curr_pos,
                       textbox->letter_size,
                       textbox->dims.x(),
@@ -220,7 +220,7 @@ void GuiComponent::test () {
                     textbox->config |= TextBox::TextBoxConfig::TBCWinAgRight;
                     textbox->window_end = textbox->curr_pos + 1;
                     textbox->window_start = textbox->gs->get_left_window(
-                      textbox->get_text_16(),
+                      textbox->get_text(),
                       textbox->curr_pos,
                       textbox->letter_size,
                       textbox->dims.x(),
@@ -230,7 +230,7 @@ void GuiComponent::test () {
                   } else if (textbox->curr_pos <= textbox->window_start) {
                     textbox->window_start = textbox->curr_pos;
                     textbox->window_end = textbox->gs->get_right_window(
-                      textbox->get_text_16(), 
+                      textbox->get_text(), 
                       textbox->curr_pos,
                       textbox->letter_size,
                       textbox->dims.x(),
@@ -245,7 +245,7 @@ void GuiComponent::test () {
               }
 
               // filling the text_area with the new image which will be showed.
-              std::u16string str = textbox->get_text_16().substr(
+              std::string_view str = textbox->get_text().substr(
                 textbox->window_start, 
                 textbox->window_end - textbox->window_start
               );
@@ -281,7 +281,7 @@ void GuiComponent::test () {
         Label* label = static_cast<Label*>(this->elems[i].ptr);
         if (label->config & Label::LabelConfig::LCchanged) {
           label->gs->fill (
-            label->get_text_16(), 
+            label->get_text(), 
             label->letter_size, 
             label->letter_color, 
             label->text_area

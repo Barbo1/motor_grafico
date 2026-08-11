@@ -1,4 +1,5 @@
 #include "../../headers/concepts/lights.hpp"
+#include "../../headers/concepts/glyph_system.hpp"
 #include "../../headers/concepts/image_modifier.hpp"
 #include "../../headers/primitives/global.hpp"
 
@@ -83,9 +84,38 @@ std::vector<MaskObject> get_segments_3 () {
   };
 }
 
+void configure_glyph_system (GlyphsSystem* gs, uint32_t size, SDL_Color color) {
+  constexpr std::array<char16_t, 26 + 26 + 10 + 8 + 2> characters = {
+    u'A', u'B', u'C', u'D', u'E', u'F', u'G', u'H', u'I', u'J',
+    u'K', u'L', u'M', u'N', u'O', u'P', u'Q', u'R', u'S', u'T',
+    u'U', u'V', u'W', u'X', u'Y', u'Z',
+
+    u'a', u'b', u'c', u'd', u'e', u'f', u'g', u'h', u'i', u'j',
+    u'k', u'l', u'm', u'n', u'o', u'p', u'q', u'r', u's', u't',
+    u'u', u'v', u'w', u'x', u'y', u'z',
+
+    u'0', u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9',
+
+    u'_', u'?', u'!', u':', u',', u'.', u'/', u'(', u')', u' '
+  };
+  for (const auto& character: characters)
+    gs->cache(character, size, color);
+  gs->clear_meta();
+}
+
 int main () {
-  std::string name = "Ventana";
-  Global* glb = Global::create(name, 786, 1280, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create("hola", SDL_Color {30, 30, 30, 0});
+  uint32_t width = glb->get_width();
+  Arena arena = Arena(1000*1000*8);
+  
+  int32_t error;
+  SDL_Color color = SDL_Color {255,255,255,255};
+  GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
+  if (error < 0) {
+    std::cout << "problema al cargar fuentes de letra." << std::endl;
+    return -1;
+  }
+  configure_glyph_system (&gs, 20, color);
 
   Light light_0 = {
     .intensity = 70.f,
@@ -122,9 +152,6 @@ int main () {
   view_1 | view_0.draw_light_view_mask (light_2, segments);
 
   while (cont) {
-    std::cout << "light_0: (" << light_0.position.x << ", " << light_0.position.y << ")" << std::endl;
-    std::cout << "light_1: (" << light_1.position.x << ", " << light_1.position.y << ")" << std::endl;
-
     glb->begin_render();
       img_mod.draw (glb, Dir2 {200.f, 200.f});
 
@@ -135,15 +162,24 @@ int main () {
 
       float a = glb->get_time();
       avg_time_1 += (a - avg_time_1) / aux_time_1;
-      std::cout << ", tiempo: " << a << ", avg: " << avg_time_1 << std::endl;
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
       for (const auto& segment: segments) {
-        SDL_RenderDrawLine(glb->get_render(), segment.point1.x, segment.point1.y, segment.point2.x, segment.point2.y);
+        SDL_RenderDrawLine(glb->get_render(), segment.point1.x(), segment.point1.y(), segment.point2.x(), segment.point2.y());
       }
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
-      SDL_RenderDrawPoint(glb->get_render(), light_0.position.x, light_0.position.y);
+      SDL_RenderDrawPoint(glb->get_render(), light_0.position.x(), light_0.position.y());
+      std::string aux_str_1 = "light_0: (" + 
+        std::to_string(light_0.position.x()) + ", " + 
+        std::to_string(light_0.position.y()) + ")";
+      std::string aux_str_2 = "light_1: (" + 
+        std::to_string(light_1.position.x()) + ", " + 
+        std::to_string(light_1.position.y()) + ")";
+      std::string aux_str_3 = "tiempo: " + std::to_string(a) + ", avg: " + std::to_string(avg_time_1);
+      gs.print (aux_str_1, 20, color, Dir2(width - 300.f, 20.f));
+      gs.print (aux_str_2, 20, color, Dir2(width - 300.f, 50.f));
+      gs.print (aux_str_3, 20, color, Dir2(width - 300.f, 80.f));
     glb->end_render();
     
     if (SDL_PollEvent(&event)) {
@@ -161,8 +197,8 @@ int main () {
           break;
         
         case SDL_MOUSEMOTION:
-          light_0.position.x = event.motion.x;
-          light_0.position.y = event.motion.y;
+          light_0.position.x(event.motion.x);
+          light_0.position.y(event.motion.y);
           break;
       }
     }

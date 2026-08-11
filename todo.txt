@@ -135,12 +135,12 @@
         |V| + resposicion, resolucion y punto de colision para linea-poligono.
         | | + resposicion, resolucion y punto de colision para poligono-poligono.
  | | - implementar proyectiles:
-        | | + testeos.
+        |V| + testeos.
         | | + resposiciones.
         | | + resoluciones.
         | | + puntos de colision.
  | | - mejoras en el codigo: 
-        | | + agregar una comprobacion de punteros nullos cada vez que se hace un new,
+        |T| + agregar una comprobacion de punteros nullos cada vez que se hace un new,
         |V| + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
         | | + mejorar el manejo de la memoria de la rasterizacion de letras.
         |V| + mejorar el manejo de la memoria de los vectores.
