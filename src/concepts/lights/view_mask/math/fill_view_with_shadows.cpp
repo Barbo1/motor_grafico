@@ -2,24 +2,31 @@
 #include <SDL2/SDL_surface.h>
 #include <array>
 
-void fill_view_with_shadows (SDL_Surface*& img, const Dir2& position, const std::vector<MaskObject>& segments) {
+void fill_view_with_shadows (
+  SDL_Surface*& img, 
+  DynamicalArena& darena,
+  MaskObjectList segments,
+  const Dir2& position
+) {
   Uint32* buffer = (Uint32*)img->pixels;
 
-  const std::vector<MaskObject> viewed = generate_view_covering (
-    position, 
+  MaskObjectList viewed = generate_view_covering (
+    darena,
     segments, 
+    position, 
     ViewGeneration::POINT
   );
 
-  Dir2 dims = Dir2 {(float)img->w, (float)img->h};
+  Dir2 dims = Dir2 ((float)img->w, (float)img->h);
   const Dir2& position_off = dims.nmadd (0.5f, position);
 
   __m128 neg_mm = _mm_set1_ps (-0.f);
 
   std::array<Dir2, 8> points;
-  for (const MaskObject& segment: viewed) {
-    const Dir2 dir1_off = segment.point1 - position;
-    const Dir2 dir2_off = segment.point2 - position;
+
+  for (MaskObject* iter = viewed.obj; iter != nullptr; iter = iter->next) {
+    const Dir2 dir1_off = Dir2(iter->point1) - position;
+    const Dir2 dir2_off = Dir2(iter->point2) - position;
 
     const Dir2 I_1 = Dir2 {_mm_xor_ps (_mm_and_ps (dir1_off.v, neg_mm), dims.v)};
     const Dir2 aux1 = Dir2 {_mm_div_ps ((I_1 - position_off).v, dir1_off.v)};
@@ -36,15 +43,18 @@ void fill_view_with_shadows (SDL_Surface*& img, const Dir2& position, const std:
     Q_1 += position;
     Q_2 += position;
 
-    points[0] = segment.point1;
+    points[0] = Dir2(iter->point1);
     points[1] = Q_1;
     points[2] = Q_off + Q_1;
     points[3] = Q_off + Q_2;
     points[4] = Q_2;
-    points[5] = segment.point2;
+    points[5] = Dir2(iter->point2);
     points[6] = points[0];
     points[7] = points[1];
 
     cast_shadow (buffer, (int32_t)img->w, (int32_t)img->h, points, 6);
   }
+
+  if (viewed.obj != nullptr)
+    darena.complete_free_mo(viewed.obj);
 }

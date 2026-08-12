@@ -1,0 +1,15 @@
+#include "../../../../headers/primitives/arena.hpp"
+#include <cstdlib>
+
+DynamicalArena::DynamicalArena(std::size_t size) {
+  this->size = size;
+  this->remaining = size;
+  this->curr_ptr = (std::byte*)malloc(size);
+
+  this->ptr_blocks = std::vector<std::byte*>();
+  this->ptr_blocks.reserve(3);
+  this->ptr_blocks.push_back(this->curr_ptr);
+  this->blocks = 1;
+
+  this->freed_mo = nullptr;
+}

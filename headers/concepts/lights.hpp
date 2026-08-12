@@ -3,9 +3,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
-#include <vector>
+#include <span>
 
+#include "../primitives/types_definition.hpp"
 #include "../primitives/vectors.hpp"
+#include "../primitives/arena.hpp"
 
 #define BUCKET_LINES_ESTIMATED_PARTITIONS 16
 
@@ -22,10 +24,9 @@ struct Light {
   } color;
 };
 
-struct MaskObject {
-  Dir2 point1;
-  Dir2 point2;
-  bool circle;
+struct MaskObjectList {
+  MaskObject* obj;
+  std::size_t size;
 };
 
 class Global;
@@ -42,9 +43,14 @@ class ViewMask {
     /* mask drawing. */
     ViewMask& draw_color_uniform_mask (const Uint32 color);
     ViewMask& draw_light_uniform_mask (const Light& light);
-    ViewMask& draw_color_view_mask (const Dir2& position, const std::vector<MaskObject>& segments);
-    ViewMask& draw_light_view_mask (const Light& light, const std::vector<MaskObject>& segments);
-    ViewMask& draw_color_directional_mask (const Dir2& direction, const std::vector<MaskObject>& segments);
+    ViewMask& draw_color_view_mask (DynamicalArena& darena, const Dir2& position, MaskObjectList segments);
+    ViewMask& draw_color_directional_mask (DynamicalArena& darena, const Dir2& direction, MaskObjectList segments);
+    ViewMask& draw_light_view_mask (const Light&, DynamicalArena&, const SDL_Rect&, MaskObjectList);
+    ViewMask& draw_light_view_mask (
+      DynamicalArena& darena,
+      std::span<std::pair<Light, MaskObjectList>>& lights,
+      const SDL_Rect& screen_metrics
+    );
 
     /* mask fusion. */
     ViewMask& operator| (const ViewMask&);
@@ -58,8 +64,6 @@ class ViewMask {
 /**************************/
 /*       Light Math       */
 /**************************/
-
-enum ViewCoveringType {point, direction};
 
 /* This function is meant to draw a shadow in the buffer of a view mask. The 
  * function takes an array of 8, meaning that it receives 6 points denoting
@@ -78,8 +82,9 @@ void cast_shadow (
  * */
 void fill_view_with_shadows (
   SDL_Surface*& img, 
-  const Dir2& position, 
-  const std::vector<MaskObject>& segments
+  DynamicalArena& darena,
+  MaskObjectList segments,
+  const Dir2& position
 );
 
 /* This function uses cast_shadow to create the shadows for a directional 
@@ -87,8 +92,9 @@ void fill_view_with_shadows (
  * */
 void fill_directional_with_shadows (
   SDL_Surface*& img, 
-  const Dir2& direction, 
-  const std::vector<MaskObject>& segments
+  DynamicalArena& darena,
+  MaskObjectList segments,
+  const Dir2& direction
 );
 
 /* This function fill the remaining space of a view with light from the 
@@ -124,8 +130,17 @@ enum ViewGeneration {
   DIRECTION
 };
 
-std::vector<MaskObject> generate_view_covering (
+MaskObjectList generate_view_covering (
+  DynamicalArena& darena,
+  MaskObjectList segments, 
   const Dir2& position, 
-  const std::vector<MaskObject>& segments, 
   ViewGeneration by_what
+);
+
+MaskObjectList filter_lines_point_view (
+  DynamicalArena& darena,
+  MaskObjectList segments,
+  const Light& light, 
+  const Dir2 screen_pos, 
+  const Dir2 screen_dims
 );

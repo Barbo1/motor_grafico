@@ -52,7 +52,7 @@ std::array<Dir2, 10> set_points_4 () {
 
 int main () {
   std::string name = "Ventana";
-  Global* glb = Global::create(name, 600, 800, SDL_Color {30, 30, 30, 0});
+  Global* glb = Global::create(name, SDL_Color {30, 30, 30, 0});
   Arena arena = Arena(1000*1000*4);
   SDL_Event event;
   

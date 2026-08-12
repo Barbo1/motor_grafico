@@ -1,6 +1,8 @@
 #pragma once
 
+#include "./types_definition.hpp"
 #include <cstddef>
+#include <vector>
 
 struct ArenaConstexFlag {
   std::byte* context_current;
@@ -32,3 +34,45 @@ class Arena {
 
     void restart();
 };
+
+class DynamicalArena {
+  private:
+    std::byte* curr_ptr;
+    std::vector<std::byte*> ptr_blocks;
+    std::size_t size, remaining, blocks;
+
+    // pointers to free memory.
+    MaskObject* freed_mo;
+  public:
+    DynamicalArena(std::size_t size);
+    ~DynamicalArena();
+  
+    MaskObject* alloc_mo ();
+    void free_mo (MaskObject*);
+    void complete_free_mo (MaskObject*);
+};
+
+/*
+template<typename T>
+class ListDA {
+  private:
+    std::size_t n;
+    T* elems;
+    DynamicalArena* darena;
+
+  public:
+    ListDA(DynamicalArena& arena);
+    ListDA(const ListDA&);
+    ListDA(ListDA&&);
+    ListDA operator=(const ListDA&);
+    ListDA operator=(ListDA&&);
+
+    template<T> void push_back(T);
+    template<T> T pop_back();
+    template<T> T back();
+    
+    std::size_t size();
+
+    
+};
+*/

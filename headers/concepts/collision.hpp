@@ -311,6 +311,7 @@ inline Dir2 resposition_direction_square_nedge(
  * represent the point of collition. This point is guarantied to be inside
  * the square, but not the polygon.
  * */
+#include <iostream>
 inline Dir2 collision_point_nedge_square (
   Dir2 sq_pos, Dir2 sq_dims,
   std::array<MemDir2, 2>* placed_segments,
@@ -325,6 +326,7 @@ inline Dir2 collision_point_nedge_square (
     Dir2 vD = Dir2(segment[0]);
     Dir2 coefs;
     if (test_collision_square_segment (sq_pos, sq_dims, E, vD, coefs)) {
+      std::cout << coefs.x() << ", " << coefs.y() << std::endl;
       float coefs_sum = coefs.sum();
       ret = vD.madd(coefs_sum * 0.5f, E).madd(coefs_sum, ret);
       denom += coefs_sum;

@@ -1,5 +1,18 @@
 #pragma once
 
+#include "./vectors.hpp"
+
+// types
+
+struct MaskObject {
+  MaskObject* next;
+  MemDir2 point1;
+  MemDir2 point2;
+};
+
+
+// enums
+
 enum ParSrcType {
   PS_SMOOTH,
   PS_EXPLOSION

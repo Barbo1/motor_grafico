@@ -217,7 +217,13 @@ static inline int meeting_condition_for_obfuscating_by_point (
   return _mm_movemask_ps(over_both) & 0b111;
 }
 
-std::vector<MaskObject> generate_view_covering (const Dir2& position, const std::vector<MaskObject>& segments, ViewGeneration by_what) {
+MaskObjectList generate_view_covering (
+  DynamicalArena& darena,
+  MaskObjectList segment_list, 
+  const Dir2& position, 
+  ViewGeneration by_what
+) {
+
   int (*meeting_condition_for_ordering) (
     const SecondLevelElement&, 
     const SecondLevelElement&, 
@@ -240,10 +246,12 @@ std::vector<MaskObject> generate_view_covering (const Dir2& position, const std:
       meeting_condition_for_obfuscating = meeting_condition_for_obfuscating_by_direction;
       break;
   };
+  
+  auto [segments, segments_size] = segment_list;
 
   /* Initialization of the buckets. */
   std::vector<FirstLevelElement> buckets(
-    segments.size (),
+    segments_size,
     FirstLevelElement {
       .data = std::vector<SecondLevelElement>(),
       .first_level_offset = 0,
@@ -251,17 +259,20 @@ std::vector<MaskObject> generate_view_covering (const Dir2& position, const std:
       .last_second_level_offset = 0
     }
   );
-  for (int32_t i = 0; i < (int32_t)segments.size(); i++) {
+
+  int32_t i = 0;
+  for (MaskObject* iter = segments; iter != nullptr; iter = iter->next) {
     buckets[i].data.reserve (BUCKET_LINES_ESTIMATED_PARTITIONS);
     buckets[i].data.push_back (SecondLevelElement {
-      .point1 = segments[i].point1,
-      .point2 = segments[i].point2,
+      .point1 = Dir2(iter->point1),
+      .point2 = Dir2(iter->point2),
       .partition_offset = -1
     });
     buckets[i].first_level_offset = i-1;
+    i++;
   }
 
-  uint32_t many_elements = segments.size();
+  uint32_t many_elements = segments_size;
 
   /* Rejecting volumes. */
   int32_t pos_1 = many_elements - 1;
@@ -475,24 +486,34 @@ std::vector<MaskObject> generate_view_covering (const Dir2& position, const std:
     pos_1 = buckets[pos_1].first_level_offset;
   }
 
-  std::vector<MaskObject> ret;
-  ret.reserve (many_elements);
+  MaskObject* ret = nullptr;
+  MaskObject* iter = nullptr;
 
-  pos_1 = segments.size() - 1;
+  pos_1 = segments_size - 1;
   while (pos_1 >= 0) {
     int32_t inner_pos_1 = buckets[pos_1].first_second_level_offset;
 
     while (inner_pos_1 >= 0) {
       SecondLevelElement& line_1 = buckets[pos_1].data[inner_pos_1];
-      ret.push_back(MaskObject {
-        .point1 = line_1.point1, 
-        .point2 = line_1.point2, 
-        .circle = false
-      });
+      MaskObject* aux =  darena.alloc_mo();
+      aux->point1.store(line_1.point1);
+      aux->point2.store(line_1.point2);
+      if (ret == nullptr) {
+        iter = aux = ret = aux;
+      } else {
+        iter->next = aux;
+        iter = aux;
+      }
       inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
     } 
     pos_1 = buckets[pos_1].first_level_offset;
   }
 
-  return ret;
+  if (ret != nullptr)
+    iter->next = nullptr;
+
+  return MaskObjectList {
+    .obj = ret,
+    .size = many_elements
+  };
 }
