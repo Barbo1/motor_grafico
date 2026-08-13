@@ -1,4 +1,4 @@
-#include "../../../../../headers/concepts/lights.hpp"
+#include "../../../../headers/concepts/lights.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -219,7 +219,7 @@ static inline int meeting_condition_for_obfuscating_by_point (
 
 MaskObjectList generate_view_covering (
   DynamicalArena& darena,
-  MaskObjectList segment_list, 
+  const MaskObjectList& segment_list, 
   const Dir2& position, 
   ViewGeneration by_what
 ) {
@@ -495,15 +495,18 @@ MaskObjectList generate_view_covering (
 
     while (inner_pos_1 >= 0) {
       SecondLevelElement& line_1 = buckets[pos_1].data[inner_pos_1];
+
       MaskObject* aux =  darena.alloc_mo();
       aux->point1.store(line_1.point1);
       aux->point2.store(line_1.point2);
+
       if (ret == nullptr) {
-        iter = aux = ret = aux;
+        iter = ret = aux;
       } else {
         iter->next = aux;
         iter = aux;
       }
+
       inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
     } 
     pos_1 = buckets[pos_1].first_level_offset;

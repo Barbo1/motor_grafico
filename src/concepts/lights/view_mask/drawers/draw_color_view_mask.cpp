@@ -3,7 +3,11 @@
 #include <SDL2/SDL_surface.h>
 #include <cstdlib>
 
-ViewMask& ViewMask::draw_color_view_mask (DynamicalArena& darena, const Dir2& position, MaskObjectList segments) {
+ViewMask& ViewMask::draw_color_view_mask (
+  DynamicalArena& darena, 
+  const MaskObjectList& segments,
+  const Dir2& position
+) {
   Uint32* buffer = (Uint32*)img->pixels;
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;

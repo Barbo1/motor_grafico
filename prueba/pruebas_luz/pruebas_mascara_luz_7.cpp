@@ -146,45 +146,35 @@ int main () {
   }
   configure_glyph_system (&gs, 20, color);
 
-  Light light_0 = {
-    .intensity = 70.f,
-    .attenuation = 0.02f,
-    .position = {518.f, 334.f},
-    .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-  }; 
-
-  Light light_1 = {
-    .intensity = 150.f,
-    .attenuation = 0.01f,
-    .position = {318.f, 337.f},
-    .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
-  };
-
-  Light light_2 = {
-    .intensity = 150.f,
-    .attenuation = 0.01f,
-    .position = {400.f, 400.f},
-    .color = {.r = 1.0f, .g = 1.0f, .b = 0.1f},
-  };
-
   MaskObjectList segments = get_segments_2(darena);
+  std::vector<std::pair<Light, MaskObjectList>> light_info = {
+    std::pair<Light, MaskObjectList>{{
+      .intensity = 70.f,
+      .attenuation = 0.02f,
+      .position = {518.f, 334.f},
+      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+    }, segments
+  }, {{
+      .intensity = 150.f,
+      .attenuation = 0.01f,
+      .position = {318.f, 337.f},
+      .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
+  }, segments
+  }, {{
+      .intensity = 150.f,
+      .attenuation = 0.01f,
+      .position = {400.f, 400.f},
+      .color = {.r = 1.0f, .g = 1.0f, .b = 0.1f},
+    }, segments}
+  };
 
   bool cont = true;
   SDL_Event event;
   
   Visualizer<D2FIG> img_mod = ImageModifier::chargePNG("../images/psic2.png").resize(200, 200).cast(glb);
-  /*
-  MaskObjectList segments,
-  DynamicalArena& darena,
-  const Light& light, 
-  const Dir2& screen_dims 
-   * */
   
   ViewMask view_0 (glb->get_width(), glb->get_height());
-  ViewMask view_1 (glb->get_width(), glb->get_height());
   float aux_time_1 = 0.f, avg_time_1 = 0.f;
-  view_1.draw_light_view_mask (darena, segments, light_1, screen_dims);
-  view_1 | view_0.draw_light_view_mask (darena, segments, light_2, screen_dims);
 
   while (cont) {
     glb->begin_render();
@@ -192,8 +182,8 @@ int main () {
 
       aux_time_1 += 1;
 
-      view_0.draw_light_view_mask (darena, segments, light_0, screen_dims);
-      glb->apply_mask (view_0 | view_1);
+      view_0.draw_light_view_mask (darena, light_info, screen_dims);
+      glb->apply_mask (view_0);
 
       float a = glb->get_time();
       avg_time_1 += (a - avg_time_1) / aux_time_1;
@@ -204,16 +194,16 @@ int main () {
      }
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
-      SDL_RenderDrawPoint(glb->get_render(), light_0.position.x(), light_0.position.y());
+      SDL_RenderDrawPoint(glb->get_render(), light_info[0].first.position.x(), light_info[0].first.position.y());
       std::string aux_str_1 = "light_0: (" + 
-        std::to_string(light_0.position.x()) + ", " + 
-        std::to_string(light_0.position.y()) + ")";
-      std::string aux_str_2 = "light_1: (" + 
-        std::to_string(light_1.position.x()) + ", " + 
-        std::to_string(light_1.position.y()) + ")";
+        std::to_string(light_info[0].first.position.x()) + ", " + 
+        std::to_string(light_info[0].first.position.y()) + ")";
+      /*std::string aux_str_2 = "light_1: (" + 
+        std::to_string(light_info[1].first.position.x()) + ", " + 
+        std::to_string(light_info[1].first.position.y()) + ")";*/
       std::string aux_str_3 = "tiempo: " + std::to_string(a) + ", avg: " + std::to_string(avg_time_1);
       gs.print (aux_str_1, 20, color, Dir2(width - 300.f, 20.f));
-      gs.print (aux_str_2, 20, color, Dir2(width - 300.f, 50.f));
+      /*gs.print (aux_str_2, 20, color, Dir2(width - 300.f, 50.f));*/
       gs.print (aux_str_3, 20, color, Dir2(width - 300.f, 80.f));
     glb->end_render();
     
@@ -232,8 +222,8 @@ int main () {
           break;
         
         case SDL_MOUSEMOTION:
-          light_0.position.x(event.motion.x - 20.f);
-          light_0.position.y(event.motion.y);
+          light_info[0].first.position.x(event.motion.x - 20.f);
+          light_info[0].first.position.y(event.motion.y);
           break;
       }
     }

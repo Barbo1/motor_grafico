@@ -1,6 +1,10 @@
 #include "../../../../../headers/concepts/lights.hpp"
 
-ViewMask& ViewMask::draw_color_directional_mask (DynamicalArena& darena, const Dir2& direction, MaskObjectList segments) {
+ViewMask& ViewMask::draw_color_directional_mask (
+  DynamicalArena& darena, 
+  const MaskObjectList& segments,
+  const Dir2& direction
+) {
   Uint32* buffer = (Uint32*)img->pixels;
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;

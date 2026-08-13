@@ -630,3 +630,34 @@ inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir
   else
     return INFINITY;
 }
+
+/* This function returns the center and dimension of the lighted zone of a 
+ * light, due the dimentions and positions of the screen and light. The
+ * calculations depends if the light is inside the screen or not.
+ *
+ * 'screen_pos' is the position of the screen (equal the )
+ * */
+inline std::array<Dir2, 2> calculate_light_bound (const Dir2& screen_dims, const Dir2& light_pos, const Dir2& light_dims) {
+  __m128 b = _mm_add_ps(light_pos.v, light_dims.v);
+  __m128 d = _mm_sub_ps(light_pos.v, light_dims.v);
+  __m128 min = _mm_min_ps(screen_dims.v, b);
+  __m128 max = _mm_max_ps(_mm_setzero_ps(), d);
+
+  Dir2 K = Dir2::from_well(_mm_mul_ps(_mm_add_ps(min, max), _mm_set1_ps(0.5f)));
+  Dir2 dimsK = Dir2::from_well(_mm_sub_ps(min, K.v));
+
+  Dir2 screen_pos = Dir2::from_well(_mm_mul_ps(screen_dims.v, _mm_set1_ps(0.5f)));
+  if (!test_point_inside_square (light_pos, screen_pos, screen_pos)) {
+    __m128 aux = _mm_sub_ps(K.v, light_pos.v);
+    __m128 aux_abs = _mm_andnot_ps(_mm_set1_ps(-0.f), aux);
+    __m128 light_dims_2 = _mm_mul_ps(light_dims.v, _mm_set1_ps(0.5f));
+    __m128 u = _mm_and_ps (
+      _mm_or_ps (light_dims_2, _mm_and_ps(_mm_set1_ps(-0.f), aux)),
+      _mm_cmplt_ps (_mm_permute_ps(aux_abs, 0b00010001), aux_abs)
+    );
+    K = Dir2::from_well(_mm_add_ps(light_pos.v, u));
+    dimsK = Dir2::from_well(_mm_sub_ps(light_dims.v, _mm_andnot_ps(_mm_set1_ps(-0.f), u)));
+  }
+
+  return {K, dimsK};
+}

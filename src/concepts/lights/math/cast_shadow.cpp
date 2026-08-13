@@ -1,4 +1,5 @@
-#include "../../../../../headers/concepts/lights.hpp"
+#include "../../../../headers/concepts/lights.hpp"
+
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <array>

@@ -1,4 +1,4 @@
-#include "../../../../../headers/concepts/lights.hpp"
+#include "../../../../headers/concepts/lights.hpp"
 #include <SDL2/SDL_surface.h>
 
 void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
@@ -110,7 +110,7 @@ void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
           _mm_cvtps_epi32 (
             _mm_move_ss(
               _mm_mul_ps (mm_color, opr), 
-              _mm_sub_ss (_mm_set_ps (0.f, 0.f, 0.f, 255.f), opr) 
+              _mm_sub_ss (_mm_set_ss (255.f), opr) 
             )
           ), 
           mm_opr_mask

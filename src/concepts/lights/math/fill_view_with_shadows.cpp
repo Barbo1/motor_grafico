@@ -1,11 +1,12 @@
-#include "../../../../../headers/concepts/lights.hpp"
+#include "../../../../headers/concepts/lights.hpp"
+
 #include <SDL2/SDL_surface.h>
 #include <array>
 
 void fill_view_with_shadows (
   SDL_Surface*& img, 
   DynamicalArena& darena,
-  MaskObjectList segments,
+  const MaskObjectList& segments,
   const Dir2& position
 ) {
   Uint32* buffer = (Uint32*)img->pixels;

@@ -42,14 +42,32 @@ class ViewMask {
 
     /* mask drawing. */
     ViewMask& draw_color_uniform_mask (const Uint32 color);
+
     ViewMask& draw_light_uniform_mask (const Light& light);
-    ViewMask& draw_color_view_mask (DynamicalArena& darena, const Dir2& position, MaskObjectList segments);
-    ViewMask& draw_color_directional_mask (DynamicalArena& darena, const Dir2& direction, MaskObjectList segments);
-    ViewMask& draw_light_view_mask (const Light&, DynamicalArena&, const SDL_Rect&, MaskObjectList);
+
+    ViewMask& draw_color_view_mask (
+      DynamicalArena& darena, 
+      const MaskObjectList& segments,
+      const Dir2& position
+    );
+
+    ViewMask& draw_color_directional_mask (
+      DynamicalArena& darena, 
+      const MaskObjectList& segments,
+      const Dir2& direction
+    );
+    
     ViewMask& draw_light_view_mask (
       DynamicalArena& darena,
-      std::span<std::pair<Light, MaskObjectList>>& lights,
-      const SDL_Rect& screen_metrics
+      const MaskObjectList& segments,
+      const Light& light, 
+      const Dir2& screen_dims 
+    );
+
+    ViewMask& draw_light_view_mask (
+      DynamicalArena& darena,
+      const std::span<std::pair<Light, MaskObjectList>, std::dynamic_extent>& lights,
+      const Dir2& screen_dims 
     );
 
     /* mask fusion. */
@@ -83,7 +101,7 @@ void cast_shadow (
 void fill_view_with_shadows (
   SDL_Surface*& img, 
   DynamicalArena& darena,
-  MaskObjectList segments,
+  const MaskObjectList& segments,
   const Dir2& position
 );
 
@@ -93,7 +111,7 @@ void fill_view_with_shadows (
 void fill_directional_with_shadows (
   SDL_Surface*& img, 
   DynamicalArena& darena,
-  MaskObjectList segments,
+  const MaskObjectList& segments,
   const Dir2& direction
 );
 
@@ -132,15 +150,14 @@ enum ViewGeneration {
 
 MaskObjectList generate_view_covering (
   DynamicalArena& darena,
-  MaskObjectList segments, 
+  const MaskObjectList& segments, 
   const Dir2& position, 
   ViewGeneration by_what
 );
 
 MaskObjectList filter_lines_point_view (
   DynamicalArena& darena,
-  MaskObjectList segments,
+  const MaskObjectList& segments,
   const Light& light, 
-  const Dir2 screen_pos, 
   const Dir2 screen_dims
 );
