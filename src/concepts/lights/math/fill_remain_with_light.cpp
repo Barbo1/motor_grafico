@@ -84,31 +84,24 @@ void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
     pos = init_pos;
   }
 #else
-  Dir2 
-    init_pos = aux, 
-    add_coef_x = Dir2 {_mm_set_ps (0.f, 0.f, 0.f, add_coef)},
-    add_coef_y = Dir2 {_mm_set_ps (0.f, 0.f, add_coef, 0.f)},
-    pos;
-  __m128 
+  __m128
+    pos,
+    init_pos = aux.v,
+    add_coef_x = _mm_set_ps (0.f, add_coef, 0.f, add_coef),
+    add_coef_y = _mm_set_ps (add_coef, 0.f, add_coef, 0.f),
     mm_color = _mm_set_ps (light.color.r, light.color.g, light.color.b, 0.f),
-    inv_intensity = _mm_set_ps (0.f, 0.f, 0.f, 1.f / light.intensity);
+    inv_intensity = _mm_set_ps (0.f, 1.f / light.intensity, 0.f, 1.f / light.intensity);
   __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
 
   pos = init_pos;
   for (uint32_t i = 0; i < (uint32_t)img->h; i++) {
     for (uint32_t j = 0; j < (uint32_t)img->w; j++) {
       if (*buffer == 0) {
-        __m128 opr = _mm_fmadd_ps (pos.v, pos.v, inv_intensity);
-        opr = _mm_rcp_ss (
-          _mm_add_ss (
-            opr, 
-            _mm_shuffle_ps (opr, opr, 0b01010101)
-          )
-        );
-        opr = _mm_shuffle_ps (opr, opr, 0b00000000);
+        __m128 opr = _mm_fmadd_ps (pos, pos, inv_intensity);
+        opr = _mm_rcp_ps (_mm_add_ps (opr, _mm_permute_ps (opr, 0b00010001)));
         _mm_storeu_si32 (buffer, _mm_shuffle_epi8 (
           _mm_cvtps_epi32 (
-            _mm_move_ss(
+            _mm_move_ss (
               _mm_mul_ps (mm_color, opr), 
               _mm_sub_ss (_mm_set_ss (255.f), opr) 
             )

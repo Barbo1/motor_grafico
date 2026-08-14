@@ -15,74 +15,98 @@
 
 const int SCREEN_FPS = 60;
 const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
-
-std::vector<MaskObject> get_segments_1 () {
-  return {
-    MaskObject {.point1 = Dir2 {134.f, 114.f}, .point2 = Dir2 {52.f, 274.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {245.f, 103.f}, .point2 = Dir2 {604.f, 76.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {678.f, 149.f}, .point2 = Dir2 {411.f, 178.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {117.f, 355.f}, .point2 = Dir2 {278.f, 195.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {531.f, 218.f}, .point2 = Dir2 {634.f, 210.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {566.f, 441.f}, .point2 = Dir2 {382.f, 313.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {617.f, 466.f}, .point2 = Dir2 {388.f, 437.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {121.f, 265.f}, .point2 = Dir2 {172.f, 199.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {464.f, 348.f}, .point2 = Dir2 {447.f, 337.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {498.f, 370.f}, .point2 = Dir2 {506.f, 377.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {529.f, 390.f}, .point2 = Dir2 {546.f, 407.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {540.f, 320.f}, .point2 = Dir2 {595.f, 355.f}, .circle = false},
+ 
+MaskObjectList get_segments_1 (DynamicalArena& darena) {
+  std::vector<std::array<MemDir2, 2>> a = {
+    std::array<MemDir2, 2>({MemDir2 {134.f, 114.f}, MemDir2 {52.f, 274.f}}),
+    std::array<MemDir2, 2>({MemDir2 {245.f, 103.f}, MemDir2 {604.f, 76.f}}),
+    std::array<MemDir2, 2>({MemDir2 {678.f, 149.f}, MemDir2 {411.f, 178.f}}),
+    std::array<MemDir2, 2>({MemDir2 {117.f, 355.f}, MemDir2 {278.f, 195.f}}),
+    std::array<MemDir2, 2>({MemDir2 {531.f, 218.f}, MemDir2 {634.f, 210.f}}),
+    std::array<MemDir2, 2>({MemDir2 {566.f, 441.f}, MemDir2 {382.f, 313.f}}),
+    std::array<MemDir2, 2>({MemDir2 {617.f, 466.f}, MemDir2 {388.f, 437.f}}),
+    std::array<MemDir2, 2>({MemDir2 {121.f, 265.f}, MemDir2 {172.f, 199.f}}),
+    std::array<MemDir2, 2>({MemDir2 {464.f, 348.f}, MemDir2 {447.f, 337.f}}),
+    std::array<MemDir2, 2>({MemDir2 {498.f, 370.f}, MemDir2 {506.f, 377.f}}),
+    std::array<MemDir2, 2>({MemDir2 {529.f, 390.f}, MemDir2 {546.f, 407.f}}),
+    std::array<MemDir2, 2>({MemDir2 {540.f, 320.f}, MemDir2 {595.f, 355.f}}),
   };
+
+  MaskObjectList ret = {
+    .obj = nullptr,
+    .size = a.size()
+  };
+
+  for (auto& elem: a) {
+    MaskObject* ret_new = darena.alloc_mo();
+    ret_new->point1 = elem[0];
+    ret_new->point2 = elem[1];
+    ret_new->next = ret.obj;
+    ret.obj = ret_new->next;
+  }
+
+  return ret;
 }
 
-std::vector<MaskObject> get_segments_2 () {
-  return {
-    MaskObject {.point1 = Dir2 {122.f, 84.f}, .point2 = Dir2 {86.f, 125.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {86.f, 125.f}, .point2 = Dir2 {53.f, 1.78f}, .circle = false},
-    MaskObject {.point1 = Dir2 {53.f, 1.78f}, .point2 = Dir2 {62.f, 221.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {62.f, 221.f}, .point2 = Dir2 {121.f, 196.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {121.f, 196.f}, .point2 = Dir2 {112.f, 243.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {112.f, 243.f}, .point2 = Dir2 {20.f, 302.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {20.f, 302.f}, .point2 = Dir2 {50.f, 360.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {50.f, 360.f}, .point2 = Dir2 {106.f, 330.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {106.f, 330.f}, .point2 = Dir2 {60.f, 315.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {60.f, 315.f}, .point2 = Dir2 {108.f, 293.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {108.f, 293.f}, .point2 = Dir2 {164.f, 311.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {164.f, 311.f}, .point2 = Dir2 {110.f, 378.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {110.f, 378.f}, .point2 = Dir2 {40.f, 429.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {40.f, 429.f}, .point2 = Dir2 {37.f, 470.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {37.f, 470.f}, .point2 = Dir2 {127.f, 502.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {127.f, 502.f}, .point2 = Dir2 {330.f, 468.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {330.f, 468.f}, .point2 = Dir2 {157.f, 438.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {157.f, 438.f}, .point2 = Dir2 {282.f, 357.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {282.f, 357.f}, .point2 = Dir2 {546.f, 482.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {546.f, 482.f}, .point2 = Dir2 {765.f, 473.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {765.f, 473.f}, .point2 = Dir2 {750.f, 245.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {750.f, 245.f}, .point2 = Dir2 {703.f, 284.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {703.f, 284.f}, .point2 = Dir2 {500.f, 200.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {500.f, 200.f}, .point2 = Dir2 {532.f, 287.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {532.f, 287.f}, .point2 = Dir2 {409.f, 230.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {409.f, 230.f}, .point2 = Dir2 {446.f, 104.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {446.f, 104.f}, .point2 = Dir2 {269.f, 139.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {269.f, 139.f}, .point2 = Dir2 {250.f, 117.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {250.f, 117.f}, .point2 = Dir2 {239.f, 85.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {239.f, 85.f}, .point2 = Dir2 {183.f, 135.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {183.f, 135.f}, .point2 = Dir2 {280.f, 257.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {280.f, 257.f}, .point2 = Dir2 {173.f, 196.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {173.f, 196.f}, .point2 = Dir2 {122.f, 84.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {364.f, 307.f}, .point2 = Dir2 {531.f, 333.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {531.f, 333.f}, .point2 = Dir2 {655.f, 331.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {655.f, 331.f}, .point2 = Dir2 {730.f, 379.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {730.f, 379.f}, .point2 = Dir2 {718.f, 438.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {718.f, 438.f}, .point2 = Dir2 {572.f, 436.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {572.f, 436.f}, .point2 = Dir2 {364.f, 307.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {554.f, 49.f}, .point2 = Dir2 {646.f, 82.f}, .circle = false},
-    MaskObject {.point1 = Dir2 {646.f, 82.f}, .point2 = Dir2 {681.f, 163.f}, .circle = false},
+MaskObjectList get_segments_2 (DynamicalArena& darena) {
+  std::vector<std::array<MemDir2, 2>> a = {
+    std::array<MemDir2, 2>({MemDir2 {122.f, 84.f}, MemDir2 {86.f, 125.f}}),
+    std::array<MemDir2, 2>({MemDir2 {86.f, 125.f}, MemDir2 {53.f, 1.78f}}),
+    std::array<MemDir2, 2>({MemDir2 {53.f, 1.78f}, MemDir2 {62.f, 221.f}}),
+    std::array<MemDir2, 2>({MemDir2 {62.f, 221.f}, MemDir2 {121.f, 196.f}}),
+    std::array<MemDir2, 2>({MemDir2 {121.f, 196.f}, MemDir2{112.f, 243.f}}),
+    std::array<MemDir2, 2>({MemDir2 {112.f, 243.f}, MemDir2{20.f, 302.f}}),
+    std::array<MemDir2, 2>({MemDir2 {20.f, 302.f}, MemDir2 {50.f, 360.f}}),
+    std::array<MemDir2, 2>({MemDir2 {50.f, 360.f}, MemDir2 {106.f, 330.f}}),
+    std::array<MemDir2, 2>({MemDir2 {106.f, 330.f}, MemDir2{60.f, 315.f}}),
+    std::array<MemDir2, 2>({MemDir2 {60.f, 315.f}, MemDir2 {108.f, 293.f}}),
+    std::array<MemDir2, 2>({MemDir2 {108.f, 293.f}, MemDir2{164.f, 311.f}}),
+    std::array<MemDir2, 2>({MemDir2 {164.f, 311.f}, MemDir2{110.f, 378.f}}),
+    std::array<MemDir2, 2>({MemDir2 {110.f, 378.f}, MemDir2{40.f, 429.f}}),
+    std::array<MemDir2, 2>({MemDir2 {40.f, 429.f}, MemDir2 {37.f, 470.f}}),
+    std::array<MemDir2, 2>({MemDir2 {37.f, 470.f}, MemDir2 {127.f, 502.f}}),
+    std::array<MemDir2, 2>({MemDir2 {127.f, 502.f}, MemDir2{330.f, 468.f}}),
+    std::array<MemDir2, 2>({MemDir2 {330.f, 468.f}, MemDir2{157.f, 438.f}}),
+    std::array<MemDir2, 2>({MemDir2 {157.f, 438.f}, MemDir2{282.f, 357.f}}),
+    std::array<MemDir2, 2>({MemDir2 {282.f, 357.f}, MemDir2{546.f, 482.f}}),
+    std::array<MemDir2, 2>({MemDir2 {546.f, 482.f}, MemDir2{765.f, 473.f}}),
+    std::array<MemDir2, 2>({MemDir2 {765.f, 473.f}, MemDir2{750.f, 245.f}}),
+    std::array<MemDir2, 2>({MemDir2 {750.f, 245.f}, MemDir2{703.f, 284.f}}),
+    std::array<MemDir2, 2>({MemDir2 {703.f, 284.f}, MemDir2{500.f, 200.f}}),
+    std::array<MemDir2, 2>({MemDir2 {500.f, 200.f}, MemDir2{532.f, 287.f}}),
+    std::array<MemDir2, 2>({MemDir2 {532.f, 287.f}, MemDir2{409.f, 230.f}}),
+    std::array<MemDir2, 2>({MemDir2 {409.f, 230.f}, MemDir2{446.f, 104.f}}),
+    std::array<MemDir2, 2>({MemDir2 {446.f, 104.f}, MemDir2{269.f, 139.f}}),
+    std::array<MemDir2, 2>({MemDir2 {269.f, 139.f}, MemDir2{250.f, 117.f}}),
+    std::array<MemDir2, 2>({MemDir2 {250.f, 117.f}, MemDir2{239.f, 85.f}}),
+    std::array<MemDir2, 2>({MemDir2 {239.f, 85.f}, MemDir2 {183.f, 135.f}}),
+    std::array<MemDir2, 2>({MemDir2 {183.f, 135.f}, MemDir2{280.f, 257.f}}),
+    std::array<MemDir2, 2>({MemDir2 {280.f, 257.f}, MemDir2{173.f, 196.f}}),
+    std::array<MemDir2, 2>({MemDir2 {173.f, 196.f}, MemDir2{122.f, 84.f}}),
+    std::array<MemDir2, 2>({MemDir2 {364.f, 307.f}, MemDir2{531.f, 333.f}}),
+    std::array<MemDir2, 2>({MemDir2 {531.f, 333.f}, MemDir2{655.f, 331.f}}),
+    std::array<MemDir2, 2>({MemDir2 {655.f, 331.f}, MemDir2{730.f, 379.f}}),
+    std::array<MemDir2, 2>({MemDir2 {730.f, 379.f}, MemDir2{718.f, 438.f}}),
+    std::array<MemDir2, 2>({MemDir2 {718.f, 438.f}, MemDir2{572.f, 436.f}}),
+    std::array<MemDir2, 2>({MemDir2 {572.f, 436.f}, MemDir2{364.f, 307.f}}),
+    std::array<MemDir2, 2>({MemDir2 {554.f, 49.f}, MemDir2 {646.f, 82.f}}),
+    std::array<MemDir2, 2>({MemDir2 {646.f, 82.f}, MemDir2 {681.f, 163.f}})
   };
-}
 
-std::vector<MaskObject> get_segments_3 () {
-  return {
-    MaskObject {.point1 = Dir2 {134.f, 114.f}, .point2 = Dir2 {52.f, 274.f}, .circle = false},
+  MaskObjectList ret = {
+    .obj = nullptr,
+    .size = a.size()
   };
+
+  for (const auto& as: a) {
+    MaskObject* ret_new = darena.alloc_mo();
+    ret_new->point1 = as[0];
+    ret_new->point2 = as[1];
+    ret_new->next = ret.obj;
+    ret.obj = ret_new;
+  }
+
+  return ret;
 }
 
 void configure_glyph_system (GlyphsSystem* gs, uint32_t size, SDL_Color color) {
@@ -107,7 +131,9 @@ void configure_glyph_system (GlyphsSystem* gs, uint32_t size, SDL_Color color) {
 int main () {
   Global* glb = Global::create("hola", SDL_Color {30, 30, 30, 0});
   uint32_t width = glb->get_width();
+
   Arena arena = Arena(1000*1000*8);
+  DynamicalArena darena = DynamicalArena(10000*8);
   
   int32_t error;
   SDL_Color color = SDL_Color {255,255,255,255};
@@ -136,7 +162,7 @@ int main () {
   //Uint32 shadow_color = SDL_MapRGBA(format, 0, 0, 0, 255);
   SDL_FreeFormat(format);
 
-  const std::vector<MaskObject> segments = get_segments_2();
+  MaskObjectList segments = get_segments_2(darena);
 
   bool cont = true;
   SDL_Event event;
@@ -160,8 +186,14 @@ int main () {
       avg_time_1 += (a - avg_time_1) / aux_time_1;
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
-      for (const auto& segment: segments) {
-        SDL_RenderDrawLine(glb->get_render(), segment.point1.x(), segment.point1.y(), segment.point2.x(), segment.point2.y());
+      for (auto segment = segments.obj; segment != nullptr; segment = segment->next) {
+        SDL_RenderDrawLine(
+          glb->get_render(), 
+          segment->point1.x, 
+          segment->point1.y, 
+          segment->point2.x, 
+          segment->point2.y
+        );
       }
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);

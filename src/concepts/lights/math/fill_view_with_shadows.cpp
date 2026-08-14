@@ -29,12 +29,12 @@ void fill_view_with_shadows (
     const Dir2 dir1_off = Dir2(iter->point1) - position;
     const Dir2 dir2_off = Dir2(iter->point2) - position;
 
-    const Dir2 I_1 = Dir2 {_mm_xor_ps (_mm_and_ps (dir1_off.v, neg_mm), dims.v)};
-    const Dir2 aux1 = Dir2 {_mm_div_ps ((I_1 - position_off).v, dir1_off.v)};
+    const Dir2 I_1 = Dir2 (_mm_xor_ps (_mm_and_ps (dir1_off.v, neg_mm), dims.v));
+    const Dir2 aux1 = Dir2 (_mm_div_ps ((I_1 - position_off).v, dir1_off.v));
     Dir2 Q_1 = dir1_off * std::min (aux1.x(), aux1.y());
     
-    const Dir2 I_2 = Dir2 {_mm_xor_ps (_mm_and_ps (dir2_off.v, neg_mm), dims.v)};
-    const Dir2 aux2 = Dir2 {_mm_div_ps ((I_2 - position_off).v, dir2_off.v)};
+    const Dir2 I_2 = Dir2 (_mm_xor_ps (_mm_and_ps (dir2_off.v, neg_mm), dims.v));
+    const Dir2 aux2 = Dir2 (_mm_div_ps ((I_2 - position_off).v, dir2_off.v));
     Dir2 Q_2 = dir2_off * std::min (aux2.x(), aux2.y());
 
     const float opr = (dir2_off * (Q_2 - Q_1)) / dir2_off.pL(dir1_off);

@@ -65,6 +65,7 @@ class ViewMask {
     );
 
     ViewMask& draw_light_view_mask (
+      //Arena& arena,
       DynamicalArena& darena,
       const std::span<std::pair<Light, MaskObjectList>, std::dynamic_extent>& lights,
       const Dir2& screen_dims 

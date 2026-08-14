@@ -173,12 +173,6 @@ int main () {
   SDL_Event event;
   
   Visualizer<D2FIG> img_mod = ImageModifier::chargePNG("../images/psic2.png").resize(200, 200).cast(glb);
-  /*
-  MaskObjectList segments,
-  DynamicalArena& darena,
-  const Light& light, 
-  const Dir2& screen_dims 
-   * */
   
   ViewMask view_0 (glb->get_width(), glb->get_height());
   ViewMask view_1 (glb->get_width(), glb->get_height());
