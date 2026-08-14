@@ -183,7 +183,7 @@ static pointSet get_points_set (
 
 SDL_Surface* GlyphsSystem::raster (char16_t character, uint16_t s, SDL_Color color) const {
   auto founded = this->mapping.find (character);
-  if (founded == this->mapping.end())
+  if (founded == this->mapping.end() || !this->is_meta)
     return SDL_CreateRGBSurface (
       0, 1, 1, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
     );

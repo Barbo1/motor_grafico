@@ -49,7 +49,7 @@ ImageModifier& ImageModifier::operator| (const ImageModifier& img) {
     }
 
     if (this->aquired)
-      std::free(this->texture->pixels);
+      delete [] (Uint32*)this->texture->pixels;
     SDL_FreeSurface(this->texture);
 
     this->texture = sur;

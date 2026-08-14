@@ -17,7 +17,6 @@ MaskObject* DynamicalArena::alloc_mo () {
       this->remaining = this->size;
       this->curr_ptr = (std::byte*)malloc(this->size);
       this->ptr_blocks.push_back(this->curr_ptr);
-      this->blocks++;
 
       iptr = reinterpret_cast<uint64_t>(this->curr_ptr);
       align_offset = ~(iptr - 1) & (alignof(MaskObject) - 1);

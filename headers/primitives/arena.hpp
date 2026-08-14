@@ -39,7 +39,7 @@ class DynamicalArena {
   private:
     std::byte* curr_ptr;
     std::vector<std::byte*> ptr_blocks;
-    std::size_t size, remaining, blocks;
+    std::size_t size, remaining;
 
     // pointers to free memory.
     MaskObject* freed_mo;

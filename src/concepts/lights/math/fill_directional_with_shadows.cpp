@@ -5,13 +5,13 @@
 #include <cstdint>
 
 void fill_directional_with_shadows (
-  SDL_Surface*& img, 
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& direction
 ) {
-  Uint32* buffer = (Uint32*)img->pixels;
-
   MaskObjectList viewed = generate_view_covering (
     darena,
     segments,
@@ -19,7 +19,7 @@ void fill_directional_with_shadows (
     ViewGeneration::DIRECTION
   );
 
-  const Dir2 dims = Dir2 {(float)img->w, (float)img->h};
+  const Dir2 dims = Dir2 (width, height);
   const Dir2 dims2 = dims * 0.5f;
   const Dir2 I = Dir2 {_mm_xor_ps (_mm_and_ps (direction.v, _mm_set1_ps (-0.f)), dims.v)} + dims2;
 
@@ -41,7 +41,7 @@ void fill_directional_with_shadows (
     points[4] = points[0];
     points[5] = points[1];
 
-    cast_shadow (buffer, (int32_t)img->w, (int32_t)img->h, points, 4);
+    cast_shadow (buffer, width, height, points, 4);
   }
 
   if (viewed.obj != nullptr)

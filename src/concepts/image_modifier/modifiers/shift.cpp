@@ -19,7 +19,7 @@ ImageModifier& ImageModifier::shift (const Dir2& offset) {
       memcpy (arr, src, sizeof(uint32_t) * w);
 
     if (this->aquired)
-      std::free(this->texture->pixels);
+      delete [] (Uint32*)this->texture->pixels;
     SDL_FreeSurface(this->texture);
 
     this->aquired = 0;

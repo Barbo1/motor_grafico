@@ -9,7 +9,7 @@ ViewMask& ViewMask::draw_color_directional_mask (
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;
 
-  fill_directional_with_shadows (this->img, darena, segments, direction);
+  fill_directional_with_shadows (buffer, img->w, img->h, darena, segments, direction);
 
   return *this;
 }

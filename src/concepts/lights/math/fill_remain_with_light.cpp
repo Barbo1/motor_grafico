@@ -1,8 +1,12 @@
 #include "../../../../headers/concepts/lights.hpp"
 #include <SDL2/SDL_surface.h>
 
-void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
-  Uint32* buffer = (Uint32*)img->pixels;
+void fill_remain_with_lights (
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
+  const Light& light
+) {
   float add_coef = light.attenuation / std::sqrt(light.intensity);
   Dir2 aux = light.position * add_coef;
 
@@ -94,8 +98,8 @@ void fill_remain_with_lights (SDL_Surface*& img, const Light& light) {
   __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
 
   pos = init_pos;
-  for (uint32_t i = 0; i < (uint32_t)img->h; i++) {
-    for (uint32_t j = 0; j < (uint32_t)img->w; j++) {
+  for (int32_t i = 0; i < height; i++) {
+    for (int32_t j = 0; j < width; j++) {
       if (*buffer == 0) {
         __m128 opr = _mm_fmadd_ps (pos, pos, inv_intensity);
         opr = _mm_rcp_ps (_mm_add_ps (opr, _mm_permute_ps (opr, 0b00010001)));

@@ -76,11 +76,13 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
   int32_t matrix_width = std::lround (dims.x()) + 2;
   int error;
   BoolMatrix bound = BoolMatrix (matrix_height, matrix_width, arena, &error);
-  if (error < 0)
+  if (error < 0) {
+    arena.go_back_context(arena_context);
     return SDL_CreateRGBSurface (
       0, 1, 1, 32, 
       0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
     );
+  }
 
   // generating array of the point of the scaled image.
   for (uint32_t i = 0; i < size; i++)
@@ -145,6 +147,5 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
   }
 
   arena.go_back_context(arena_context);
-
   return surface;
 }

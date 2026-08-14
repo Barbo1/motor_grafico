@@ -299,22 +299,26 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
   int32_t matrix_width = std::lround (dims.x()) + 2;
   int error;
   BoolMatrix bound = BoolMatrix (matrix_height, matrix_width, arena, &error);
-  if (error < 0)
+  if (error < 0) {
+    arena.go_back_context(arena_context);
     return SDL_CreateRGBSurface (
       0, 1, 1, 32, 
       0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
     );
+  }
 
   // allocation for filtered_elements.
   std::size_t max_elements = 0;
   for (const auto& elements: components)
     max_elements = std::max(max_elements, elements.size());
   ComponentElement* filtered_elements = arena.atalloc<ComponentElement>(max_elements);
-  if (filtered_elements == nullptr)
+  if (filtered_elements == nullptr) {
+    arena.go_back_context(arena_context);
     return SDL_CreateRGBSurface (
       0, 1, 1, 32, 
       0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
     );
+  }
 
   // drawing.
   for (const auto& elements: components) {
@@ -391,8 +395,10 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
       elem = filtered_elements[++pos];
 
     // assuming that no glyph can be compound only on straight lines.
-    if (pos == many_filtered)
+    if (pos == many_filtered) {
+      arena.go_back_context(arena_context);
       return nullptr;
+    }
 
     // drawing the component inside the BoolMatrix.
     float prev_direction = get_prev_direction(filtered_elements [(many_filtered + pos - 1) % many_filtered]);
@@ -470,6 +476,5 @@ SDL_Surface* raster_grade_2 (const std::vector<std::vector<ComponentElement>>& c
   }
   
   arena.go_back_context(arena_context);
-
   return surface;
 }

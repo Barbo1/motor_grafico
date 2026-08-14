@@ -65,7 +65,7 @@ class ViewMask {
     );
 
     ViewMask& draw_light_view_mask (
-      //Arena& arena,
+      Arena& arena,
       DynamicalArena& darena,
       const std::span<std::pair<Light, MaskObjectList>, std::dynamic_extent>& lights,
       const Dir2& screen_dims 
@@ -100,7 +100,9 @@ void cast_shadow (
  * surface img. 
  * */
 void fill_view_with_shadows (
-  SDL_Surface*& img, 
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& position
@@ -110,7 +112,9 @@ void fill_view_with_shadows (
  * view in the surface img. 
  * */
 void fill_directional_with_shadows (
-  SDL_Surface*& img, 
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& direction
@@ -120,7 +124,9 @@ void fill_directional_with_shadows (
  * position of the light to all the places with no color defined (0). 
  * */
 void fill_remain_with_lights (
-  SDL_Surface*& img, 
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
   const Light& light
 );
 

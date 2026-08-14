@@ -12,7 +12,7 @@ ViewMask& ViewMask::draw_color_view_mask (
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;
 
-  fill_view_with_shadows (this->img, darena, segments, position);
+  fill_view_with_shadows (buffer, img->w, img->h, darena, segments, position);
 
   return *this;
 }

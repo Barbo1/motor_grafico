@@ -18,7 +18,7 @@ ImageModifier& ImageModifier::rotate270 () {
   }
 
   if (this->aquired)
-    std::free(this->texture->pixels);
+    delete [] (Uint32*)this->texture->pixels;
   SDL_FreeSurface (this->texture);
 
   this->texture = sur;

@@ -4,21 +4,21 @@
 #include <array>
 
 void fill_view_with_shadows (
-  SDL_Surface*& img, 
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& position
 ) {
-  Uint32* buffer = (Uint32*)img->pixels;
-
   MaskObjectList viewed = generate_view_covering (
     darena,
-    segments, 
-    position, 
+    segments,
+    position,
     ViewGeneration::POINT
   );
 
-  Dir2 dims = Dir2 ((float)img->w, (float)img->h);
+  const Dir2 dims = Dir2 (width, height);
   const Dir2& position_off = dims.nmadd (0.5f, position);
 
   __m128 neg_mm = _mm_set1_ps (-0.f);
@@ -53,7 +53,7 @@ void fill_view_with_shadows (
     points[6] = points[0];
     points[7] = points[1];
 
-    cast_shadow (buffer, (int32_t)img->w, (int32_t)img->h, points, 6);
+    cast_shadow (buffer, width, height, points, 6);
   }
 
   if (viewed.obj != nullptr)

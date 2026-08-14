@@ -182,7 +182,7 @@ int main () {
 
       aux_time_1 += 1;
 
-      view_0.draw_light_view_mask (darena, light_info, screen_dims);
+      view_0.draw_light_view_mask (arena, darena, light_info, screen_dims);
       glb->apply_mask (view_0);
 
       float a = glb->get_time();

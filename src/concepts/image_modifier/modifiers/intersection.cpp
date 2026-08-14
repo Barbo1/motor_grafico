@@ -24,8 +24,8 @@ ImageModifier& ImageModifier::operator& (const ImageModifier& img) {
         if ((*fin & 0x000000FF) == 0 || (*arr & 0x000000FF) == 0)
           *fin = 0;
 
-    if (this->aquired)
-      std::free(this->texture->pixels);
+    if (this->aquired && this->texture != nullptr)
+      delete [] (Uint32*)this->texture->pixels;
     SDL_FreeSurface(this->texture);
 
     this->texture = sur;
