@@ -11,11 +11,7 @@ MaskObjectList filter_lines_point_view (
   const Light& light, 
   const Dir2 screen_dims
 ) {
-  float light_bound = std::sqrt((light.intensity - 1.f) / (light.attenuation * light.attenuation));
-  Dir2 light_dims = Dir2(light_bound, light_bound);
-  Dir2 light_pos = light.position;
-  auto [K, dimsK] = calculate_light_bound (screen_dims, light_pos, light_dims);
-
+  auto [K, dimsK] = find_light_bounding (light, screen_dims);
   Dir2 coefs;
   uint32_t size = 0;
   MaskObject* ret = nullptr;
