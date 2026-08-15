@@ -3,6 +3,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
+#include <emmintrin.h>
 
 ViewMask& ViewMask::draw_light_view_mask (
   Arena& arena,
@@ -69,7 +70,7 @@ ViewMask& ViewMask::draw_light_view_mask (
 
         // filling image.
         fill_view_with_shadows (construct_another_buffer, width, height, darena, filtered, light_pos);
-        fill_remain_with_lights (construct_another_buffer, width, height, light);
+        fill_remain_with_lights_4 (construct_another_buffer, width, height, light);
         darena.complete_free_mo (filtered.obj);
       }
 

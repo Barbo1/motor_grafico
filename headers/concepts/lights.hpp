@@ -131,6 +131,13 @@ void fill_remain_with_lights (
   const Light& light
 );
 
+void fill_remain_with_lights_4 (
+  Uint32*& buffer, 
+  int32_t width, 
+  int32_t height, 
+  const Light& light
+);
+
 /* Objects to help construct the arrange of buckets to discard lines. */
 
 struct SecondLevelElement {
