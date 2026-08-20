@@ -11,18 +11,20 @@ void fill_view_with_shadows (
   const MaskObjectList& segments,
   const Dir2& position
 ) {
+  if (segments.size == 0)
+    return;
+
   MaskObjectList viewed = generate_view_covering (
     darena,
     segments,
     position,
-    ViewGeneration::POINT
+    ViewGeneration::VG_POINT
   );
 
   const Dir2 dims = Dir2 (width, height);
   const Dir2& position_off = dims.nmadd (0.5f, position);
 
   __m128 neg_mm = _mm_set1_ps (-0.f);
-
   std::array<Dir2, 8> points;
 
   for (MaskObject* iter = viewed.obj; iter != nullptr; iter = iter->next) {
@@ -56,6 +58,5 @@ void fill_view_with_shadows (
     cast_shadow (buffer, width, height, points, 6);
   }
 
-  if (viewed.obj != nullptr)
-    darena.complete_free_mo(viewed.obj);
+  darena.complete_free_mo(viewed.obj);
 }

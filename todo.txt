@@ -124,6 +124,15 @@
       |X| - Selecter: tiene distintas opciones que puden ser identificadas mediante un numero, 
               cada una con un string que representa el significado.
  |V| - agregar capacidad de printear letras en los visualizers 2D.
+ |V| - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
+        mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
+        |V| + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
+              posicionarse en algun lugar de la pantalla,
+        |V| + reducir la cantidad de pixeles que tienen que ser computados en las mascaras 
+              grandes,
+        |V| + mantener solamente una mascara dinamica, que sea cambiada en funcion de las 
+              demas luces, para deducir alocaciones y computo innecesario,
+        |V| + extender el manejo de luces para aceptar fuentes de luz fuera de la pantalla,
  |T| - falta implementar: 
         |X| + la funcion project de image_modifier, y la function de print polygon,
         |V| + rounded_square dentro de los constructores de figuras,
@@ -140,17 +149,20 @@
         | | + resoluciones.
         | | + puntos de colision.
  | | - mejoras en el codigo: 
-        |T| + agregar una comprobacion de punteros nullos cada vez que se hace un new,
-        |V| + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible,
-        | | + mejorar el manejo de la memoria de la rasterizacion de letras.
+        | | + verificar si <cuchar> sirve para hacer la transformacion de string a u16string.
+        | | + re-implementar.
+              | | > testeo de colision entre linea y nedge.
+              |V| > testeo de colision entre prisma y nedge.
+        | | + crear una function en math para rotar Dir3 y cambiar el rotate de 3DFig.
+        | | + cambiar algoritmo de dibujo de un circulo.
+        | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.
+        |T| + agregar una comprobacion de punteros nullos cada vez que se hace un new.
+        |V| + agregar unreachable() en las ramas inalcanzables, por ejemplo en switches con default imposible.
+        |V| + mejorar el manejo de la memoria de la rasterizacion de letras.
         |V| + mejorar el manejo de la memoria de los vectores.
         |V| + hacer un nuevo archivo en primitives para funciones matematicas que se repitan 
                 durante el codigo, como las evaluaciones de ofuscamiento de lineas.
-        | | + re-implementar:
-              | | > testeo de colision entre linea y nedge.
-              | | > testeo de colision entre prisma y nedge.
         |V| + eliminar el coportamiento indefinido de las uniones en los vectores.
-        | | + verificar si <cuchar> sirve para hacer la transformacion de string a u16string.
         |V| + implementar Arena para realizar alocaciones mediante un buffer en el stack. La idea es poder
               utilizarla mediente los siguientes metodos:
                + Arena (std::size_t SIZE): crea una nueva arena de tamaño 'SIZE'
@@ -163,7 +175,6 @@
             generar metodos que sean particulares para cada tipo que necesite, pero tengo que hacer una analisis 
             previo de los tipos de datos que tengan este comportamiento. Como minimo, voy a necesitar para los 
             proyectiles(cuando los programe).
-        | | + crear una function en math para rotar Dir3 y cambiar el rotate de 3DFig.
  | | - corregir problemas de velocidad que no se hace 0 cuando colisionan.
  | | - hacer test_and_resolve_collition para ahorrar operaciones.
  | | - re-implementar de nuevo el descompresor de imagenes png.
@@ -172,21 +183,11 @@
         | | + imagenes continuas(Visualizer<D2CON>) y,
         | | + imagenes continuas con mapeo(Visualizer<D2MAP>).
  | | - agregar utilizacion de audios.
- | | - reducir el espacio de computo de la luz basado en la amplitud e intensidad, haciendo 
-        mascaras mas pequeñas que la pantalla. Ahora, deberia poder hacer lo siguiente:
-        | | + generar mascaras pequeñas pensadas para el manejo estatico, que puedan 
-              posicionarse en algun lugar de la pantalla,
-        | | + reducir la cantidad de pixeles que tienen que ser computados en las mascaras 
-              grandes,
-        | | + mantener solamente una mascara dinamica, que sea cambiada en funcion de las 
-              demas luces, para deducir alocaciones y computo innecesario,
-        | | + extender el manejo de luces para aceptar fuentes de luz fuera de la pantalla,
-      Estas cosas comprender:
-        Cambiar luces para que sean objetos, que cuando se inicializan calculen la distancia
-        maxima hasta la que llega la luz, que abarca todas las funcionalidades.
-        | | + ,
  | | - cambiar modelo de iluminación:
-        | | + en vez de guardarse los lugares donde hay sombra, deberian guardarse los lugares con iluminacion. 
+        | | + view covering para un circulo, linea y square,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
+        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
+        |X| + en vez de guardarse los lugares donde hay sombra, deberian guardarse los lugares con iluminacion. 
                 Esto permite que se obtengan los lugares por lo que pasa la luz para poder recorrerlos mediante 
                 una linea de rasterización, para poder calcular la luz de cada pixel dentro de la imagen. Mas 
                 aun, es posible utilizar todas las luces posibles para generar una unica mascara de luz, lo cual 
@@ -195,12 +196,6 @@
                 imagenes, sino tambien para concatenarlas. Por lo tanto, se deberia construir el volumen de 
                 iluminacion, que consiste en un polinomio que recorre todos los pixeles iluminados. La iluminacion
                 ambiental se deberia pasar por parametro para el algoritmo.
-        | | + desde este punto de vista, las luces estaticas deberian generarse mediante la construccion del 
+        |X| + desde este punto de vista, las luces estaticas deberian generarse mediante la construccion del 
                 volumen de iluminacion, que se guardarían relacionados con la luz en particular.
-        | | + view covering para un circulo, linea y square,
-        | | + creacion de mascara con luz en un objeto(circulo, linea y square) y lineas de bloqueo de luz,
-        | | + creacion de mascara con luz en un objeto(circulo, linea y square),
  | | - implementar gear.
- | | - mejorar eficiencia de figures_constructors:
-        | | + cambiar algoritmo de dibujo de un circulo,
-        | | + realizar funciones especiales con ordenamiento de lineas para matrices de 8x8, 32x32, 64x64.

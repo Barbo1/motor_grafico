@@ -1,6 +1,7 @@
 #pragma once
 
-#include "./vectors.hpp"
+#include "./types_definition.hpp"
+
 #include <cstdint>
 #include <immintrin.h>
 #include <pmmintrin.h>
@@ -629,4 +630,273 @@ inline float coef_collision_projectil_line (Dir2 C, Dir2 v, float R, Dir2 A, Dir
     return ret;
   else
     return INFINITY;
+}
+
+inline int meeting_condition_for_ordering_by_direction (
+  const SecondLevelElement& line_1, 
+  const SecondLevelElement& line_2, 
+  const Dir2& d
+) {
+
+  const Dir2 v_1 = line_1.point2 - line_1.point1;
+  const Dir2 v_2 = line_2.point2 - line_2.point1;
+
+  Dir2 lipstick_marks = Dir2 {
+    d.pLd (line_1.point1 - line_2.point1, v_2),
+    d.pLd (line_1.point2 - line_2.point1, v_2)
+  }.bound01();
+
+  Dir2 middle_kiss = v_2.madd (
+    lipstick_marks.sum() * 0.5f, 
+    line_2.point1 - line_1.point1
+  );
+
+  int ret1 = v_1.pLd(middle_kiss, d) > 0.0001f;
+  float coef = d.pLd(middle_kiss, v_1);
+  int ret2 = 0.0001f < coef && coef < 1.0001f;
+  return (ret1 << 1) | ret2;
+}
+
+static inline int meeting_condition_for_obfuscating_by_direction (
+  const SecondLevelElement& line_1, 
+  const SecondLevelElement& line_2, 
+  const Dir2& d, 
+  Dir2& lipstick_marks
+) {
+
+  const Dir2 v_1 = line_1.point2 - line_1.point1;
+  const Dir2 v_2 = line_2.point2 - line_2.point1;
+  const Dir2 d_L = d.percan();
+
+  lipstick_marks = Dir2 {
+    d.pLd (line_1.point1 - line_2.point1, v_2),
+    d.pLd (line_1.point2 - line_2.point1, v_2)
+  }.bound01();
+
+  Dir2 middle_kiss = v_2.madd (lipstick_marks.sum() * 0.5f, line_2.point1);
+
+  __m128 denom = _mm_set1_ps (1.f / (v_1 * d_L));
+  __m128 dist = _mm_mul_ps (
+    _mm_set_ps (
+      0.f,
+      (middle_kiss - line_1.point1) * d_L,
+      (line_2.point1 - line_1.point1) * d_L,
+      (line_2.point2 - line_1.point1) * d_L
+    ), denom
+  );
+  __m128 over_both = _mm_and_ps (
+    _mm_cmplt_ps (dist, _mm_set1_ps (1.0001f)), 
+    _mm_cmpgt_ps (dist, _mm_set1_ps (0.0001f))
+  );
+
+  return (_mm_movemask_ps(over_both) & 0b111);
+}
+
+static inline int meeting_condition_for_ordering_by_point (const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position) {
+  const Dir2 dir_p1_u1 = line_1.point1 - position; 
+  const Dir2 dir_p1_u2 = line_1.point2 - position; 
+  const Dir2 dir_p1_u1_L = dir_p1_u1.percan();
+  const Dir2 dir_p1_u2_L = dir_p1_u2.percan(); 
+  const Dir2 dir_p2_u1 = line_2.point1 - position; 
+  const Dir2 dir_p2_u2 = line_2.point2 - position; 
+
+  const Dir2 dir_v = line_2.point1 - line_2.point2;
+  Dir2 lipstick_marks = Dir2 {
+    dir_p1_u1.pLd(dir_p2_u1, dir_v),
+    dir_p1_u2.pLd(dir_p2_u1, dir_v)
+  }.bound01();
+
+  Dir2 middle_kiss = dir_v.madd(lipstick_marks.sum() * -0.5f, line_2.point1);
+
+  __m128 bound_p = _mm_set1_ps(0.0001f), bound_n = _mm_set1_ps(-0.0001f);
+
+  __m128 coef = _mm_set1_ps (1.f / (dir_p1_u2_L * dir_p1_u1));
+  __m128 over_both = _mm_and_ps (
+    _mm_cmpgt_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f,
+          (middle_kiss - position) * dir_p1_u2_L, 
+          dir_p2_u1 * dir_p1_u2_L,
+          dir_p2_u2 * dir_p1_u2_L
+        ), coef
+      ), bound_p
+    ),
+    _mm_cmple_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f,
+          (middle_kiss - position) * dir_p1_u1_L, 
+          dir_p2_u1 * dir_p1_u1_L,
+          dir_p2_u2 * dir_p1_u1_L
+        ), coef
+      ), bound_n
+    )
+  );
+
+  Dir2 v12p = (line_1.point1 - line_1.point2).percan();
+  __m128 aux2 = _mm_mul_ps (v12p.v, dir_p1_u2.v);
+  __m128 coef_2 = _mm_rcp_ss (_mm_add_ss (_mm_shuffle_ps (aux2, aux2, 0b01010101), aux2));
+  coef_2 = _mm_shuffle_ps (coef_2, coef_2, 0);
+  __m128 meet_cond_2 = _mm_and_ps (
+    _mm_cmpgt_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f,
+          (middle_kiss - line_1.point2) * v12p,
+          (line_2.point1 - line_1.point2) * v12p,
+          (line_2.point2 - line_1.point2) * v12p
+        ), coef_2
+      ), bound_p
+    ),
+    _mm_cmple_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f,
+          (middle_kiss - line_1.point2) * dir_p1_u2_L,
+          (line_2.point1 - line_1.point2) * dir_p1_u2_L,
+          (line_2.point2 - line_1.point2) * dir_p1_u2_L
+        ), coef_2 
+      ), bound_n
+    )
+  );
+
+  __m128 aux1 = _mm_mul_ps ((-v12p).v, dir_p1_u1.v);
+  __m128 coef_1 = _mm_rcp_ss (_mm_add_ss (_mm_shuffle_ps (aux1, aux1, 0b01010101), aux1));
+  coef_1 = _mm_shuffle_ps (coef_1, coef_1, 0);
+  __m128 meet_cond_1 = _mm_and_ps (
+    _mm_cmpgt_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f,
+          (line_1.point1 - middle_kiss) * v12p,
+          (line_1.point1 - line_2.point1) * v12p,
+          (line_1.point1 - line_2.point2) * v12p
+        ), coef_1
+      ), bound_p
+    ),
+    _mm_cmple_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f,
+          (middle_kiss - line_1.point1) * dir_p1_u1_L,
+          (line_2.point1 - line_1.point1) * dir_p1_u1_L,
+          (line_2.point2 - line_1.point1) * dir_p1_u1_L
+        ),coef_1
+      ), bound_n
+    )
+  );
+
+  int cond_1 = (_mm_movemask_ps(_mm_and_ps (meet_cond_1, meet_cond_2)) & 0b111) > 0;
+  int cond_2 = (_mm_movemask_ps(over_both) & 0b111) > 0;
+
+  return (cond_1 << 1) | cond_2;
+}
+
+static inline int meeting_condition_for_obfuscating_by_point (
+  const SecondLevelElement& line_1, const SecondLevelElement& line_2, const Dir2& position, 
+  Dir2& lipstick_marks
+) {
+
+  const Dir2 dir_p1_u1 = line_1.point1 - position; 
+  const Dir2 dir_p1_u2 = line_1.point2 - position; 
+  const Dir2 dir_p1_u1_L = dir_p1_u1.percan();
+  const Dir2 dir_p1_u2_L = dir_p1_u2.percan(); 
+  const Dir2 dir_p2_u1 = line_2.point1 - position; 
+  const Dir2 dir_p2_u2 = line_2.point2 - position; 
+
+  const Dir2 dir_v = line_2.point1 - line_2.point2;
+  lipstick_marks = Dir2 {
+    dir_p1_u1.pLd(dir_p2_u1, dir_v),
+    dir_p1_u2.pLd(dir_p2_u1, dir_v)
+  }.bound01();
+
+  Dir2 middle_kiss = dir_v.madd(lipstick_marks.sum() * -0.5f, dir_p2_u1);
+
+  __m128 bound_p = _mm_set1_ps(0.0001f), bound_n = _mm_set1_ps(-0.0001f);
+
+  __m128 aux = _mm_mul_ps (dir_p1_u2_L.v, dir_p1_u1.v);
+  __m128 coef = _mm_rcp_ss(_mm_add_ss (_mm_shuffle_ps (aux, aux, 0b01010101), aux));
+  coef = _mm_shuffle_ps (coef, coef, 0);
+  __m128 over_both = _mm_and_ps (
+    _mm_cmpgt_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f, 
+          middle_kiss * dir_p1_u2_L, 
+          dir_p2_u1 * dir_p1_u2_L, 
+          dir_p2_u2 * dir_p1_u2_L
+        ), coef
+      ), bound_p
+    ),
+    _mm_cmple_ps (
+      _mm_mul_ps (
+        _mm_set_ps (
+          0.f, 
+          middle_kiss * dir_p1_u1_L, 
+          dir_p2_u1 * dir_p1_u1_L, 
+          dir_p2_u2 * dir_p1_u1_L
+        ), coef
+      ), bound_n
+    )
+  );
+
+  return _mm_movemask_ps(over_both) & 0b111;
+}
+
+/* This function returns the center and dimension of the physical zone encompasing
+ * the lines that blocks the light casted by 'light'. The returned rectangle IS NOT
+ * comletely inside the screen.
+ *
+ * 'light' is the light which bounds are needed.
+ * 'screen_dims' is the dimension of the complete screen (not half of it).
+ * */
+inline std::array<Dir2, 2> find_light_physical_bounding(const Light& light, const Dir2& screen_dims) {
+  __m128 half = _mm_set1_ps(0.5f);
+  __m128 sign = _mm_set1_ps(-0.f);
+  __m128 aten = _mm_set1_ps(light.attenuation);
+  __m128 light_pos = Dir2(light.position).v;
+  __m128 light_dims = _mm_sqrt_ps(_mm_mul_ps(
+    _mm_fmadd_ps(_mm_set1_ps(light.intensity), half, _mm_set1_ps(-1.f)),
+    _mm_rcp_ps(_mm_mul_ps(aten, aten))
+  ));
+
+  __m128 b = _mm_add_ps(light_pos, light_dims);
+  __m128 d = _mm_sub_ps(light_pos, light_dims);
+  __m128 min = _mm_min_ps(screen_dims.v, b);
+  __m128 max = _mm_max_ps(_mm_setzero_ps(), d);
+
+  __m128 M = _mm_add_ps(max, min);
+  __m128 N_prev = _mm_xor_ps(light_dims, _mm_and_ps(sign, _mm_fmsub_ps(M, half, light_pos)));
+  __m128 N = _mm_add_ps(N_prev, light_pos);
+  __m128 v3 = _mm_fnmadd_ps(_mm_set1_ps(2.f), N, M);
+  __m128 v4 = _mm_mul_ps(_mm_max_ps(_mm_andnot_ps(sign, v3), light_dims), half);
+  __m128 K_prev = _mm_xor_ps(v4, _mm_and_ps(sign, v3));
+  Dir2 K = Dir2::from_well(_mm_add_ps(K_prev, N));
+
+  return {K, Dir2::from_well(v4)};
+}
+
+/* This function returns the center and dimension of the lighted zone of a 
+ * light. The calculations depends if the light is inside the screen or not.
+ * The returned rectangle MUST be comletely inside the screen.
+ *
+ * 'light' is the light which bounds are needed.
+ * 'screen_dims' is the dimension of the complete screen (not half of it).
+ * */
+inline __m128 find_light_screen_bounding(const Light& light, const Dir2& screen_dims) {
+  __m128 half = _mm_set1_ps(0.5f);
+  __m128 aten = _mm_set1_ps(light.attenuation);
+  __m128 light_pos = Dir2(light.position).v;
+  __m128 light_dims = _mm_sqrt_ps(_mm_mul_ps(
+    _mm_fmadd_ps(_mm_set1_ps(light.intensity), half, _mm_set1_ps(-1.f)),
+    _mm_rcp_ps(_mm_mul_ps(aten, aten))
+  ));
+
+  __m128 b = _mm_add_ps(light_pos, light_dims);
+  __m128 d = _mm_sub_ps(light_pos, light_dims);
+  __m128 bound = _mm_movelh_ps(b, d);
+  __m128 rebound = _mm_max_ps(_mm_setzero_ps(), _mm_min_ps(screen_dims.v, bound));
+
+  return rebound;
 }

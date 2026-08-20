@@ -16,12 +16,12 @@ void fill_directional_with_shadows (
     darena,
     segments,
     direction,
-    ViewGeneration::DIRECTION
+    ViewGeneration::VG_DIRECTION
   );
 
   const Dir2 dims = Dir2 (width, height);
   const Dir2 dims2 = dims * 0.5f;
-  const Dir2 I = Dir2 {_mm_xor_ps (_mm_and_ps (direction.v, _mm_set1_ps (-0.f)), dims.v)} + dims2;
+  const Dir2 I = Dir2 (_mm_xor_ps (_mm_and_ps (direction.v, _mm_set1_ps (-0.f)), dims.v)) + dims2;
 
   std::array<Dir2, 8> points;
   for (MaskObject* iter = viewed.obj; iter != nullptr; iter = iter->next) {
@@ -44,6 +44,5 @@ void fill_directional_with_shadows (
     cast_shadow (buffer, width, height, points, 4);
   }
 
-  if (viewed.obj != nullptr)
-    darena.complete_free_mo(viewed.obj);
+  darena.complete_free_mo(viewed.obj);
 }
