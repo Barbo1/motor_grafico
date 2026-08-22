@@ -13,8 +13,8 @@ ViewMask& ViewMask::draw_light_view_mask (
     buffer[i] = 0;
 
   MaskObjectList filtered = filter_lines_point_view(darena, segments, light, screen_dims);
-  fill_view_with_shadows (buffer, img->w, img->h, darena, filtered, light.position);
-  fill_remain_with_lights (buffer, img->w, img->h, light);
+  fill_view_with_shadows (buffer, img->w, img->h, darena, filtered, light.position, 255);
+  fill_remain_with_lights (buffer, img->w, img->h, light.position, light);
 
   darena.complete_free_mo(filtered.obj);
 

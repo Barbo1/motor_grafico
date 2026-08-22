@@ -3,6 +3,8 @@
 #include <cstdlib>
 
 void DynamicalArena::free_mo (MaskObject* obj) {
-  obj->next = this->freed_mo;
-  this->freed_mo = obj;
+  if (obj != nullptr) {
+    obj->next = this->freed_mo;
+    this->freed_mo = obj;
+  }
 }

@@ -72,54 +72,60 @@ class ViewMask {
 
 /* This function is meant to draw a shadow in the buffer of a view mask. The 
  * function takes an array of 8, meaning that it receives 6 points denoting
- * the polygon.
+ * the polygon encompassing the darked zone. The color denotes the one of the
+ * shadow volume.
  * */
 void cast_shadow (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
   const std::array<Dir2, 8>& points,
-  uint32_t many_points
+  uint32_t many_points,
+  Uint32 color
 );
 
 /* This function uses cast_shadow to create the shadows for a view in the 
  * surface img. 
  * */
 void fill_view_with_shadows (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
-  const Dir2& position
+  const Dir2& position,
+  Uint32 color
 );
 
 /* This function uses cast_shadow to create the shadows for a directional 
  * view in the surface img. 
  * */
 void fill_directional_with_shadows (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
-  const Dir2& direction
+  const Dir2& direction,
+  Uint32 color
 );
 
 /* This function fill the remaining space of a view with light from the 
  * position of the light to all the places with no color defined (0). 
  * */
 void fill_remain_with_lights (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Dir2 new_light_pos,
   const Light& light
 );
 
 void fill_remain_with_lights_4 (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Dir2 new_light_pos,
   const Light& light
 );
 

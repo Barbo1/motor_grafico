@@ -3,42 +3,6 @@
 #include "./vectors.hpp"
 #include <vector>
 
-// types
-
-struct Light {
-  float intensity;
-  float attenuation;
-  Dir2 position;
-  struct LightColorTy {
-    float r, g, b;
-  } color;
-};
-
-struct MaskObject {
-  MaskObject* next;
-  MemDir2 point1;
-  MemDir2 point2;
-};
-
-struct MaskObjectList {
-  MaskObject* obj;
-  std::size_t size;
-};
-
-struct SecondLevelElement {
-  Dir2 point1;
-  Dir2 point2;
-  int32_t partition_offset;
-};
-
-struct FirstLevelElement {
-  std::vector<SecondLevelElement> data;
-  int32_t first_level_offset;
-  int32_t first_second_level_offset;
-  int32_t last_second_level_offset;
-};
-
-
 // enums
 
 enum ParSrcType {
@@ -105,4 +69,46 @@ enum PRObjType {
 enum ViewGeneration {
   VG_POINT,
   VG_DIRECTION
+};
+
+enum LightType {
+  LT_DIRECTIONAL,
+  LT_CENTERD,
+  LT_FOCALIZED
+};
+
+
+// types
+
+struct Light {
+  std::array<Dir2, 2> focal_line;
+  Dir2 position;
+  struct LightColorTy {float r, g, b;} color;
+  float intensity;
+  float attenuation;
+  LightType type;
+};
+
+struct MaskObject {
+  MaskObject* next;
+  MemDir2 point1;
+  MemDir2 point2;
+};
+
+struct MaskObjectList {
+  MaskObject* obj;
+  std::size_t size;
+};
+
+struct SecondLevelElement {
+  Dir2 point1;
+  Dir2 point2;
+  int32_t partition_offset;
+};
+
+struct FirstLevelElement {
+  std::vector<SecondLevelElement> data;
+  int32_t first_level_offset;
+  int32_t first_second_level_offset;
+  int32_t last_second_level_offset;
 };

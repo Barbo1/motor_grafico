@@ -2,13 +2,14 @@
 #include <SDL2/SDL_surface.h>
 
 void fill_remain_with_lights (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Dir2 new_light_pos,
   const Light& light
 ) {
   float add_coef = light.attenuation / std::sqrt(light.intensity);
-  Dir2 aux = light.position * add_coef;
+  Dir2 aux = new_light_pos * add_coef;
 
 #if defined(__AVX2__) && defined(__AVX__)
   __m256 

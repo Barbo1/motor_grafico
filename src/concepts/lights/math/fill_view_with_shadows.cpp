@@ -1,15 +1,17 @@
 #include "../../../../headers/concepts/lights.hpp"
 
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <array>
 
 void fill_view_with_shadows (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
-  const Dir2& position
+  const Dir2& position,
+  Uint32 color
 ) {
   if (segments.size == 0)
     return;
@@ -55,7 +57,7 @@ void fill_view_with_shadows (
     points[6] = points[0];
     points[7] = points[1];
 
-    cast_shadow (buffer, width, height, points, 6);
+    cast_shadow (buffer, width, height, points, 6, color);
   }
 
   darena.complete_free_mo(viewed.obj);

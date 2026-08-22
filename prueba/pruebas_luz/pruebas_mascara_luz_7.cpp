@@ -50,6 +50,7 @@ MaskObjectList get_segments_1 (DynamicalArena& darena) {
 
 MaskObjectList get_segments_2 (DynamicalArena& darena) {
   std::vector<std::array<MemDir2, 2>> a = {
+    std::array<MemDir2, 2>({MemDir2 {-10.f, -10.f}, MemDir2 {-10.f, 80.f}}),
     std::array<MemDir2, 2>({MemDir2 {122.f, 84.f}, MemDir2 {86.f, 125.f}}),
     std::array<MemDir2, 2>({MemDir2 {86.f, 125.f}, MemDir2 {53.f, 1.78f}}),
     std::array<MemDir2, 2>({MemDir2 {53.f, 1.78f}, MemDir2 {62.f, 221.f}}),
@@ -147,26 +148,41 @@ int main () {
   configure_glyph_system (&gs, 20, color);
 
   MaskObjectList segments = get_segments_2(darena);
+  //MaskObjectList segments_1 = {.obj = nullptr, .size = 0};
   std::vector<std::pair<Light, MaskObjectList>> light_info = {
     std::pair<Light, MaskObjectList>{{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(518.f, 334.f),
+      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
       .intensity = 70.f,
       .attenuation = 0.02f,
-      .position = {518.f, 334.f},
-      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+      .type = LightType::LT_CENTERD
     }, segments
   }, {{
-      .intensity = 150.f,
-      .attenuation = 0.01f,
-      .position = {318.f, 337.f},
-      .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
+      .focal_line = std::array<Dir2, 2>{Dir2(150.f, 10.f), Dir2(200.f, 10.f)},
+      .position = Dir2(175.f, -15.f),
+      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+      .intensity = 70.f,
+      .attenuation = 0.02f,
+      .type = LightType::LT_FOCALIZED
   }, segments
   }, {{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(318.f, 337.f),
+      .color = {.r = 1.0f, .g = 0.f, .b = 0.1f},
       .intensity = 150.f,
       .attenuation = 0.01f,
-      .position = {400.f, 400.f},
+      .type = LightType::LT_CENTERD
+  }, segments
+  }, {{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(400.f, 400.f),
       .color = {.r = 1.0f, .g = 1.0f, .b = 0.1f},
-    }, segments}
-  };
+      .intensity = 150.f,
+      .attenuation = 0.01f,
+      .type = LightType::LT_CENTERD
+    }, segments
+  }};
 
   bool cont = true;
   SDL_Event event;
@@ -178,7 +194,7 @@ int main () {
 
   while (cont) {
     glb->begin_render();
-      img_mod.draw (glb, Dir2 {200.f, 200.f});
+      img_mod.draw (glb, Dir2 (200.f, 200.f));
 
       aux_time_1 += 1;
 
@@ -191,7 +207,7 @@ int main () {
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);
       for (MaskObject* iter = segments.obj; iter != nullptr; iter = iter->next) {
         SDL_RenderDrawLine(glb->get_render(), iter->point1.x, iter->point1.y, iter->point2.x, iter->point2.y);
-     }
+      }
 
       SDL_SetRenderDrawColor(glb->get_render(), 0, 255, 0, 255);
       SDL_RenderDrawPoint(glb->get_render(), light_info[0].first.position.x(), light_info[0].first.position.y());

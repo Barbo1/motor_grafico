@@ -5,6 +5,7 @@
 #include <SDL2/SDL_stdinc.h>
 #include <cstdint>
 #include <emmintrin.h>
+#include <utility>
 
 ViewMask& ViewMask::draw_light_view_mask (
   Arena& arena,
@@ -14,16 +15,9 @@ ViewMask& ViewMask::draw_light_view_mask (
 ) {
   Uint32* buffer_first = (Uint32*)img->pixels;
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
-    buffer_first[i] = 0;
+    buffer_first[i] = 255;
 
-  const Light& light = segments[0].first;
-  const MaskObjectList& parts = segments[0].second;
-  MaskObjectList filtered = filter_lines_point_view(darena, parts, light, screen_dims);
-  fill_view_with_shadows (buffer_first, img->w, img->h, darena, filtered, light.position);
-  fill_remain_with_lights (buffer_first, img->w, img->h, light);
-  darena.complete_free_mo(filtered.obj);
-
-  for (uint32_t ss = 1; ss < segments.size(); ss++) {
+  for (uint32_t ss = 0; ss < segments.size(); ss++) {
     const Light& light = segments[ss].first;
     const MaskObjectList& parts = segments[ss].second;
 
@@ -32,7 +26,18 @@ ViewMask& ViewMask::draw_light_view_mask (
     uint32_t xmin, ymin;
     int32_t width, height;
     {
-      __m128 rebound = find_light_screen_bounding(light, screen_dims);
+      __m128 rebound;
+      switch (light.type) {
+        case LightType::LT_CENTERD:
+          rebound = find_light_screen_bounding(light, screen_dims);
+          break;
+        case LightType::LT_FOCALIZED:
+          rebound = find_focal_screen_bounding(light, light.focal_line[0], light.focal_line[1], screen_dims);
+          break;
+        default:
+          std::unreachable();
+          break;
+      }
       __m128i reboundi = _mm_cvtps_epi32(rebound);
 
       bound_min = Dir2::from_well(_mm_permute_ps(rebound, 0b11101110));
@@ -47,7 +52,7 @@ ViewMask& ViewMask::draw_light_view_mask (
       xmin = (xmin >> 2) << 2;
       width = xmax - xmin;
     }
-    
+  
     if (width <= 0 || height <= 0) 
       continue;
 
@@ -56,12 +61,8 @@ ViewMask& ViewMask::draw_light_view_mask (
     if (another_buffer == nullptr) 
       continue;
 
-    for (int32_t k = 0; k < width * height; k++)
-      another_buffer[k] = 0;
-
     {
-      // filter lines.
-      Uint32* construct_another_buffer = another_buffer;
+      // filter and reposition lines.
       MaskObjectList filtered = filter_lines_point_view(darena, parts, light, screen_dims);
       light_pos -= bound_min;
       for (auto iter = filtered.obj; iter != nullptr; iter = iter->next) {
@@ -69,9 +70,43 @@ ViewMask& ViewMask::draw_light_view_mask (
         iter->point2.store(Dir2(iter->point2) - bound_min);
       }
 
+      // set initial conditions based on light type.
+      Uint32* construct_another_buffer = another_buffer;
+      switch (light.type) {
+        case LightType::LT_CENTERD:
+          for (int32_t k = 0; k < width * height; k++)
+            construct_another_buffer[k] = 0;
+          break;
+        case LightType::LT_FOCALIZED: {
+            for (int32_t k = 0; k < width * height; k++)
+              construct_another_buffer[k] = 255;
+    
+            MaskObject* obj = darena.alloc_mo();
+            obj->point1.store(light.focal_line[0] - bound_min);
+            obj->point2.store(light.focal_line[1] - bound_min);
+            obj->next = nullptr;
+            MaskObjectList first_ofuscation = {.obj = obj, .size = 1};
+            fill_view_with_shadows (
+              construct_another_buffer, 
+              width, 
+              height, 
+              darena,
+              first_ofuscation,
+              light_pos,
+              0
+            );
+            darena.free_mo(obj);
+          }
+          break;
+
+        default:
+          std::unreachable();
+          break;
+      }
+
       // filling image.
-      fill_view_with_shadows (construct_another_buffer, width, height, darena, filtered, light_pos);
-      fill_remain_with_lights_4 (construct_another_buffer, width, height, light);
+      fill_view_with_shadows (construct_another_buffer, width, height, darena, filtered, light_pos, 255);
+      fill_remain_with_lights_4 (construct_another_buffer, width, height, light_pos, light);
       darena.complete_free_mo (filtered.obj);
     }
 
@@ -81,8 +116,7 @@ ViewMask& ViewMask::draw_light_view_mask (
       const __m128i mm_opr_mask = _mm_set_epi8 (0,0,0,0,0,0,0,0,0,0,0,0,12,8,4,0);
       const uint32_t advance_y = img->w - width;
 
-      Uint32* buffer = (Uint32*)img->pixels;
-      Uint32* buffer_this = buffer + xmin + ymin * img->w;
+      Uint32* buffer_this = ((Uint32*)img->pixels) + xmin + ymin * img->w;
 
       for (int32_t h = 0; h < height; h++) {
         for (int32_t w = 0; w < width; w+=4) {

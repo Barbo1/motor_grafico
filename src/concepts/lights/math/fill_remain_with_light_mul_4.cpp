@@ -5,13 +5,14 @@
 #include <immintrin.h>
 
 void fill_remain_with_lights_4 (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Dir2 new_light_pos,
   const Light& light
 ) {
   float add_coef = light.attenuation / std::sqrt(light.intensity);
-  Dir2 aux = light.position * add_coef;
+  Dir2 aux = new_light_pos * add_coef;
   __m128
     pos_1, pos_2,
     coef_needed = _mm_set_ps(0.f, add_coef, 0.f, 0.f),

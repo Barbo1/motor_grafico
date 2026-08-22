@@ -1,16 +1,18 @@
 #include "../../../../headers/concepts/lights.hpp"
 
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_surface.h>
 #include <array>
 #include <cstdint>
 
 void fill_directional_with_shadows (
-  Uint32*& buffer, 
+  Uint32* buffer, 
   int32_t width, 
   int32_t height, 
   DynamicalArena& darena,
   const MaskObjectList& segments,
-  const Dir2& direction
+  const Dir2& direction,
+  Uint32 color
 ) {
   MaskObjectList viewed = generate_view_covering (
     darena,
@@ -41,7 +43,7 @@ void fill_directional_with_shadows (
     points[4] = points[0];
     points[5] = points[1];
 
-    cast_shadow (buffer, width, height, points, 4);
+    cast_shadow (buffer, width, height, points, 4, color);
   }
 
   darena.complete_free_mo(viewed.obj);
