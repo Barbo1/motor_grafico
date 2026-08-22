@@ -148,16 +148,23 @@ int main () {
   configure_glyph_system (&gs, 20, color);
 
   MaskObjectList segments = get_segments_2(darena);
-  //MaskObjectList segments_1 = {.obj = nullptr, .size = 0};
   std::vector<std::pair<Light, MaskObjectList>> light_info = {
     std::pair<Light, MaskObjectList>{{
       .focal_line = std::array<Dir2, 2>(),
       .position = Dir2(518.f, 334.f),
-      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+      .color = {.r = 0.0f, .g = 1.0f, .b = 0.0f},
       .intensity = 70.f,
       .attenuation = 0.02f,
       .type = LightType::LT_CENTERD
     }, segments
+  }, {{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(175.f, 10.f),
+      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+      .intensity = 10.f,
+      .attenuation = 0.02f,
+      .type = LightType::LT_CENTERD
+  }, segments
   }, {{
       .focal_line = std::array<Dir2, 2>{Dir2(150.f, 10.f), Dir2(200.f, 10.f)},
       .position = Dir2(175.f, -15.f),
@@ -198,7 +205,7 @@ int main () {
 
       aux_time_1 += 1;
 
-      view_0.draw_light_view_mask (arena, darena, light_info, screen_dims);
+      view_0.draw_light_mask (arena, darena, light_info, screen_dims);
       glb->apply_mask (view_0);
 
       float a = glb->get_time();

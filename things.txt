@@ -1,0 +1,12 @@
+
+para el calculo de la union de las luces:
+  na1 = 255 - a1
+  na2 = 255 - a2
+  q = na1 + na2
+  c = ((r1, g1, b1, 0) * na1/q + (r2, g2, b2, 0) * na2/q) + (0, 0, 0, min (a1, a2))
+  c = ((r1, g1, b1, 0) * na1/(na1 + na2) + (r2, g2, b2, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
+  c = ((r1, g1, b1, 0) * (na1+na2-na2)/(na1 + na2) + (r2, g2, b2, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
+  c = ((r1, g1, b1, 0) * (1 - na2/(na1 + na2)) + (r2, g2, b2, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
+  c = ((r1, g1, b1, 0) - (r1, g1, b1, 0) * na2/(na1 + na2) + (r2, g2, b2, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
+  c = ((r1, g1, b1, 0) + (r2, g2, b2, 0) * na2/(na1 + na2) - (r1, g1, b1, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
+  c = ((r1, g1, b1, 0) + (r2-r1, g2-g1, b2-b1, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
