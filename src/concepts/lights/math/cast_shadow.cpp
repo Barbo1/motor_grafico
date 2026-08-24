@@ -39,22 +39,17 @@ void cast_shadow (
 
   // Calculating coefitients.
   __m128 coef[6];
-  __m128 coef_sum[6];
   uint32_t many_segments = 0;
   for (std::size_t i = 0; i < many_points; i++) {
     const Dir2 p1_p2 = points[i+1] - points[i];
     if (p1_p2.y() != 0) {
       float q = 1.f / p1_p2.y();
       float mi = p1_p2.x() * q;
-      _mm_storeu_ps(reinterpret_cast<float*>(coef_sum + many_segments), _mm_set_ps(0.f, 0.f, q, mi));
-      _mm_storeu_ps(
-        reinterpret_cast<float*>(coef + many_segments), 
-        _mm_set_ps(
-          0.f, 
-          0.f, 
-          q * (botf - points[i].y()),
-          std::fmaf(mi, botf - points[i+1].y(), points[i+1].x())
-        )
+      coef[many_segments] = _mm_set_ps(
+        q, 
+        mi,
+        q * (botf - points[i].y()),
+        std::fmaf(mi, botf - points[i+1].y(), points[i+1].x())
       );
       many_segments++;
     }
@@ -65,35 +60,29 @@ void cast_shadow (
   __m128 cond_bound_top = _mm_set1_ps(1.0001f);
   __m128 cond_bound_bot = _mm_set1_ps(-0.0001f);
   for (int32_t level = bot * width; level < top; level += width) {
-    std::array<int32_t, 2> bounds = {-1, -1};
     uint32_t founded = 0;
+    std::array<int32_t, 2> bounds;
     for (uint32_t i = 0; i < many_segments; i++) {
-      __m128 part = _mm_loadu_ps(reinterpret_cast<float*>(coef + i));
+      __m128 part = coef[i];
       __m128 cond = _mm_and_ps(_mm_cmplt_ps(part, cond_bound_top), _mm_cmplt_ps(cond_bound_bot, part));
-      if (_mm_movemask_ps(cond) & 0b10) {
-        int32_t inter = _mm_cvt_ss2si(part);
-        if (founded == 0 || (founded == 1 && bounds[0] != inter)) {
-          bounds[founded++] = inter;
-        }
+      if ((_mm_movemask_ps(cond) & 0b10) && founded < 2) {
+        bounds[founded++] = _mm_cvt_ss2si(part);
       }
-      __m128 part_sum = _mm_loadu_ps(reinterpret_cast<float*>(coef_sum + i));
-      _mm_storeu_ps(reinterpret_cast<float*>(coef + i), _mm_add_ps(part, part_sum));
+      coef[i] = _mm_add_ps(part, _mm_movehl_ps(_mm_setzero_ps(), part));
     }
-    
-    if (founded == 2) {
-      const std::pair<int32_t, int32_t> min_max_res = std::minmax(bounds[0], bounds[1]);
-      int32_t first = bound_inside (min_max_res.first - 1, width);
-      int32_t last = bound_inside (min_max_res.second + 1, width);
-      uint32_t many = last - first;
 
-      __m128i* position_128 = (__m128i*)(buffer + first + level);
-      for (uint32_t i = 0; i < many/4; i++, position_128++)
-        _mm_storeu_si128 (position_128, color_mm);
+    const std::pair<int32_t, int32_t> min_max_res = std::minmax(bounds[0], bounds[1]);
+    int32_t first = bound_inside (min_max_res.first - 1, width);
+    int32_t last = bound_inside (min_max_res.second + 1, width);
+    int32_t many = last - first;
+    int32_t iter = 0;
 
-      Uint32* position_32 = (Uint32*)position_128;
-      for (uint32_t i = 0; i < many%4; position_32++, i++) {
-        *position_32 = color;
-      }
-    }
+    __m128i* position_128 = (__m128i*)(buffer + first + level);
+    for (iter = 0; iter < (((many>>2)-1)<<2); iter+=4, position_128++)
+      _mm_storeu_si128 (position_128, color_mm);
+
+    Uint32* position_32 = (Uint32*)position_128;
+    for (; iter < many; position_32++, iter++)
+      *position_32 = color;
   }
 }

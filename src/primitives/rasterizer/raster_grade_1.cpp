@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <utility>
 
-static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction) {
+static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_direction, float& next_direction, uint32_t width, uint32_t height) {
   Dir2 diff21 = P2 - P1;
-  if (diff21.y() != 0.f) {
+  if (std::abs(diff21.y()) > 1.f) {
     uint64_t prev_point_disapears = (diff21.y() * prev_direction < 0.f ? 1ULL : 0ULL);
     uint64_t next_point_disapears = (diff21.y() * next_direction < 0.f ? 1ULL : 0ULL);
 
@@ -19,17 +19,17 @@ static void draw_line (BoolMatrix& bound, Dir2 P1, Dir2 P2, float& prev_directio
     }
 
     float x = P1.x();
-    for (float y = P1.y(); y <= PM.y(); y++) {
-      uint64_t xi = std::lround (x);
-      uint64_t yi = std::lround (y);
+    for (float y = P1.y(); y <= PM.y(); y+=1.f) {
+      uint64_t xi = std::min(std::max((uint32_t)std::lround (x), 0U), width);
+      uint64_t yi = std::min(std::max((uint32_t)std::lround (y), 0U), height);
       bound.change (yi, xi, (prev_point_disapears & bound(yi, xi)) ^ 1ULL);
       x += x_diff;
     }
       
     x = P2.x();
-    for (float y = P2.y(); y > PM.y(); y--) {
-      uint64_t xi = std::lround (x);
-      uint64_t yi = std::lround (y);
+    for (float y = P2.y(); y > PM.y(); y-=1.f) {
+      uint64_t xi = std::min(std::max((uint32_t)std::lround (x), 0U), width);
+      uint64_t yi = std::min(std::max((uint32_t)std::lround (y), 0U), height);
       bound.change (yi, xi, (next_point_disapears & bound(yi, xi)) ^ 1ULL);
       x -= x_diff;
     }
@@ -61,7 +61,7 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
 
   // Searching maximum and minimum coordenates.
   Dir2 min = points[0], max = points[0];
-  for (uint32_t i = 0; i < size; i++) {
+  for (uint32_t i = 1; i < size; i++) {
     min.v = _mm_min_ps (min.v, points[i].v);
     max.v = _mm_max_ps (max.v, points[i].v);
   }
@@ -97,7 +97,7 @@ SDL_Surface* raster_grade_1 (const Dir2* ps, std::size_t size, SDL_Color color, 
   float prev_direction = (P1 - points[size-2]).y();
   float next_direction = (P3 - P2).y();
   for (std::size_t pos = 2; pos < size+2; pos++) {
-    draw_line (bound, P1, P2, prev_direction, next_direction);
+    draw_line (bound, P1, P2, prev_direction, next_direction, matrix_width, matrix_height);
     prev_direction = (P2 - P1).y();
     P1 = std::exchange (P2, std::exchange (P3, points[pos]));
     next_direction = (P3 - P2).y();

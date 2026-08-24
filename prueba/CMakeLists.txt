@@ -1,4 +1,4 @@
-add_executable (fin ./pruebas_luz/pruebas_mascara_luz_7.cpp)
+add_executable (fin ./prueba_juego_con_balas.cpp)
 target_include_directories (fin PRIVATE ${CMAKE_SOURCE_DIR}/headers)
 target_link_libraries (fin PRIVATE 
   objsrc_primitives

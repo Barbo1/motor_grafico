@@ -1,8 +1,8 @@
-#include "../../headers/concepts/lights.hpp"
 #include "../../headers/concepts/glyph_system.hpp"
 #include "../../headers/concepts/image_modifier.hpp"
 #include "../../headers/primitives/global.hpp"
 #include "../../headers/primitives/arena.hpp"
+#include "../../headers/concepts/lights.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>

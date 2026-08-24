@@ -1,17 +1,20 @@
+#include "../headers/primitives/global.hpp"
+#include "../headers/primitives/arena.hpp"
+#include "../headers/concepts/visualizer.hpp"
+#include "../headers/concepts/image_modifier.hpp"
+#include "../headers/concepts/collision.hpp"
+#include "../headers/concepts/lights.hpp"
 #include "../headers/pr_objects/square.hpp"
 #include "../headers/pr_objects/line.hpp"
 #include "../headers/pr_objects/projectile.hpp"
-#include "../headers/concepts/image_modifier.hpp"
-#include "../headers/concepts/visualizer.hpp"
 #include "../headers/sp_objects/particle_source.hpp"
-#include "../headers/primitives/global.hpp"
-#include "../headers/concepts/collision.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <cstdint>
 #include <iostream>
 #include <cmath>
+#include <ranges>
 
 void configure_glyph_system (GlyphsSystem* gs) {
   SDL_Color color = SDL_Color {255,255,255,255};
@@ -69,6 +72,10 @@ int main () {
     Visualizer<D2FIG> texture;
     Square physical_body;
   };
+  struct Canion {
+    Visualizer<D2FIG> rotation_engine;
+    float width, height;
+  };
  
 
   // informacion del jugados
@@ -77,6 +84,12 @@ int main () {
     .texture = ImageModifier::square(40, 40, color).cast(glb),
     .physical_body = Square(AngDir2 (20.f, 20.f, 0.f), 20, 20, 2.f)
   };
+  Canion player_canion = Canion {
+    .rotation_engine = ImageModifier::circle(arena, 10, color).cast(glb),
+    .width = 4.f,
+    .height = 20.f
+  };
+
 
 
   // informacion del cajas
@@ -186,14 +199,79 @@ int main () {
     std::string aux_str = std::to_string(many_bullets) + " : " + std::to_string(max_bullet_quantity);
     time_to_next_bullet = std::max(0, time_to_next_bullet - static_cast<int32_t>(glb->get_ticks()));
 
+    /* Evaluacion de eventos. */
+    if (SDL_PollEvent(&event)) {
+      switch (event.type) {
+        case SDL_QUIT:
+          cont = false;
+          break;
+
+        case SDL_KEYDOWN:
+          switch (event.key.keysym.sym) {
+            case SDLK_ESCAPE:
+              cont = false;
+              break;
+          }
+      }
+    }
+
+    if (key_array[SDL_SCANCODE_W])
+      player_pos_margin = std::max(player_pos_margin - real_player_vel*glb->get_time(), 0.f);
+    if (key_array[SDL_SCANCODE_S])
+      player_pos_margin = std::min(player_pos_margin + real_player_vel*glb->get_time(), 1.f);
+
+    // calculate view direction.
+    uint32_t mask = SDL_GetMouseState(&x_mouse, &y_mouse);
+    Dir2 direction;
+    {
+      Dir2 dev = Dir2(2.f*player_canion.width + 2.f, 0.f);
+      Dir2 bullet_max_begin = Dir2(player.physical_body.position) + dev;
+      direction = (Dir2(x_mouse, y_mouse) - bullet_max_begin).normalize();
+      float cos = std::max(std::abs(direction.x()), min_cos_angle_direction);
+      direction = Dir2(cos, std::copysign(std::sqrt(1 - std::max(std::min(cos*cos, 1.f), 0.f)), direction.y()));
+    }
+
+    // posicionar balas.
+    bool clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
+    if (clicking && time_to_next_bullet == 0 && many_bullets > 0) {
+      bool finded = false;
+      for (uint32_t i = 0; i < bullets.size() && !finded; i++) {
+        if (!bullets[i].present && !bullets[i].particles.bursting()) {
+          finded = true;
+          many_bullets--;
+
+          Dir2 dev = Dir2(bullet_radio + player.physical_body.dims.x + 2.f, 0.f);
+          Dir2 bullet_begin = Dir2(player.physical_body.position) + dev;
+          bullets[i].physical_body = Projectile (bullet_begin, bullet_radio, bullet_mass);
+          bullets[i].many_collisions = 1;
+          bullets[i].present = true;
+          bullets[i].physical_body.velocity.store(direction * bullet_velocity_norm);
+        }
+      }
+      time_to_next_bullet = ratio_bullet_generation_ms;
+    }
+
     /* Render of the objects. */
     glb->begin_render();
       gs.print (aux_str, 20, color, Dir2(20.f, 20.f));
+      
+      // set initial position.
       player.physical_body.position.store(Dir2(
         width * 0.04, 
         height * (std::fmaf(std::fmaf(player_pos_margin, 2.f, -1.f), amplitud_pos_margin, middle_pos_margin))
       ));
 
+      Dir2 relative = Dir2(player.physical_body.position) + Dir2(20.f, 0.f);
+      Dir2 vech = direction * player_canion.height;
+      Dir2 vecw = direction.percan() * player_canion.width;
+      std::vector<Dir2> player_canion_aux = std::vector<Dir2>{
+        vech + vecw + relative + Dir2(5.f, -1.f), 
+        vech - vecw + relative + Dir2(5.f, -1.f), 
+        -vecw + relative + Dir2(5.f, -1.f), 
+        vecw + relative + Dir2(5.f, -1.f)
+      };
+      print_polygon_c (glb, arena, player_canion_aux, red);
+      player_canion.rotation_engine.draw(glb, relative);
       player.texture.draw(glb, player.physical_body.position);
       
       for (auto& box: boxes)
@@ -223,7 +301,6 @@ int main () {
     }
 
     /* Testing of the collitions. */
-
     for (uint32_t j = 0; j < enemies.size(); j++) {
       auto& enemy = enemies[j];
       if (enemy.present) {
@@ -275,51 +352,6 @@ int main () {
         }
       } else if (bullet.particles.bursting())
         bullet.particles.calculate_movement(AngDir2());
-    }
-
-    /* Evaluacion de eventos. */
-    if (SDL_PollEvent(&event)) {
-      switch (event.type) {
-        case SDL_QUIT:
-          cont = false;
-          break;
-
-        case SDL_KEYDOWN:
-          switch (event.key.keysym.sym) {
-            case SDLK_ESCAPE:
-              cont = false;
-              break;
-          }
-      }
-    }
-
-    if (key_array[SDL_SCANCODE_W])
-      player_pos_margin = std::max(player_pos_margin - real_player_vel*glb->get_time(), 0.f);
-    if (key_array[SDL_SCANCODE_S])
-      player_pos_margin = std::min(player_pos_margin + real_player_vel*glb->get_time(), 1.f);
-
-    uint32_t mask = SDL_GetMouseState(&x_mouse, &y_mouse);
-    bool clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
-    if (clicking && time_to_next_bullet == 0 && many_bullets > 0) {
-      bool finded = false;
-      for (uint32_t i = 0; i < bullets.size() && !finded; i++) {
-        if (!bullets[i].present && !bullets[i].particles.bursting()) {
-          finded = true;
-          many_bullets--;
-
-          Dir2 dev = Dir2(bullet_radio + player.physical_body.dims.x + 2.f, 0.f);
-          Dir2 bullet_begin = Dir2(player.physical_body.position) + dev;
-          Dir2 direction = (Dir2(x_mouse, y_mouse) - bullet_begin).normalize();
-          float cos = std::max(direction.x(), min_cos_angle_direction);
-          direction = Dir2(cos, std::copysign(std::sqrt(1 - cos*cos), direction.y()));
-
-          bullets[i].physical_body = Projectile (bullet_begin, bullet_radio, bullet_mass);
-          bullets[i].many_collisions = 1;
-          bullets[i].present = true;
-          bullets[i].physical_body.velocity.store(direction * bullet_velocity_norm);
-        }
-      }
-      time_to_next_bullet = ratio_bullet_generation_ms;
     }
   }
 }

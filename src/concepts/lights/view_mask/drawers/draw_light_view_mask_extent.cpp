@@ -117,7 +117,8 @@ ViewMask& ViewMask::draw_light_mask (
 
     {
       // appending both images.
-      const __m128 ext_255 = _mm_set1_ps (255.f);
+      const __m128i ext_255 = _mm_set1_epi32 (255);
+      const __m128i ext_510 = _mm_set1_epi32 (510);
       const __m128i alpha_mask = _mm_set_epi8 (0,0,0,0xFF,0,0,0,0xFF,0,0,0,0xFF,0,0,0,0xFF);
       const uint32_t advance_y = img->w - width;
 
@@ -127,19 +128,16 @@ ViewMask& ViewMask::draw_light_mask (
         for (int32_t w = 0; w < width; w+=4) {
           __m128i charged_t = _mm_loadu_si128 ((__m128i*)buffer_this);
           __m128i charged_m = _mm_loadu_si128 ((__m128i*)another_buffer);
-          __m128i pixel_2, pixel_4, final_alphas;
+          __m128i pixel_2, pixel_4, final_alphas = _mm_min_epu8(charged_t, charged_m);
           __m128 mult_coef;
 
           {
-            // calculating final alphas.
+            // calculating multiplicative coeficients for colors.
             __m128i alphasm_i = _mm_blendv_epi8 (_mm_setzero_si128(), charged_m, alpha_mask);
             __m128i alphast_i = _mm_blendv_epi8 (_mm_setzero_si128(), charged_t, alpha_mask);
-            final_alphas = _mm_min_epi32(alphast_i, alphasm_i);
-
-            // calculating multiplicative coeficients for colors.
-            __m128 alphasm = _mm_sub_ps (ext_255, _mm_cvtepi32_ps (alphasm_i));
-            __m128 alphast = _mm_sub_ps (ext_255, _mm_cvtepi32_ps (alphast_i));
-            mult_coef = _mm_div_ps (alphasm, _mm_add_ps (alphast, alphasm));
+            __m128 alphasm = _mm_cvtepi32_ps (_mm_sub_epi32 (ext_255, alphasm_i));
+            __m128 denom = _mm_cvtepi32_ps (_mm_sub_epi32 (ext_510, _mm_add_epi32 (alphast_i, alphasm_i)));
+            mult_coef = _mm_div_ps (alphasm, denom);
           }
 
           {
