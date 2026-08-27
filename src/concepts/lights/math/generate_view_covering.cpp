@@ -1,11 +1,14 @@
 #include "../../../../headers/concepts/lights.hpp"
 #include "../../../../headers/primitives/math.hpp"
+#include "../../../../headers/primitives/bool_matrix.hpp"
 
 #include <cmath>
 #include <cstdint>
 #include <utility>
 #include <immintrin.h>
+
 MaskObjectList generate_view_covering (
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segment_list, 
   const Dir2& position, 
@@ -41,6 +44,7 @@ MaskObjectList generate_view_covering (
   std::vector<FirstLevelElement> buckets(
     segments_size,
     FirstLevelElement {
+      .init_segment = SecondLevelElement {},
       .data = std::vector<SecondLevelElement>(),
       .first_level_offset = 0,
       .first_second_level_offset = 0,
@@ -50,10 +54,17 @@ MaskObjectList generate_view_covering (
 
   int32_t i = 0;
   for (MaskObject* iter = segments; iter != nullptr; iter = iter->next) {
+    Dir2 point1 = Dir2(iter->point1);
+    Dir2 point2 = Dir2(iter->point2);
+    buckets[i].init_segment = SecondLevelElement {
+      .point1 = point1,
+      .point2 = point2,
+      .partition_offset = -1
+    };
     buckets[i].data.reserve (BUCKET_LINES_ESTIMATED_PARTITIONS);
     buckets[i].data.push_back (SecondLevelElement {
-      .point1 = Dir2(iter->point1),
-      .point2 = Dir2(iter->point2),
+      .point1 = point1,
+      .point2 = point2,
       .partition_offset = -1
     });
     buckets[i].first_level_offset = i-1;
@@ -61,29 +72,31 @@ MaskObjectList generate_view_covering (
   }
 
   uint32_t many_elements = segments_size;
-
-  /* Rejecting volumes. */
   int32_t pos_1 = many_elements - 1;
   int pos_2;
-  while (pos_1 >= 0) {
+  
+  /* the only way of assuring that algorithm ends. */
+  int error;
+  BoolMatrix mat = BoolMatrix(1, segments_size, arena, &error);
+  if (error == 0) {
 
-    /* * * * * * * * * * * * * * * * * * * * *
-     * searching for the most near segment. *
-     * * * * * * * * * * * * * * * * * * * * */
+    /* Rejecting volumes. */
+    while (pos_1 >= 0) {
 
-    pos_2 = buckets[pos_1].first_level_offset;
-    POS_2_NEXT:
-    while (pos_2 >= 0) {
+      mat.set_zeros();
 
-      int32_t inner_pos_1 = buckets[pos_1].first_second_level_offset;
-      while (inner_pos_1 >= 0) {
-      
-        int32_t inner_pos_2 = buckets[pos_2].first_second_level_offset;
-        while (inner_pos_2 >= 0) {
+      /* * * * * * * * * * * * * * * * * * * * * *
+       * searching for the most dominant segment. *
+       * * * * * * * * * * * * * * * * * * * * * */
 
+      pos_2 = buckets[pos_1].first_level_offset;
+      POS_2_NEXT:
+      while (pos_2 >= 0) {
+
+        if (mat(0, pos_2) == 0) {
           int meet_cond = meeting_condition_for_ordering (
-            buckets[pos_1].data[inner_pos_1], 
-            buckets[pos_2].data[inner_pos_2], 
+            buckets[pos_1].init_segment, 
+            buckets[pos_2].init_segment, 
             position
           );
 
@@ -91,6 +104,8 @@ MaskObjectList generate_view_covering (
             if (meet_cond & 0b10) {
               pos_2 = buckets[pos_2].first_level_offset;
             } else {
+              mat.change (0, pos_2, 1);
+              std::swap (buckets[pos_1].init_segment, buckets[pos_2].init_segment);
               std::swap (buckets[pos_1].data, buckets[pos_2].data);
               std::swap (buckets[pos_1].last_second_level_offset, buckets[pos_2].last_second_level_offset);
               std::swap (buckets[pos_1].first_second_level_offset, buckets[pos_2].first_second_level_offset);
@@ -98,181 +113,181 @@ MaskObjectList generate_view_covering (
             }
             goto POS_2_NEXT;
           }
-          inner_pos_2 = buckets[pos_2].data[inner_pos_2].partition_offset;
         }
-        inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
+        pos_2 = buckets[pos_2].first_level_offset;
       }
-      pos_2 = buckets[pos_2].first_level_offset;
-    }
 
-    /* * * * * * * * * * * * * * * * * * 
-     * obfuscating submissive segments. *
-     * * * * * * * * * * * * * * * * * */
+      /* * * * * * * * * * * * * * * * * * 
+       * obfuscating submissive segments. *
+       * * * * * * * * * * * * * * * * * */
 
-    pos_2 = buckets[pos_1].first_level_offset;
-    int32_t prev_pos_2 = pos_1;
+      pos_2 = buckets[pos_1].first_level_offset;
+      int32_t prev_pos_2 = pos_1;
 
-    while (pos_2 >= 0) {
+      while (pos_2 >= 0) {
 
-      bool more_posibilities = true;
-      int32_t inner_pos_1 = buckets[pos_1].first_second_level_offset;
-      while (inner_pos_1 >= 0 && more_posibilities) {
-      
-        int32_t inner_pos_2 = buckets[pos_2].first_second_level_offset;
-        int32_t prev_inner_pos_2 = -1;
-        while (inner_pos_2 >= 0) {
+        bool more_posibilities = true;
+        int32_t inner_pos_1 = buckets[pos_1].first_second_level_offset;
+        while (inner_pos_1 >= 0 && more_posibilities) {
+        
+          int32_t inner_pos_2 = buckets[pos_2].first_second_level_offset;
+          int32_t prev_inner_pos_2 = -1;
+          while (inner_pos_2 >= 0) {
 
-          SecondLevelElement& line_2 = buckets[pos_2].data[inner_pos_2];
-          const Dir2 dir_v = line_2.point2 - line_2.point1;
+            SecondLevelElement& line_2 = buckets[pos_2].data[inner_pos_2];
+            const Dir2 dir_v = line_2.point2 - line_2.point1;
 
-          Dir2 lipstick_marks;
-          int meet_cond = meeting_condition_for_obfuscating (
-            buckets[pos_1].data[inner_pos_1], 
-            line_2, 
-            position, 
-            lipstick_marks
-          );
+            Dir2 lipstick_marks;
+            int meet_cond = meeting_condition_for_obfuscating (
+              buckets[pos_1].data[inner_pos_1], 
+              line_2, 
+              position, 
+              lipstick_marks
+            );
 
-          if (lipstick_marks.y() > lipstick_marks.x())
-            lipstick_marks.turn();
+            if (lipstick_marks.y() > lipstick_marks.x())
+              lipstick_marks.turn();
 
-          switch (by_what) {
-            case ViewGeneration::VG_POINT:
-              /* obfuscate one side. */
-              if ((meet_cond & 0b11) == 0b10) {
-                if (meet_cond & 0b100)
-                  line_2.point1 += dir_v * lipstick_marks.x();
-                else
-                  line_2.point1 += dir_v * lipstick_marks.y();
+            switch (by_what) {
+              case ViewGeneration::VG_POINT:
+                /* obfuscate one side. */
+                if ((meet_cond & 0b11) == 0b10) {
+                  if (meet_cond & 0b100)
+                    line_2.point1 += dir_v * lipstick_marks.x();
+                  else
+                    line_2.point1 += dir_v * lipstick_marks.y();
 
-              } else if ((meet_cond & 0b11) == 0b01) {
-                if (meet_cond & 0b100)
+                } else if ((meet_cond & 0b11) == 0b01) {
+                  if (meet_cond & 0b100)
+                    line_2.point2 = dir_v.madd(lipstick_marks.y(), line_2.point1);
+                  else
+                    line_2.point2 = dir_v.madd(lipstick_marks.x(), line_2.point1);
+
+                  /* obfuscate subsegment(divide the segment in two parts). */
+                } else if (meet_cond == 0b100) {
+                  Dir2 kiss_x = dir_v.madd(lipstick_marks.x(), line_2.point1);
+                  Dir2 kiss_y = dir_v.madd(lipstick_marks.y(), line_2.point1);
+
+                  if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
+                    int32_t aux = buckets[pos_2].data.size();
+                    int32_t last = buckets[pos_2].last_second_level_offset;
+
+                    buckets[pos_2].data.push_back(line_2);
+
+                    buckets[pos_2].last_second_level_offset = 
+                      buckets[pos_2].data[last].partition_offset = 
+                      aux;
+                    buckets[pos_2].data[aux].partition_offset = -1;
+                    buckets[pos_2].data[aux].point1 = kiss_x;
+                    many_elements++;
+                  }
+
+                  if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
+                    if (buckets[pos_2].first_second_level_offset == inner_pos_2)
+                      buckets[pos_2].first_second_level_offset = 
+                        buckets[pos_2].data[inner_pos_2].partition_offset;
+                    else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
+                      buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
+                      buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
+                    } else 
+                      buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                        buckets[pos_2].data[inner_pos_2].partition_offset;
+                    many_elements--;
+                  } else {
+                    line_2.point2 = kiss_y;
+                  }
+
+                  inner_pos_2 = -1;
+                  goto FIN_INNER;
+                }
+                break;
+              default:
+
+                /* obfuscate one side. */
+                if ((meet_cond & 0b11) == 0b10) {
+                  line_2.point1 = dir_v.madd(lipstick_marks.x(), line_2.point1);
+
+                } else if ((meet_cond & 0b11) == 0b01) {
                   line_2.point2 = dir_v.madd(lipstick_marks.y(), line_2.point1);
-                else
-                  line_2.point2 = dir_v.madd(lipstick_marks.x(), line_2.point1);
 
-                /* obfuscate subsegment(divide the segment in two parts). */
-              } else if (meet_cond == 0b100) {
-                Dir2 kiss_x = dir_v.madd(lipstick_marks.x(), line_2.point1);
-                Dir2 kiss_y = dir_v.madd(lipstick_marks.y(), line_2.point1);
+                  /* obfuscate subsegment(divide the segment in two parts). */
+                } else if (meet_cond == 0b100) {
+                  Dir2 kiss_x = dir_v.madd(lipstick_marks.x(), line_2.point1);
+                  Dir2 kiss_y = dir_v.madd(lipstick_marks.y(), line_2.point1);
 
-                if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
-                  int32_t aux = buckets[pos_2].data.size();
-                  int32_t last = buckets[pos_2].last_second_level_offset;
+                  if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
+                    int32_t aux = buckets[pos_2].data.size();
+                    int32_t last = buckets[pos_2].last_second_level_offset;
 
-                  buckets[pos_2].data.push_back(line_2);
+                    buckets[pos_2].data.push_back(line_2);
 
-                  buckets[pos_2].last_second_level_offset = 
-                    buckets[pos_2].data[last].partition_offset = 
-                    aux;
-                  buckets[pos_2].data[aux].partition_offset = -1;
-                  buckets[pos_2].data[aux].point1 = kiss_x;
-                  many_elements++;
+                    buckets[pos_2].last_second_level_offset = 
+                      buckets[pos_2].data[last].partition_offset = 
+                      aux;
+                    buckets[pos_2].data[aux].partition_offset = -1;
+                    buckets[pos_2].data[aux].point1 = kiss_x;
+                    many_elements++;
+                  }
+
+                  if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
+                    if (buckets[pos_2].first_second_level_offset == inner_pos_2)
+                      buckets[pos_2].first_second_level_offset = 
+                        buckets[pos_2].data[inner_pos_2].partition_offset;
+                    else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
+                      buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
+                      buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
+                    } else 
+                      buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                        buckets[pos_2].data[inner_pos_2].partition_offset;
+                    many_elements--;
+                  } else {
+                    line_2.point2 = kiss_y;
+                  }
+
+                  inner_pos_2 = -1;
+                  goto FIN_INNER;
                 }
+                break;
+            }
 
-                if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
-                  if (buckets[pos_2].first_second_level_offset == inner_pos_2)
-                    buckets[pos_2].first_second_level_offset = 
-                      buckets[pos_2].data[inner_pos_2].partition_offset;
-                  else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
-                    buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
-                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
-                  } else 
-                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                      buckets[pos_2].data[inner_pos_2].partition_offset;
-                  many_elements--;
-                } else {
-                  line_2.point2 = kiss_y;
-                }
-
-                inner_pos_2 = -1;
-                goto FIN_INNER;
-              }
-              break;
-            default:
-
-              /* obfuscate one side. */
-              if ((meet_cond & 0b11) == 0b10) {
-                line_2.point1 = dir_v.madd(lipstick_marks.x(), line_2.point1);
-
-              } else if ((meet_cond & 0b11) == 0b01) {
-                line_2.point2 = dir_v.madd(lipstick_marks.y(), line_2.point1);
-
-                /* obfuscate subsegment(divide the segment in two parts). */
-              } else if (meet_cond == 0b100) {
-                Dir2 kiss_x = dir_v.madd(lipstick_marks.x(), line_2.point1);
-                Dir2 kiss_y = dir_v.madd(lipstick_marks.y(), line_2.point1);
-
-                if ((line_2.point2 - kiss_x).modulo2() >= 1.f) {
-                  int32_t aux = buckets[pos_2].data.size();
-                  int32_t last = buckets[pos_2].last_second_level_offset;
-
-                  buckets[pos_2].data.push_back(line_2);
-
-                  buckets[pos_2].last_second_level_offset = 
-                    buckets[pos_2].data[last].partition_offset = 
-                    aux;
-                  buckets[pos_2].data[aux].partition_offset = -1;
-                  buckets[pos_2].data[aux].point1 = kiss_x;
-                  many_elements++;
-                }
-
-                if ((line_2.point1 - kiss_y).modulo2() < 1.f) {
-                  if (buckets[pos_2].first_second_level_offset == inner_pos_2)
-                    buckets[pos_2].first_second_level_offset = 
-                      buckets[pos_2].data[inner_pos_2].partition_offset;
-                  else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
-                    buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
-                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = -1;
-                  } else 
-                    buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                      buckets[pos_2].data[inner_pos_2].partition_offset;
-                  many_elements--;
-                } else {
-                  line_2.point2 = kiss_y;
-                }
-
-                inner_pos_2 = -1;
-                goto FIN_INNER;
-              }
-              break;
+            /* obfuscate completely. */
+            if (meet_cond == 0b111 || (line_2.point1 - line_2.point2).modulo2() < 1.f) {
+              if (buckets[pos_2].first_second_level_offset == inner_pos_2)
+                inner_pos_2 = 
+                  buckets[pos_2].first_second_level_offset = 
+                  buckets[pos_2].data[inner_pos_2].partition_offset;
+              else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
+                buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
+                inner_pos_2 = 
+                  buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                  -1;
+              } else 
+                inner_pos_2 =
+                  buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
+                  buckets[pos_2].data[inner_pos_2].partition_offset;
+              many_elements--;
+            } else {
+              prev_inner_pos_2 = std::exchange (inner_pos_2, buckets[pos_2].data[inner_pos_2].partition_offset);
+            }
           }
 
-          /* obfuscate completely. */
-          if (meet_cond == 0b111 || (line_2.point1 - line_2.point2).modulo2() < 1.f) {
-            if (buckets[pos_2].first_second_level_offset == inner_pos_2)
-              inner_pos_2 = 
-                buckets[pos_2].first_second_level_offset = 
-                buckets[pos_2].data[inner_pos_2].partition_offset;
-            else if (buckets[pos_2].data[inner_pos_2].partition_offset == -1) {
-              buckets[pos_2].last_second_level_offset = prev_inner_pos_2;
-              inner_pos_2 = 
-                buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                -1;
-            } else 
-              inner_pos_2 =
-                buckets[pos_2].data[prev_inner_pos_2].partition_offset = 
-                buckets[pos_2].data[inner_pos_2].partition_offset;
-            many_elements--;
-          } else {
-            prev_inner_pos_2 = std::exchange (inner_pos_2, buckets[pos_2].data[inner_pos_2].partition_offset);
-          }
+          FIN_INNER:
+          more_posibilities = buckets[pos_2].first_second_level_offset >= 0;
+          inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
         }
-
-        FIN_INNER:
-        more_posibilities = buckets[pos_2].first_second_level_offset >= 0;
-        inner_pos_1 = buckets[pos_1].data[inner_pos_1].partition_offset;
+        if (!more_posibilities)
+          pos_2 = 
+            buckets[prev_pos_2].first_level_offset = 
+              buckets[pos_2].first_level_offset;
+        else 
+          prev_pos_2 = std::exchange(pos_2, buckets[pos_2].first_level_offset);
       }
-      if (!more_posibilities)
-        pos_2 = 
-          buckets[prev_pos_2].first_level_offset = 
-            buckets[pos_2].first_level_offset;
-      else 
-        prev_pos_2 = std::exchange(pos_2, buckets[pos_2].first_level_offset);
-    }
 
-    pos_1 = buckets[pos_1].first_level_offset;
+      pos_1 = buckets[pos_1].first_level_offset;
+    }
   }
+
+  // create last se1uence.
 
   MaskObject* ret = nullptr;
   MaskObject* iter = nullptr;
@@ -284,7 +299,7 @@ MaskObjectList generate_view_covering (
     while (inner_pos_1 >= 0) {
       SecondLevelElement& line_1 = buckets[pos_1].data[inner_pos_1];
 
-      MaskObject* aux =  darena.alloc_mo();
+      MaskObject* aux = darena.alloc_mo();
       aux->point1.store(line_1.point1);
       aux->point2.store(line_1.point2);
 

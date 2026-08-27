@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../primitives/vectors.hpp"
-#include "../primitives/global.hpp"
+#include "../concepts/global.hpp"
 
 struct Circle {
   MemDir2 position;

@@ -1,7 +1,8 @@
 #pragma once 
 
 #include "../primitives/vectors.hpp"
-#include "../primitives/global.hpp"
+#include "./global.hpp"
+
 #include <type_traits>
 #include <concepts>
 

@@ -3,6 +3,7 @@
 #include <cstdint>
 
 ViewMask& ViewMask::draw_light_view_mask (
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Light& light, 
@@ -12,8 +13,8 @@ ViewMask& ViewMask::draw_light_view_mask (
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;
 
-  MaskObjectList filtered = filter_lines_point_view(darena, segments, light, screen_dims);
-  fill_view_with_shadows (buffer, img->w, img->h, darena, filtered, light.position, 255);
+  MaskObjectList filtered = filter_segments_point_view(darena, segments, light, screen_dims);
+  fill_view_with_shadows (buffer, img->w, img->h, arena, darena, filtered, light.position, 255);
   fill_remain_with_lights (buffer, img->w, img->h, light.position, light);
 
   darena.complete_free_mo(filtered.obj);

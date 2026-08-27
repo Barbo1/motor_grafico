@@ -15,7 +15,6 @@ void cast_shadow (
   Uint32 color
 ) {
   int32_t top, bot;
-  float botf;
   {
     __m128 max = _mm_max_ps(
       _mm_max_ps(points[0].v, _mm_max_ps(points[1].v, points[2].v)), 
@@ -25,64 +24,55 @@ void cast_shadow (
       _mm_min_ps(points[0].v, _mm_min_ps(points[1].v, points[2].v)), 
       _mm_min_ps(points[3].v, _mm_min_ps(points[4].v, points[5].v))
     );
-    __m128 both = _mm_max_ps(_mm_min_ps(_mm_movelh_ps(max, min), _mm_set1_ps(height)), _mm_setzero_ps());
+    __m128 both = _mm_movelh_ps(max, min);
     __m128i bothi = _mm_cvtps_epi32(both);
 
-    botf = _mm_cvtss_f32(_mm_permute_ps(both, 0b11));
-    top = _mm_extract_epi32(bothi, 1) * width;
-    bot = _mm_extract_epi32(bothi, 3);
+    top = std::clamp(_mm_extract_epi32(bothi, 1), 0, height) * width;
+    bot = std::clamp(_mm_extract_epi32(bothi, 3), 0, height);
   }
 
-  auto bound_inside = [&] (int32_t num, int32_t up) {
-    return std::max<int32_t> (std::min<int32_t> (num, up), 0);
-  };
-
   // Calculating coefitients.
-  __m128 coef[6];
+  std::array<Dir2, 2> filtered_segments[6];
   uint32_t many_segments = 0;
   for (std::size_t i = 0; i < many_points; i++) {
-    const Dir2 p1_p2 = points[i+1] - points[i];
-    if (p1_p2.y() != 0) {
-      float q = 1.f / p1_p2.y();
-      float mi = p1_p2.x() * q;
-      coef[many_segments] = _mm_set_ps(
-        q, 
-        mi,
-        q * (botf - points[i].y()),
-        std::fmaf(mi, botf - points[i+1].y(), points[i+1].x())
-      );
+    const Dir2 v = points[i+1] - points[i];
+    if (std::abs(v.y()) > 1.f) {
+      filtered_segments[many_segments][0] = v;
+      filtered_segments[many_segments][1] = points[i];
       many_segments++;
     }
   }
 
   // Filling the shadows.
   __m128i color_mm = _mm_set1_epi32 (color);
-  __m128 cond_bound_top = _mm_set1_ps(1.0001f);
-  __m128 cond_bound_bot = _mm_set1_ps(-0.0001f);
-  for (int32_t level = bot * width; level < top; level += width) {
+  Dir2 C = Dir2(0.f, bot);
+  for (int32_t level = bot * width; level < top; level += width, C += Dir2(0.f, 1.f)) {
     uint32_t founded = 0;
-    std::array<int32_t, 2> bounds;
+    std::array<int32_t, 2> bounds = {-1, -1};
     for (uint32_t i = 0; i < many_segments; i++) {
-      __m128 part = coef[i];
-      __m128 cond = _mm_and_ps(_mm_cmplt_ps(part, cond_bound_top), _mm_cmplt_ps(cond_bound_bot, part));
-      if ((_mm_movemask_ps(cond) & 0b10) && founded < 2) {
-        bounds[founded++] = _mm_cvt_ss2si(part);
+      Dir2 v = filtered_segments[i][0];
+      Dir2 p = filtered_segments[i][1];
+      float coef = Dir2::from_well(_mm_div_ps((C - p).v, v.v)).y();
+      int32_t x = static_cast<int32_t>(v.madd(coef, p).x());
+      if (-0.0001f < coef && coef < 1.0001f && (founded == 0 || (founded == 1 && bounds[0] != x))) {
+        bounds[founded++] = x;
       }
-      coef[i] = _mm_add_ps(part, _mm_movehl_ps(_mm_setzero_ps(), part));
     }
 
-    const std::pair<int32_t, int32_t> min_max_res = std::minmax(bounds[0], bounds[1]);
-    int32_t first = bound_inside (min_max_res.first - 1, width);
-    int32_t last = bound_inside (min_max_res.second + 1, width);
-    int32_t many = last - first;
-    int32_t iter = 0;
+    if (founded == 2) {
+      std::pair<int32_t, int32_t> min_max_res = std::minmax (bounds[0], bounds[1]);
+      int32_t first = std::clamp (min_max_res.first - 1, 0, width);
+      int32_t last = std::clamp (min_max_res.second + 1, 0, width);
+      int32_t many = last - first;
+      int32_t iter = 0;
 
-    __m128i* position_128 = (__m128i*)(buffer + first + level);
-    for (iter = 0; iter < (((many>>2)-1)<<2); iter+=4, position_128++)
-      _mm_storeu_si128 (position_128, color_mm);
+      __m128i* position_128 = (__m128i*)(buffer + first + level);
+      for (iter = 0; iter < (((many>>2)-1)<<2); iter+=4, position_128++)
+        _mm_storeu_si128 (position_128, color_mm);
 
-    Uint32* position_32 = (Uint32*)position_128;
-    for (; iter < many; position_32++, iter++)
-      *position_32 = color;
+      Uint32* position_32 = (Uint32*)position_128;
+      for (; iter < many; position_32++, iter++)
+        *position_32 = color;
+    }
   }
 }

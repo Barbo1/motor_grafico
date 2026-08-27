@@ -9,12 +9,14 @@ void fill_directional_with_shadows (
   Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& direction,
   Uint32 color
 ) {
   MaskObjectList viewed = generate_view_covering (
+    arena,
     darena,
     segments,
     direction,

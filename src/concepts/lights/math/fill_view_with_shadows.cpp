@@ -8,6 +8,7 @@ void fill_view_with_shadows (
   Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& position,
@@ -17,6 +18,7 @@ void fill_view_with_shadows (
     return;
 
   MaskObjectList viewed = generate_view_covering (
+    arena,
     darena,
     segments,
     position,
@@ -48,12 +50,12 @@ void fill_view_with_shadows (
     Q_1 += position;
     Q_2 += position;
 
-    points[0] = Dir2(iter->point1);
-    points[1] = Q_1;
-    points[2] = Q_off + Q_1;
-    points[3] = Q_off + Q_2;
-    points[4] = Q_2;
-    points[5] = Dir2(iter->point2);
+    points[0] = Dir2(iter->point1).round();
+    points[1] = Q_1.round();
+    points[2] = (Q_off + Q_1).round();
+    points[3] = (Q_off + Q_2).round();
+    points[4] = Q_2.round();
+    points[5] = Dir2(iter->point2).round();
     points[6] = points[0];
     points[7] = points[1];
 

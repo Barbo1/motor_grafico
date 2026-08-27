@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../primitives/global.hpp"
+#include "../concepts/global.hpp"
 #include <cstdint>
 
 struct Square {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../headers/primitives/global.hpp"
+#include "./global.hpp"
 #include "./visualizer.hpp"
 
 #include <string>

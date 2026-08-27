@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/global.hpp"
+#include "../../../../headers/concepts/global.hpp"
 #include <SDL2/SDL_timer.h>
 
 void Global::end_render () {

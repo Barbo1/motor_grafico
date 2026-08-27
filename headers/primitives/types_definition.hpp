@@ -107,6 +107,7 @@ struct SecondLevelElement {
 };
 
 struct FirstLevelElement {
+  SecondLevelElement init_segment;
   std::vector<SecondLevelElement> data;
   int32_t first_level_offset;
   int32_t first_second_level_offset;

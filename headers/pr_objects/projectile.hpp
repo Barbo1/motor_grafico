@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../primitives/vectors.hpp"
-#include "../primitives/global.hpp"
+#include "../concepts/global.hpp"
 
 struct Projectile {
   void* col_obj;

@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/global.hpp"
+#include "../../../../headers/concepts/global.hpp"
 
 Global* Global::single {nullptr};
     

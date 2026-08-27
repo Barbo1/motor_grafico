@@ -1,4 +1,4 @@
-#include "../headers/primitives/global.hpp"
+#include "../headers/concepts/global.hpp"
 #include "../headers/primitives/arena.hpp"
 #include "../headers/concepts/visualizer.hpp"
 #include "../headers/concepts/image_modifier.hpp"
@@ -14,7 +14,6 @@
 #include <cstdint>
 #include <iostream>
 #include <cmath>
-#include <ranges>
 
 void configure_glyph_system (GlyphsSystem* gs) {
   SDL_Color color = SDL_Color {255,255,255,255};
@@ -29,19 +28,33 @@ void configure_glyph_system (GlyphsSystem* gs) {
 
     u'0', u'1', u'2', u'3', u'4', u'5', u'6', u'7', u'8', u'9',
 
-    u'_', u'?', u'!', u':', u',', u'.', u'/'
+    u'_', u'?', u'!', u':', u',', u'.', u'/', u' '
   };
   for (const auto& character: characters)
     gs->cache(character, 20, color);
   gs->clear_meta();
 }
 
+Dir2 calculate_bound_curr_direction (
+  const Dir2& bullet_max_begin, 
+  const float& min_cos_angle_direction, 
+  int x_mouse, 
+  int y_mouse
+) {
+  Dir2 direction = (Dir2(x_mouse, y_mouse) - bullet_max_begin).normalize();
+  float cos = std::max(std::abs(direction.x()), min_cos_angle_direction);
+  return Dir2(cos, std::copysign(std::sqrt(1 - std::max(std::min(cos*cos, 1.f), 0.f)), direction.y()));
+}
+
 int main () {
   std::string name = "Ventana";
   Global* glb = Global::create(name, SDL_Color {30, 30, 30, 0});
   Arena arena = Arena(1000*1000*8);
+  DynamicalArena darena = DynamicalArena(10000*8);
+
   uint32_t width = glb->get_width();
   uint32_t height = glb->get_height();
+  Dir2 screen_dims = Dir2 (static_cast<int>(width), static_cast<int>(height));
   
   int32_t error;
   GlyphsSystem gs (glb, &arena, "../fuentes_letras/Nostard-Medium.ttf", &error);
@@ -130,8 +143,8 @@ int main () {
         std::pair<float, float>{M_PI * 0.5f, M_PI * 1.5f},
         bullet_particles_img,
         5,
-        0.01f,
-        3000
+        0.5f,
+        500
       ),
       .texture = bullet_img,
       .physical_body = Projectile (Dir2(), bullet_radio, bullet_mass),
@@ -163,7 +176,7 @@ int main () {
       .ticks_until_shot = ticks_until_shot_flying_orbs,
       .present = true 
     };
-    enemies[0].physical_body.velocity.store(Dir2(0.01f, 0.01f));
+    enemies[0].physical_body.velocity.store(Dir2(0.01f, 0.1f));
 
     gen_rand = glb->get_random() & 7;
     radio = static_cast<float>(gen_rand + 30);
@@ -174,16 +187,88 @@ int main () {
       .ticks_until_shot = ticks_until_shot_flying_orbs,
       .present = true 
     };
-    enemies[1].physical_body.velocity.store(Dir2(0.01f, -0.01f));
+    enemies[1].physical_body.velocity.store(Dir2(0.01f, -0.1f));
   }
+
+
+  // luces.
+  MaskObjectList segments = {.obj = nullptr, .size = 0};
+  for (const auto& box: boxes) {
+    Dir2 pos = Dir2(box.physical_body.position);
+    Dir2 D = Dir2(box.physical_body.dims);
+    Dir2 P = Dir2(box.physical_body.dims).dir_mul(Dir2(-1.f, 1.f));
+
+    MaskObject* ret_new = darena.alloc_mo();
+    ret_new->point1.store(pos + D);
+    ret_new->point2.store(pos + P);
+    ret_new->next = segments.obj;
+    segments.obj = ret_new;
+
+    ret_new = darena.alloc_mo();
+    ret_new->point1.store(pos + D);
+    ret_new->point2.store(pos - P);
+    ret_new->next = segments.obj;
+    segments.obj = ret_new;
+    
+    ret_new = darena.alloc_mo();
+    ret_new->point1.store(pos - D);
+    ret_new->point2.store(pos + P);
+    ret_new->next = segments.obj;
+    segments.obj = ret_new;
+
+    ret_new = darena.alloc_mo();
+    ret_new->point1.store(pos - D);
+    ret_new->point2.store(pos - P);
+    ret_new->next = segments.obj;
+    segments.obj = ret_new;
+
+    segments.size += 4;
+  }
+
+  std::vector<std::pair<Light, MaskObjectList>> light_info = {
+    std::pair<Light, MaskObjectList>{{
+      .focal_line = std::array<Dir2, 2>{Dir2(150.f, 10.f), Dir2(200.f, 10.f)},
+      .position = Dir2(175.f, -15.f),
+      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+      .intensity = 100.f,
+      .attenuation = 0.005f,
+      .type = LightType::LT_FOCALIZED
+    }, segments
+  }, {{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(175.f, 10.f),
+      .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+      .intensity = 60.f,
+      .attenuation = 0.1f,
+      .type = LightType::LT_CENTERD
+  }, segments
+  }, {{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(0.f, 0.f),
+      .color = {.r = 1.0f, .g = .0f, .b = .0f},
+      .intensity = 70.f,
+      .attenuation = 0.01f,
+      .type = LightType::LT_CENTERD
+  }, segments
+  }, {{
+      .focal_line = std::array<Dir2, 2>(),
+      .position = Dir2(0.f, 0.f),
+      .color = {.r = 1.0f, .g = .0f, .b = .0f},
+      .intensity = 70.f,
+      .attenuation = 0.01f,
+      .type = LightType::LT_CENTERD
+    }, segments
+  }};
+  
+  ViewMask view_0 (glb->get_width(), glb->get_height());
 
 
   // general information in the program.
 
-  float player_vel = 0.2f;
+  float player_vel = 2.2f;
   float amplitud_pos_margin = 0.365f; // max = 0.365f
   float shot_aperture_angle = M_PI / 18.f;
-  float bullet_velocity_norm = 0.02f;
+  float bullet_velocity_norm = 1.7f;
   uint32_t max_bullet_quantity = 100;
   int32_t ratio_bullet_generation_ms = 300;
 
@@ -195,26 +280,14 @@ int main () {
   uint32_t many_bullets = max_bullet_quantity;
   int32_t time_to_next_bullet = ratio_bullet_generation_ms;
   float min_cos_angle_direction = std::cos(shot_aperture_angle);
+  float aux_time_1 = 1.f, avg_time_1 = 0.f;
   while (cont) {
-    std::string aux_str = std::to_string(many_bullets) + " : " + std::to_string(max_bullet_quantity);
-    time_to_next_bullet = std::max(0, time_to_next_bullet - static_cast<int32_t>(glb->get_ticks()));
+    glb->time_bound();
 
     /* Evaluacion de eventos. */
-    if (SDL_PollEvent(&event)) {
-      switch (event.type) {
-        case SDL_QUIT:
-          cont = false;
-          break;
-
-        case SDL_KEYDOWN:
-          switch (event.key.keysym.sym) {
-            case SDLK_ESCAPE:
-              cont = false;
-              break;
-          }
-      }
-    }
-
+    while (SDL_PollEvent(&event));
+    if (key_array[SDL_SCANCODE_ESCAPE])
+      cont = false;
     if (key_array[SDL_SCANCODE_W])
       player_pos_margin = std::max(player_pos_margin - real_player_vel*glb->get_time(), 0.f);
     if (key_array[SDL_SCANCODE_S])
@@ -222,55 +295,38 @@ int main () {
 
     // calculate view direction.
     uint32_t mask = SDL_GetMouseState(&x_mouse, &y_mouse);
-    Dir2 direction;
-    {
-      Dir2 dev = Dir2(2.f*player_canion.width + 2.f, 0.f);
-      Dir2 bullet_max_begin = Dir2(player.physical_body.position) + dev;
-      direction = (Dir2(x_mouse, y_mouse) - bullet_max_begin).normalize();
-      float cos = std::max(std::abs(direction.x()), min_cos_angle_direction);
-      direction = Dir2(cos, std::copysign(std::sqrt(1 - std::max(std::min(cos*cos, 1.f), 0.f)), direction.y()));
-    }
-
-    // posicionar balas.
-    bool clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
-    if (clicking && time_to_next_bullet == 0 && many_bullets > 0) {
-      bool finded = false;
-      for (uint32_t i = 0; i < bullets.size() && !finded; i++) {
-        if (!bullets[i].present && !bullets[i].particles.bursting()) {
-          finded = true;
-          many_bullets--;
-
-          Dir2 dev = Dir2(bullet_radio + player.physical_body.dims.x + 2.f, 0.f);
-          Dir2 bullet_begin = Dir2(player.physical_body.position) + dev;
-          bullets[i].physical_body = Projectile (bullet_begin, bullet_radio, bullet_mass);
-          bullets[i].many_collisions = 1;
-          bullets[i].present = true;
-          bullets[i].physical_body.velocity.store(direction * bullet_velocity_norm);
-        }
-      }
-      time_to_next_bullet = ratio_bullet_generation_ms;
-    }
+    Dir2 bullet_max_begin = Dir2(2.f*player_canion.width + 2.f, 0.f) + Dir2(player.physical_body.position);
+    Dir2 direction = calculate_bound_curr_direction (
+      bullet_max_begin, 
+      min_cos_angle_direction, 
+      x_mouse, 
+      y_mouse
+    );
 
     /* Render of the objects. */
     glb->begin_render();
-      gs.print (aux_str, 20, color, Dir2(20.f, 20.f));
-      
       // set initial position.
       player.physical_body.position.store(Dir2(
         width * 0.04, 
         height * (std::fmaf(std::fmaf(player_pos_margin, 2.f, -1.f), amplitud_pos_margin, middle_pos_margin))
       ));
 
-      Dir2 relative = Dir2(player.physical_body.position) + Dir2(20.f, 0.f);
+      Dir2 relative = Dir2(player.physical_body.position) + Dir2(25.f, -1.f);
       Dir2 vech = direction * player_canion.height;
       Dir2 vecw = direction.percan() * player_canion.width;
+
+      Dir2 canion_up_1 = vech + vecw + relative;
+      Dir2 canion_up_2 = vech - vecw + relative;
+      Dir2 canion_down_1 = -vecw + relative;
+      Dir2 canion_down_2 = vecw + relative;
+      Dir2 canion_mouth = (canion_up_1 + canion_up_2) * 0.5f;
       std::vector<Dir2> player_canion_aux = std::vector<Dir2>{
-        vech + vecw + relative + Dir2(5.f, -1.f), 
-        vech - vecw + relative + Dir2(5.f, -1.f), 
-        -vecw + relative + Dir2(5.f, -1.f), 
-        vecw + relative + Dir2(5.f, -1.f)
+        canion_up_1, 
+        canion_up_2, 
+        canion_down_1, 
+        canion_down_2
       };
-      print_polygon_c (glb, arena, player_canion_aux, red);
+      print_polygon_c (glb, arena, player_canion_aux, color);
       player_canion.rotation_engine.draw(glb, relative);
       player.texture.draw(glb, player.physical_body.position);
       
@@ -288,7 +344,50 @@ int main () {
           bullet.particles.draw();
       }
 
+      light_info[0].first.focal_line[0] = canion_up_1;
+      light_info[0].first.focal_line[1] = canion_up_2;
+      light_info[0].first.position = direction.madd(player_canion.height - 10.f, relative);
+      light_info[1].first.position = canion_mouth;
+
+      if (enemies[0].present)
+        light_info[2].first.position = enemies[0].physical_body.position;
+      if (enemies[1].present)
+        light_info[3].first.position = enemies[1].physical_body.position;
+      
+      view_0.draw_light_mask (arena, darena, light_info, screen_dims, 200);
+      glb->apply_mask (view_0);
+
+      std::string aux_str = std::to_string(many_bullets) + " : " + std::to_string(max_bullet_quantity);
+      gs.print (aux_str, 20, color, Dir2(20.f, 20.f));
+      
+      float a = glb->get_time();
+      aux_time_1 += 1;
+      avg_time_1 += a;
+      std::string aux_str_3 = "tiempo: " + std::to_string(a) + ", avg: " + std::to_string(avg_time_1 / aux_time_1);
+      gs.print (aux_str_3, 20, color, Dir2(width - 300.f, 80.f));
     glb->end_render();
+
+
+    // posicionar balas.
+    
+    bool clicking = mask & SDL_BUTTON(SDL_BUTTON_LEFT);
+    if (clicking && time_to_next_bullet == 0.f && many_bullets > 0) {
+      bool finded = false;
+      for (uint32_t i = 0; i < bullets.size() && !finded; i++) {
+        if (!bullets[i].present && !bullets[i].particles.bursting()) {
+          finded = true;
+          many_bullets--;
+
+          Dir2 bullet_begin = canion_mouth + direction * bullet_radio;
+          bullets[i].physical_body = Projectile (bullet_begin, bullet_radio, bullet_mass);
+          bullets[i].many_collisions = 1;
+          bullets[i].present = true;
+          bullets[i].physical_body.velocity.store(direction * bullet_velocity_norm);
+        }
+      }
+      time_to_next_bullet = ratio_bullet_generation_ms;
+    }
+
 
     // moving the movible obejcts.
 
@@ -353,5 +452,7 @@ int main () {
       } else if (bullet.particles.bursting())
         bullet.particles.calculate_movement(AngDir2());
     }
+    
+    time_to_next_bullet = std::max(time_to_next_bullet - static_cast<int32_t>(glb->get_ticks()), 0);
   }
 }

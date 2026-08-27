@@ -12,7 +12,7 @@ MaskObject* DynamicalArena::alloc_mo () {
     uintptr_t iptr = reinterpret_cast<uint64_t>(this->curr_ptr);
     uintptr_t align_offset = ~(iptr - 1) & (alignof(MaskObject) - 1);
     std::size_t complete_size = sizeof(MaskObject) + align_offset;
-    
+
     if (this->remaining < complete_size) {
       this->remaining = this->size;
       this->curr_ptr = (std::byte*)malloc(this->size);
@@ -28,20 +28,3 @@ MaskObject* DynamicalArena::alloc_mo () {
     return reinterpret_cast<MaskObject*>(iptr + align_offset);
   }
 }
-/**
-class DynamicalArena {
-  private:
-    std::byte* init_ptr;
-    std::vector<std::byte> ptr_blocks;
-    std::size_t size, remaining, blocks;
-
-    // pointers to free memory.
-    MaskObject* ptr_mo;
-  public:
-    DynamicalArena(std::size_t size);
-    ~DynamicalArena();
-  
-    MaskObject* alloc_mo (std::size_t size);
-    void free_mo (MaskObject*);
-};
- */

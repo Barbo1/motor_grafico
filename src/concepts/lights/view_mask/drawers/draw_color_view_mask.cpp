@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 ViewMask& ViewMask::draw_color_view_mask (
+  Arena& arena,
   DynamicalArena& darena, 
   const MaskObjectList& segments,
   const Dir2& position
@@ -12,7 +13,7 @@ ViewMask& ViewMask::draw_color_view_mask (
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
     buffer[i] = 0;
 
-  fill_view_with_shadows (buffer, img->w, img->h, darena, segments, position, 255);
+  fill_view_with_shadows (buffer, img->w, img->h, arena, darena, segments, position, 255);
 
   return *this;
 }

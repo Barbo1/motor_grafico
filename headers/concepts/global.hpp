@@ -8,7 +8,7 @@
 #include <string_view>
 #include <cstdlib>
 
-#include "../concepts/lights.hpp"
+#include "./lights.hpp"
 
 class Global {
   private: 
@@ -34,6 +34,7 @@ class Global {
 
     static Global* create (std::string_view window_name, SDL_Color bg_color) noexcept;
     ~Global ();
+    void time_bound ();
 
     /* Render functions. */
     void begin_render ();

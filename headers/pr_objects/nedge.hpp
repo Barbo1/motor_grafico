@@ -2,7 +2,7 @@
 
 #include "../concepts/glyph_system.hpp"
 #include "../concepts/visualizer.hpp"
-#include "../primitives/global.hpp"
+#include "../concepts/global.hpp"
 
 #include <SDL2/SDL.h>
 #include <cstdint>

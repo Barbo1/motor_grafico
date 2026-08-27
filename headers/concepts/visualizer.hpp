@@ -10,7 +10,7 @@
 #include <variant>
 #include <string>
 
-#include "../primitives/global.hpp"
+#include "./global.hpp"
 #include "../primitives/arena.hpp"
 #include "../primitives/vectors.hpp"
 

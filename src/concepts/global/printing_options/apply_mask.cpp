@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/global.hpp"
+#include "../../../../headers/concepts/global.hpp"
 
 void Global::apply_mask (const ViewMask& mask) {
   SDL_UpdateTexture (this->render_mask, NULL, mask.img->pixels, mask.img->pitch);

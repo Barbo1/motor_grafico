@@ -1,6 +1,6 @@
 #include "../../headers/concepts/glyph_system.hpp"
 #include "../../headers/concepts/image_modifier.hpp"
-#include "../../headers/primitives/global.hpp"
+#include "../../headers/concepts/global.hpp"
 #include "../../headers/primitives/arena.hpp"
 #include "../../headers/concepts/lights.hpp"
 
@@ -200,15 +200,15 @@ int main () {
   float aux_time_1 = 0.f, avg_time_1 = 0.f;
 
   while (cont) {
+    glb->time_bound();
     glb->begin_render();
       img_mod.draw (glb, Dir2 (200.f, 200.f));
 
-      aux_time_1 += 1;
-
-      view_0.draw_light_mask (arena, darena, light_info, screen_dims);
+      view_0.draw_light_mask (arena, darena, light_info, screen_dims, 255);
       glb->apply_mask (view_0);
 
       float a = glb->get_time();
+      aux_time_1 += 1;
       avg_time_1 += (a - avg_time_1) / aux_time_1;
 
       SDL_SetRenderDrawColor(glb->get_render(), 255, 255, 255, 255);

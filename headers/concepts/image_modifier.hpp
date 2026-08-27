@@ -8,7 +8,7 @@
 #include <string>
 
 #include "../primitives/vectors.hpp"
-#include "../primitives/global.hpp"
+#include "../concepts/global.hpp"
 #include "./visualizer.hpp"
 
 class ImageModifier {

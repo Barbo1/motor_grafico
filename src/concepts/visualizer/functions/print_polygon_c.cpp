@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/global.hpp"
+#include "../../../../headers/concepts/global.hpp"
 #include "../../../../headers/primitives/rasterizer.hpp"
 #include <SDL2/SDL_surface.h>
 #include <cmath>

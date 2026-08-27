@@ -10,3 +10,8 @@ para el calculo de la union de las luces:
   c = ((r1, g1, b1, 0) - (r1, g1, b1, 0) * na2/(na1 + na2) + (r2, g2, b2, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
   c = ((r1, g1, b1, 0) + (r2, g2, b2, 0) * na2/(na1 + na2) - (r1, g1, b1, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
   c = ((r1, g1, b1, 0) + (r2-r1, g2-g1, b2-b1, 0) * na2/(na1 + na2)) + (0, 0, 0, min (a1, a2))
+
+
+problemas de iluminacion en juego:
+  - player pos = (54.64, 375.398) y player direction = (0.988797, -0.149269)
+

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../primitives/global.hpp"
+#include "../concepts/global.hpp"
 #include "../primitives/vectors.hpp"
 #include "../pr_objects/circle.hpp"
 #include "../pr_objects/square.hpp"

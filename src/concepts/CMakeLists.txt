@@ -5,11 +5,12 @@ file(GLOB_RECURSE FILES_COL "collision/*.cpp")
 file(GLOB_RECURSE FILES_LGT "lights/*.cpp")
 file(GLOB_RECURSE FILES_GLY "glyph_system/*.cpp")
 file(GLOB_RECURSE FILES_GUI "gui/*.cpp")
+file(GLOB_RECURSE FILES_GLB "global/*.cpp")
 
 add_library (objsrc_concepts OBJECT)
 target_include_directories (objsrc_concepts PUBLIC ${CMAKE_SOURCE_DIR}/headers)
 target_sources (objsrc_concepts PRIVATE 
   ${FILES_TEX} ${FILES_PHY} ${FILES_IMF} 
   ${FILES_COL} ${FILES_LGT} ${FILES_GLY} 
-  ${FILES_GUI}
+  ${FILES_GUI} ${FILES_GLB} 
 )

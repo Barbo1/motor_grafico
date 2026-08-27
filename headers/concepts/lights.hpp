@@ -32,18 +32,21 @@ class ViewMask {
     ViewMask& draw_light_uniform_mask (const Light& light);
 
     ViewMask& draw_color_view_mask (
+      Arena& arena,
       DynamicalArena& darena, 
       const MaskObjectList& segments,
       const Dir2& position
     );
 
     ViewMask& draw_color_directional_mask (
+      Arena& arena,
       DynamicalArena& darena, 
       const MaskObjectList& segments,
       const Dir2& direction
     );
     
     ViewMask& draw_light_view_mask (
+      Arena& arena,
       DynamicalArena& darena,
       const MaskObjectList& segments,
       const Light& light, 
@@ -54,7 +57,8 @@ class ViewMask {
       Arena& arena,
       DynamicalArena& darena,
       const std::span<std::pair<Light, MaskObjectList>, std::dynamic_extent>& lights,
-      const Dir2& screen_dims 
+      const Dir2& screen_dims,
+      const Uint32 background_color
     );
 
     /* mask fusion. */
@@ -91,6 +95,7 @@ void fill_view_with_shadows (
   Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& position,
@@ -104,6 +109,7 @@ void fill_directional_with_shadows (
   Uint32* buffer, 
   int32_t width, 
   int32_t height, 
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Dir2& direction,
@@ -135,13 +141,17 @@ void fill_remain_with_lights_4 (
  * is that this one make a covering resembling a parallel view.
  * */
 MaskObjectList generate_view_covering (
+  Arena& arena,
   DynamicalArena& darena,
   const MaskObjectList& segments, 
   const Dir2& position, 
   ViewGeneration by_what
 );
 
-MaskObjectList filter_lines_point_view (
+/* Reduce the segments so that they get inside the bound of the light in the screen.
+ * The ones that doesn't pass over the bound are filtered away.
+ * */
+MaskObjectList filter_segments_point_view (
   DynamicalArena& darena,
   const MaskObjectList& segments,
   const Light& light, 

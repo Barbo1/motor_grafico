@@ -12,64 +12,88 @@ ViewMask& ViewMask::draw_light_mask (
   Arena& arena,
   DynamicalArena& darena,
   const std::span<std::pair<Light, MaskObjectList>, std::dynamic_extent>& segments,
-  const Dir2& screen_dims 
+  const Dir2& screen_dims,
+  const Uint32 background_color
 ) {
   // initialy fill the image with shadows.
   Uint32* buffer_first = (Uint32*)img->pixels;
   for (uint32_t i = 0; i < (uint32_t)(img->w * img->h); i++)
-    buffer_first[i] = 255;
+    buffer_first[i] = background_color;
 
   for (uint32_t ss = 0; ss < segments.size(); ss++) {
     const Light& light = segments[ss].first;
     const MaskObjectList& parts = segments[ss].second;
 
+    MaskObjectList filtered;
     Dir2 light_pos = Dir2(light.position);
     Dir2 bound_min;
     int32_t width, height, xmin, ymin;
     {
       // calculating bound of the imaged of the light.
-      __m128 rebound;
+      __m128 bound;
       switch (light.type) {
         case LightType::LT_CENTERD:
-          rebound = find_light_screen_bounding(light, screen_dims);
+          bound = find_light_screen_bounding(light);
           break;
         case LightType::LT_FOCALIZED:
-          rebound = find_focal_screen_bounding(light, light.focal_line[0], light.focal_line[1], screen_dims);
+          bound = find_focal_screen_bounding(light, light.focal_line[0], light.focal_line[1]);
           break;
         default:
           std::unreachable();
           break;
       }
-
-      __m128i reboundi = _mm_cvtps_epi32(rebound);
-      uint32_t xmax = _mm_extract_epi32(reboundi, 0);
-      uint32_t ymax = _mm_extract_epi32(reboundi, 1);
-      uint32_t xmin_prev = _mm_extract_epi32(reboundi, 2);
-      ymin = _mm_extract_epi32(reboundi, 3);
       
+      // filter and reposition lines.
+      filtered = filter_segments_point_view(darena, parts, light, screen_dims);
+      __m128 rebound_min = _mm_setzero_ps();
+      __m128 rebound_max = screen_dims.v;
+      if (filtered.obj != nullptr) {
+        auto iter = filtered.obj;
+        rebound_min = rebound_max = Dir2(iter->point1).v;
+        for (; iter != nullptr; iter = iter->next) {
+          __m128 p1 = Dir2(iter->point1).v;
+          __m128 p2 = Dir2(iter->point2).v;
+          rebound_min = _mm_min_ps(_mm_min_ps(p1, p2), rebound_min);
+          rebound_max = _mm_max_ps(_mm_max_ps(p1, p2), rebound_max);
+        }
+      }
+      __m128 rebound = _mm_min_ps(screen_dims.v, _mm_max_ps(_mm_setzero_ps(), _mm_blend_ps(
+        _mm_max_ps(rebound_min, bound),
+        _mm_min_ps(rebound_max, bound),
+        0b1100
+      )));
+      __m128i reboundi = _mm_cvtps_epi32(rebound);
+      int32_t xmax = _mm_extract_epi32(reboundi, 0);
+      int32_t ymax = _mm_extract_epi32(reboundi, 1);
+      int32_t xmin_prev = _mm_extract_epi32(reboundi, 2);
+      ymin = _mm_extract_epi32(reboundi, 3);
+
       // xmin and xmax must be aligned to 4 bytes to be able to iterate over __m128 array.
       xmin = xmin_prev & ~3;
       xmax = xmax & ~3;
       height = ymax - ymin;
       width = xmax - xmin;
 
+      if (xmin_prev < 0 || ymin < 0 || xmax < 0 || ymax < 0 || width <= 0 || height <= 0) {
+        darena.complete_free_mo (filtered.obj);
+        continue;
+      }
+
       // reposition bounds to fit the xmin initial position.
       uint32_t diff = xmin_prev - xmin;
       bound_min = Dir2::from_well(_mm_permute_ps(rebound, 0b11101110)) - Dir2(diff, 0.f);
     }
-  
-    if (width <= 0 || height <= 0) 
-      continue;
 
     ArenaConstexFlag context = arena.get_context();
     Uint32* another_buffer = arena.atalloc<Uint32>(width * height);
-    if (another_buffer == nullptr) 
+    if (another_buffer == nullptr) {
+      darena.complete_free_mo (filtered.obj);
       continue;
+    }
 
     {
       // filter and reposition lines.
       light_pos -= bound_min;
-      MaskObjectList filtered = filter_lines_point_view(darena, parts, light, screen_dims);
       for (auto iter = filtered.obj; iter != nullptr; iter = iter->next) {
         iter->point1.store(Dir2(iter->point1) - bound_min);
         iter->point2.store(Dir2(iter->point2) - bound_min);
@@ -94,7 +118,8 @@ ViewMask& ViewMask::draw_light_mask (
             fill_view_with_shadows (
               construct_another_buffer, 
               width, 
-              height, 
+              height,
+              arena,
               darena,
               first_ofuscation,
               light_pos,
@@ -109,10 +134,10 @@ ViewMask& ViewMask::draw_light_mask (
           break;
       }
 
+
       // filling image.
-      fill_view_with_shadows (construct_another_buffer, width, height, darena, filtered, light_pos, 255);
+      fill_view_with_shadows (construct_another_buffer, width, height, arena, darena, filtered, light_pos, 255);
       fill_remain_with_lights_4 (construct_another_buffer, width, height, light_pos, light);
-      darena.complete_free_mo (filtered.obj);
     }
 
     {
@@ -190,6 +215,7 @@ ViewMask& ViewMask::draw_light_mask (
         buffer_this += advance_y;
       }
     }
+    darena.complete_free_mo (filtered.obj);
     arena.go_back_context(context);
   }
 

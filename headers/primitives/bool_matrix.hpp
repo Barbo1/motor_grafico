@@ -29,4 +29,6 @@ class BoolMatrix {
     void fill_bounds ();
     uint64_t number_bits (uint64_t lenr, uint64_t lenc);
     uint64_t number_bits_quad (uint64_t lenr, uint64_t lenc);
+
+    void set_zeros();
 };

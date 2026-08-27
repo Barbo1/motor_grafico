@@ -1,4 +1,4 @@
-#include "../../../../headers/primitives/global.hpp"
+#include "../../../../headers/concepts/global.hpp"
 #include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_render.h>
@@ -52,7 +52,7 @@ Global::Global (std::string_view window_name, SDL_Color bg_color) noexcept {
   SDL_SetTextureBlendMode(this->render_mask, SDL_BLENDMODE_BLEND);
 
   /* Initialization of configurations. */
-  this->clock_ticks = 0;
+  this->clock_ticks = SDL_GetTicks();
   this->c_width = width;
   this->c_height = height;
   this->c_bg_color = bg_color;
